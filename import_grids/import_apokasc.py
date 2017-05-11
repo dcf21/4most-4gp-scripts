@@ -32,7 +32,7 @@ training_set = Table.read(os_path.join(test_spectra_path, "trainingset_param.tab
 
 # Table supplies list of expected stellar labels for each star in the test dataset
 expected_test_output = Table.read(os_path.join(test_spectra_path, "testset_param.tab"), format="ascii")
-expected_test_output_dict = dict([(star['Starname'],star) for star in expected_test_output])
+expected_test_output_dict = dict([(star['Starname'], astropy_row_to_dict(star)) for star in expected_test_output])
 
 # Import high-resolution and low-resolution training sets into SpectrumLibraries
 for training_set_dir in ["APOKASC_trainingset/HRS", "APOKASC_trainingset/LRS"]:
@@ -59,7 +59,7 @@ for test_set_dir in ["testset/HRS", "testset/LRS"]:
     library = SpectrumLibrarySqlite(path=library_path, create=True)
 
     # Import each star in turn
-    test_set = glob.glob("{}/star*_SNR*.txt".format(test_set_dir))
+    test_set = glob.glob(os_path.join(test_spectra_path, test_set_dir, "star*_SNR*.txt"))
     for filepath in test_set:
         # Identify which star it is, etc.
         basename = os_path.basename(filepath)
