@@ -24,8 +24,10 @@ test_spectra_path = os_path.join(our_path, "..", "..", "4MOST_testspectra")
 workspace = os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
+
 # Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
-astropy_row_to_dict = lambda x: dict([(i, x[i]) for i in x.columns])
+def astropy_row_to_dict(x):
+    return dict([(i, x[i]) for i in x.columns])
 
 # Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
 training_set = Table.read(os_path.join(test_spectra_path, "trainingset_param.tab"), format="ascii")

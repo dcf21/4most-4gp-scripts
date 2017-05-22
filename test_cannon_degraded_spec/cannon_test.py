@@ -1,53 +1,91 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-# Construct and train a model.
-model = tc.L1RegularizedCannonModel(training_set, training_flux, training_ivar,
-    dispersion=common_dispersion, threads=-1)
+"""
+Take the APOKASC training set and test sets, and see how well the Cannon can reproduce APOGEE labels on a test
+set of stars.
+"""
 
-model.s2 = 0
-model.regularization = 0
-model.vectorizer = tc.vectorizer.NormalizedPolynomialVectorizer(
-    training_set, tc.vectorizer.polynomial.terminator(label_names, 2))
+import sys
+from os import path as os_path
+import logging
+import json
+from astropy.table import Table
 
-model.train()
-model._set_s2_by_hogg_heuristic()
-model.save(output_model_path, overwrite=True)
+from fourgp_speclib import SpectrumLibrarySqlite
+from fourgp_cannon import CannonInstance
 
-# Test the model.
-test_files = glob("{}/star*_SNR*.txt".format(test_set_dirname))
-N = len(test_files)
+logger = logging.getLogger(__name__)
+
+# Read input parameters
+assert len(sys.argv) == 3, """Run this script with the command line syntax
+
+python cannon_test.py <HRS|LRS> <output_path>"""
+
+test_name = sys.argv[1]  # HRS or LRS
+output_path = sys.argv[2]
+
+# List of labels over which we are going to test the performance of the Cannon
+test_labels = ("Teff", "logg", "[Fe/H]",
+               "[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]",
+               "[Ca/H]", "[Ti/H]", "[Mn/H]", "[Co/H]", "[Ni/H]", "[Ba/H]", "[Sr/H]")
+
+# Set path to workspace where we expect to find libraries of spectra
+our_path = os_path.split(os_path.abspath(__file__))[0]
+workspace = os_path.join(our_path, "..", "workspace")
+
+# Open training set
+training_library_name = "APOKASC_trainingset_{}".format(test_name)
+training_library_path = os_path.join(workspace, training_library_name)
+training_library = SpectrumLibrarySqlite(path=training_library_path, create=False)
+
+# Open test set
+test_library_name = "testset_{}".format(test_name)
+test_library_path = os_path.join(workspace, test_library_name)
+test_library = SpectrumLibrarySqlite(path=test_library_path, create=False)
+
+# Load training set
+training_library_ids = [i["specId"] for i in training_library.search()]
+training_library = training_library.open(ids=training_library_ids)
+
+# Load test set
+test_library_ids = [i["specId"] for i in test_library.search()]
+
+# Construct and train a model
+model = CannonInstance(training_set=training_library, label_names=test_labels)
+
+# Test the model
+N = len(test_library_ids)
 results = []
-for i, filename in enumerate(test_files):
-    print("Testing {}/{}: {}".format(i, N - 1, filename))
+for index in range(N):
+    test_library = test_library.open(ids=test_library_ids[index])
+    spectrum = test_library.extract_item(0)
+    star_name = spectrum.metadata["Starname"]
+    print("Testing {}/{}: {}".format(index + 1, N, star_name))
 
-    dispersion, normalized_flux, normalized_flux_err = np.loadtxt(filename).T
-    normalized_ivar = normalized_flux_err**(-2)
+    labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
 
-    # Ignore bad pixels.
-    bad = (normalized_flux_err < 0) + (~np.isfinite(normalized_ivar * normalized_flux))
-    normalized_ivar[bad] = 0
-    normalized_flux[bad] = np.nan
+    # Identify which star it is and what the SNR is
+    star_number = spectrum.metadata["star"]
+    snr = spectrum.metadata["snr"]
 
-    labels, cov, meta = model.fit(normalized_flux, normalized_ivar,
-        full_output=True)
-
-    # Identify which star it is, etc.
-    basename = os.path.basename(filename)
-    star = basename.split("_")[0].lstrip("star")
-    snr = int(basename.split("_")[1].split(".")[0].lstrip("SNR"))
-
+    # From the label covariance matrix extract the standard deviation in each label value
+    # (diagonal terms in the matrix are variances)
     err_labels = np.sqrt(np.diag(cov[0]))
 
+    # Turn list of label values into a dictionary
     result = dict(zip(label_names, labels[0]))
-    result.update(dict(zip(
-        ["E_{}".format(label_name) for label_name in label_names], err_labels)))
-    result.update({"star": star, "snr": snr})
-    print(result)
+
+    # Add the standard deviations of each label into the dictionary
+    result.update(dict(zip(["E_{}".format(label_name) for label_name in label_names], err_labels)))
+
+    # Add the APOGEE star number and the SNR ratio of the test spectrum
+    result.update({"star": star_number, "snr": snr})
     results.append(result)
 
-# Show results.
+# Write results to a file
 with open("{}.json".format(output_path), "w") as f:
     f.write(json.dumps(results))
 
 results = Table(rows=results)
 results.write("{}.fits".format(output_path))
-
