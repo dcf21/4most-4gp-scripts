@@ -15,6 +15,8 @@ from astropy.table import Table
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.info("Importing APOKASC grid of spectra")
 
 # Path to where we find Keith Hawkins's <4MOST_testspectra>
 our_path = os_path.split(os_path.abspath(__file__))[0]

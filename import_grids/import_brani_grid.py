@@ -19,6 +19,8 @@ import logging
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.info("Importing grid of template spectra for Brani's RV code")
 
 # Path to where we find Brani's <4MOST_forward_modeling>
 our_path = os_path.split(os_path.abspath(__file__))[0]
