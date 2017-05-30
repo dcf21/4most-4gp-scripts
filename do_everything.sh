@@ -9,8 +9,12 @@ python setup.py install
 cd ../fourgp_cannon
 python setup.py install
 
+# Do unit testing
+cd ../fourgp_speclib/fourgp_speclib/tests
+python -m unittest discover -v
+
 # Wipe our temporary workspace
-cd ../../../../4most-4gp-scripts
+cd ../../../../../../4most-4gp-scripts
 mkdir -p workspace
 rm -Rf workspace/*
 

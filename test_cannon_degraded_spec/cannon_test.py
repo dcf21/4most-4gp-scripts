@@ -10,6 +10,7 @@ import sys
 from os import path as os_path
 import logging
 import json
+import time
 import numpy as np
 from astropy.table import Table
 from astropy.io import fits
@@ -17,8 +18,8 @@ from astropy.io import fits
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
 
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 # Read input parameters
 assert len(sys.argv) == 4, """Run this script with the command line syntax
@@ -90,14 +91,18 @@ model = CannonInstance(training_set=training_spectra, label_names=test_labels, c
 
 # Test the model
 N = len(test_library_ids)
+time_taken = np.zeros(N)
 results = []
 for index in range(N):
     test_spectrum_array = test_library.open(ids=test_library_ids[index])
     spectrum = test_spectrum_array.extract_item(0)
     star_name = spectrum.metadata["Starname"]
-    print("Testing {}/{}: {}".format(index + 1, N, star_name))
+    # logger.info("Testing {}/{}: {}".format(index + 1, N, star_name))
 
+    time_start = time.time()
     labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
+    time_end = time.time()
+    time_taken[index] = time_end - time_start
 
     # Identify which star it is and what the SNR is
     star_number = spectrum.metadata["star"]
@@ -116,6 +121,11 @@ for index in range(N):
     # Add the APOGEE star number and the SNR ratio of the test spectrum
     result.update({"star": star_number, "snr": snr})
     results.append(result)
+
+# Report time taken
+logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spectrum.".format(N,
+                                                                                               np.mean(time_taken),
+                                                                                               np.std(time_taken)))
 
 # Write results to a file
 with open(os_path.join(output_path, "test_{}_{}.json".format(test_name, censor_name)), "w") as f:

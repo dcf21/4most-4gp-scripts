@@ -18,8 +18,8 @@ import logging
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 logger.info("Importing grid of template spectra for Brani's RV code")
 
 # Path to where we find Brani's <4MOST_forward_modeling>
@@ -39,14 +39,14 @@ os.system("mkdir -p {}".format(workspace))
 wavelength_raster = np.loadtxt(wavelength_raster_path)
 flux_templates = np.load(template_spectra_path)
 
-print "Full wavelength array shape: {}".format(wavelength_raster.shape)
-print "Flux template array shape: {}".format(flux_templates.shape)
+# logger.info("Full wavelength array shape: {}".format(wavelength_raster.shape))
+# logger.info("Flux template array shape: {}".format(flux_templates.shape))
 
 # Filter wavelength range
 wavelength_filter = (wavelength_raster > 3670) & (wavelength_raster < 9530)
 wavelength_raster = wavelength_raster[wavelength_filter]
 
-print "After filtering, wavelength array shape: {}".format(wavelength_raster.shape)
+# logger.info("After filtering, wavelength array shape: {}".format(wavelength_raster.shape))
 
 # The stellar parameters which each grid axis samples are not specified in Brani's <templates.npy> file.
 # They are as follows...

@@ -14,8 +14,8 @@ from astropy.table import Table
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 logger.info("Importing APOKASC grid of spectra")
 
 # Path to where we find Keith Hawkins's <4MOST_testspectra>
@@ -51,7 +51,7 @@ for training_set_dir in ["APOKASC_trainingset/HRS", "APOKASC_trainingset/LRS"]:
         filepath = os_path.join(test_spectra_path, training_set_dir, "{}_SNR250.txt".format(star["Starname"]))
         filename = os_path.split(filepath)[1]
         metadata = astropy_row_to_dict(star)
-        spectrum = Spectrum.from_file(filename=filepath, metadata=metadata)
+        spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, binary=False)
         library.insert(spectra=spectrum, filenames=filename)
 
 # Import high-resolution and low-resolution test sets into SpectrumLibraries
@@ -74,6 +74,6 @@ for test_set_dir in ["testset/HRS", "testset/LRS"]:
         metadata = expected_test_output_dict[star_name]
         metadata.update({"star": star_number, "snr": snr})
 
-        spectrum = Spectrum.from_file(filename=filepath, metadata=metadata)
+        spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, binary=False)
         filename = os_path.split(filepath)[1]
         library.insert(spectra=spectrum, filenames=filename)
