@@ -25,6 +25,10 @@ cd import_grids/
 python import_brani_grid.py
 python import_apokasc.py
 
+# Test RV determination
+cd ../test_rv_determination
+python rv_test.py
+
 # Test Cannon
 cd ../test_cannon_degraded_spec/
 python cannon_test.py HRS none /tmp
