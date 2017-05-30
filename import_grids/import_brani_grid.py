@@ -67,17 +67,16 @@ library = SpectrumLibrarySqlite(path=library_path, create=True)
 errors_dummy = np.zeros_like(wavelength_raster)
 
 # Import each template spectrum in turn
-for i, axis_values in enumerate(grid_axis_index_combinations):
+for i, axis_indices in enumerate(grid_axis_index_combinations):
     metadata = {}
     filename = "template{:06d}".format(i)
     item = flux_templates
-    axis_counter = 0
-    for value in axis_values:
+    for axis_counter, index in enumerate(axis_indices):
         metadata_key = grid_axes[axis_counter][0]
-        metadata_value = grid_axis_values[axis_counter][value]
-        metadata[metadata_key] = value
-        item = item[value]
-        axis_counter += 1
+        metadata_value = grid_axis_values[axis_counter][index]
+        metadata[metadata_key] = metadata_value
+        metadata[metadata_key+"_index"] = index
+        item = item[index]
 
     spectrum = Spectrum(wavelengths=wavelength_raster,
                         values=item,

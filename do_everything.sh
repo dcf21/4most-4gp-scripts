@@ -8,6 +8,8 @@ cd ../4most-4gp/src/pythonModules/fourgp_speclib
 python setup.py install
 cd ../fourgp_cannon
 python setup.py install
+cd ../fourgp_rv
+python setup.py install
 
 # Do unit testing
 cd ../fourgp_speclib/fourgp_speclib/tests
