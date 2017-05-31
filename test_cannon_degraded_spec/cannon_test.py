@@ -6,7 +6,7 @@ Take the APOKASC training set and test sets, and see how well the Cannon can rep
 set of stars.
 """
 
-import sys
+import argparse
 from os import path as os_path
 import logging
 import json
@@ -22,15 +22,17 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(fi
 logger = logging.getLogger(__name__)
 
 # Read input parameters
-assert len(sys.argv) == 4, """Run this script with the command line syntax
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--test', required=True, dest='test_library')
+parser.add_argument('--train', required=True, dest='train_library')
+parser.add_argument('--censor', default="", dest='censor_line_list')
+parser.add_argument('--output_file', default="./test_cannon.out", dest='output_file')
+args = parser.parse_args()
 
-python cannon_test.py <HRS|LRS> <censor_name> <output_path>"""
-
-test_name = sys.argv[1]  # <HRS> or <LRS>
-censor_name = sys.argv[2]  # <lines_only> or <none>
-output_path = sys.argv[3]
-
-logger.info("Testing Cannon with arguments {} {} {}".format(test_name, censor_name, output_path))
+logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test_library,
+                                                                       args.train_library,
+                                                                       args.censor_line_list,
+                                                                       args.output_file))
 
 # List of labels over which we are going to test the performance of the Cannon
 test_labels = ("Teff", "logg", "[Fe/H]",
@@ -42,13 +44,11 @@ our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "..", "workspace")
 
 # Open training set
-training_library_name = "APOKASC_trainingset_{}".format(test_name)
-training_library_path = os_path.join(workspace, training_library_name)
+training_library_path = os_path.join(workspace, args.train_library)
 training_library = SpectrumLibrarySqlite(path=training_library_path, create=False)
 
 # Open test set
-test_library_name = "testset_{}".format(test_name)
-test_library_path = os_path.join(workspace, test_library_name)
+test_library_path = os_path.join(workspace, args.test_library)
 test_library = SpectrumLibrarySqlite(path=test_library_path, create=False)
 
 # Load training set
@@ -61,10 +61,10 @@ test_library_ids = [i["specId"] for i in test_library.search()]
 
 # If required, generate the censoring masks
 censoring_masks = None
-if censor_name == "lines_only":
+if args.censor_line_list != "":
     window = 0.5  # How many Angstroms either side of the line should be used?
     censoring_masks = {}
-    ges_line_list = fits.open("ges_master_v5.fits")[1].data
+    ges_line_list = fits.open(args.censor_line_list)[1].data
 
     for label_name in test_labels[3:]:
         mask = np.zeros(raster.size, dtype=bool)
@@ -77,13 +77,13 @@ if censor_name == "lines_only":
         matching_wavelengths = ges_line_list["LAMBDA"][match]
 
         # For each wavelength, allow +/- window that line.
-        print("Found {} lines for {}".format(len(matching_wavelengths), label_name))
+        logger.info("Found {} lines for {}".format(len(matching_wavelengths), label_name))
 
         for i, wavelength in enumerate(matching_wavelengths):
             window_mask = ((wavelength + window) >= raster) * (raster >= (wavelength - window))
             mask[window_mask] = True
 
-        print("Pixels used for label {}: {} (of {})".format(label_name, mask.sum(), len(raster)))
+        logger.info("Pixels used for label {}: {} (of {})".format(label_name, mask.sum(), len(raster)))
         censoring_masks[label_name] = ~mask
 
 # Construct and train a model
@@ -128,8 +128,8 @@ logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spe
                                                                                                np.std(time_taken)))
 
 # Write results to a file
-with open(os_path.join(output_path, "test_{}_{}.json".format(test_name, censor_name)), "w") as f:
+with open(args.output_file + ".json", "w") as f:
     f.write(json.dumps(results))
 
 results = Table(rows=results)
-results.write(os_path.join(output_path, "test_{}_{}.fits".format(test_name, censor_name)).format(output_path))
+results.write(args.output_file + ".fits")
