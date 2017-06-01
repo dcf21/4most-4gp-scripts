@@ -77,13 +77,12 @@ if args.censor_line_list != "":
         matching_wavelengths = ges_line_list["LAMBDA"][match]
 
         # For each wavelength, allow +/- window that line.
-        logger.info("Found {} lines for {}".format(len(matching_wavelengths), label_name))
-
         for i, wavelength in enumerate(matching_wavelengths):
             window_mask = ((wavelength + window) >= raster) * (raster >= (wavelength - window))
             mask[window_mask] = True
 
-        logger.info("Pixels used for label {}: {} (of {})".format(label_name, mask.sum(), len(raster)))
+        logger.info("Pixels used for label {}: {} of {} (in {} lines)".format(label_name, mask.sum(),
+                                                                              len(raster), len(matching_wavelengths)))
         censoring_masks[label_name] = ~mask
 
 # Construct and train a model
