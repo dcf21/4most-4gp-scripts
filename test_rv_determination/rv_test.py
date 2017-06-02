@@ -9,8 +9,10 @@ can determine what radial velocity we applied.
 from os import path as os_path
 import logging
 import time
+import random
 import numpy as np
 
+from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
 from fourgp_rv import RvInstance
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
@@ -29,3 +31,36 @@ time_start = time.time()
 rv_code = RvInstance.from_spectrum_library_sqlite(library_path=library_path)
 time_end = time.time()
 logger.info("Set up time was {:.2f} sec".format(time_end-time_start))
+
+# Open the library of APOKASC test spectra
+test_library_name = "testset_HRS"
+test_library_path = os_path.join(workspace, test_library_name)
+test_library = SpectrumLibrarySqlite(path=test_library_path, create=False)
+
+# Load test set
+test_library_ids = [i["specId"] for i in test_library.search()]
+
+# Pick some random spectra
+indices = [random.randint(0, len(test_library_ids)-1) for i in range(4)]
+
+# Loop over the spectra we are going to test
+for index in indices:
+    # Look up database ID of the test spectrum
+    test_id = test_library_ids[index]
+
+    # Load test spectrum
+    test_spectrum = test_library.open(ids=[test_id]).extract_item(0)
+
+    # Pick a random radial velocity
+    radial_velocity = random.uniform(-200,200)
+
+    # Pick coefficients for some random continuum
+    continuum = (random.uniform(1,100), random.uniform(-1e-2, 1e-2), random.uniform(-1e-8, 1e-8))
+    continuum_spectrum = SpectrumPolynomial(wavelengths=test_spectrum.wavelengths, terms=2, coefficients=continuum)
+
+    test_spectrum_with_continuum = test_spectrum * continuum_spectrum
+    test_spectrum_with_rv = test_spectrum_with_continuum.apply_radial_velocity(radial_velocity)
+
+    stellar_labels = rv_code.fit_rv(test_spectrum_with_rv)
+
+    print "{} {}".format(radial_velocity, stellar_labels["velocity"])
