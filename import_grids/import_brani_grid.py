@@ -52,7 +52,7 @@ wavelength_raster = wavelength_raster[wavelength_filter]
 # They are as follows...
 grid_axes = [["Teff", (4000, 8250, 250)],
              ["Fe/H", (0.5, 3.0, 0.5)],
-             ["logg", (1.5, 5.5, 0.5)]
+             ["log_g", (1.5, 5.5, 0.5)]
              ]
 
 grid_axis_values = [np.arange(axis[1][0], axis[1][1], axis[1][2]) for axis in grid_axes]
