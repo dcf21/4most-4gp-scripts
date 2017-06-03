@@ -25,26 +25,26 @@ rm -Rf workspace/*
 # Import test spectra
 cd import_grids/
 python import_brani_grid.py
-python import_apokasc.py
+# python import_apokasc.py
 
 # Test RV determination
-cd ../test_rv_determination
-python rv_test.py
+# cd ../test_rv_determination
+# python rv_test.py
 
 # Test Cannon
-cd ../test_cannon_degraded_spec/
-
-python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
-                      --output_file /tmp/cannon_test_hrs
-
-python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
-                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-                      --output_file /tmp/cannon_test_hrs_censored
-
-python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
-                      --output_file /tmp/cannon_test_lrs
-
-python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
-                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-                      --output_file /tmp/cannon_test_lrs_censored
+# cd ../test_cannon_degraded_spec/
+# 
+# python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
+#                       --output_file /tmp/cannon_test_hrs
+# 
+# python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
+#                       --censor ../../4MOST_testspectra/ges_master_v5.fits \
+#                       --output_file /tmp/cannon_test_hrs_censored
+# 
+# python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
+#                       --output_file /tmp/cannon_test_lrs
+# 
+# python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
+#                       --censor ../../4MOST_testspectra/ges_master_v5.fits \
+#                       --output_file /tmp/cannon_test_lrs_censored
 
