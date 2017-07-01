@@ -21,6 +21,8 @@ cd ../fourgp_specsynth
 python setup.py install
 cd ../fourgp_telescope_data
 python setup.py install
+cd ../fourgp_fourfs
+python setup.py install
 
 # Do unit testing
 cd ../fourgp_speclib/fourgp_speclib/tests
