@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# This script runs all of the various scripts in this git repository.
+
+# It is provided for two reasons: firstly it demonstrates the correct command-line syntax for running each script.
+# Secondly, it is useful as a test. If all the scripts below complete without error, then everything is working.
+
 # Activate python virtual environment
 source ../virtualenv/bin/activate
 
@@ -12,6 +17,10 @@ cd ../fourgp_degrade
 python setup.py install
 cd ../fourgp_rv
 python setup.py install
+cd ../fourgp_specsynth
+python setup.py install
+cd ../fourgp_telescope_data
+python setup.py install
 
 # Do unit testing
 cd ../fourgp_speclib/fourgp_speclib/tests
@@ -23,13 +32,23 @@ mkdir -p workspace
 rm -Rf workspace/*
 
 # Import test spectra
-cd import_grids/
-python import_brani_grid.py
-python import_apokasc.py
+# cd import_grids/
+# python import_brani_grid.py
+# python import_apokasc.py
+
+# Synthesize test spectra
+cd ../synthesize_grids/
+python synthesize_apokasc.py --output_library APOKASC_trainingset_turbospec \
+                             --star_list ../../4MOST_testspectra/trainingset_param.tab \
+                             --limit 5
+
+python synthesize_apokasc.py --output_library APOKASC_testset_turbospec \
+                             --star_list ../../4MOST_testspectra/testset_param.tab \
+                             --limit 5
 
 # Test RV determination
-cd ../test_rv_determination
-python rv_test.py &> /tmp/rv_test_out.txt
+# cd ../test_rv_determination
+# python rv_test.py &> /tmp/rv_test_out.txt
 
 # Test Cannon
 # cd ../test_cannon_degraded_spec/
