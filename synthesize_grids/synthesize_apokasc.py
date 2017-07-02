@@ -66,11 +66,11 @@ counter_output = 0
 # Iterate over the spectra we're supposed to be synthesizing
 for star in star_list:
     metadata = astropy_row_to_dict(star)
-    TurboSpectrum.configure(stellar_mass=metadata['Mass'],
-                            t_eff=metadata['Teff'],
-                            metallicity=metadata['[Fe/H]'],
-                            log_g=metadata['logg']
-                            )
+    synthesizer.configure(stellar_mass=metadata['Mass'],
+                          t_eff=metadata['Teff'],
+                          metallicity=metadata['[Fe/H]'],
+                          log_g=metadata['logg']
+                          )
 
     # Pass list of the abundances of individual elements to TurboSpectrum
     free_abundances = {}
@@ -87,18 +87,18 @@ for star in star_list:
         free_abundances['Ba'] = np.random.normal(0, ba_dispersion) + metadata['[Fe/H]']
 
     # Set free abundances
-    TurboSpectrum.configure(free_abundances=free_abundances)
+    synthesizer.configure(free_abundances=free_abundances)
 
     # Iterate over 4MOST wavelength bands
     for band_name, band_data in FourMostData.bands.iteritems():
-        TurboSpectrum.configure(lambda_min=band_data['lambda_min'],
-                                lambda_max=band_data['lambda_max'],
-                                lambda_delta=band_data['lambda_min'] / band_data['R'],
-                                line_list_paths=[os_path.join(args.lines_dir, band_data['line_lists_edvardsson'])]
-                                )
+        synthesizer.configure(lambda_min=band_data['lambda_min'],
+                              lambda_max=band_data['lambda_max'],
+                              lambda_delta=band_data['lambda_min'] / band_data['R'],
+                              line_list_paths=[os_path.join(args.lines_dir, band_data['line_lists_edvardsson'])]
+                              )
 
         # Make spectrum
-        turbospectrum_out = TurboSpectrum.synthesise()
+        turbospectrum_out = synthesizer.synthesise()
         filepath = os_path.join(turbospectrum_out["output_file"])
 
         # Insert spectrum into SpectrumLibrary
