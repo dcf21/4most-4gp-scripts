@@ -23,6 +23,7 @@ logger.info("Synthesizing spectra for some simple test stars")
 our_path = os_path.split(os_path.abspath(__file__))[0]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output_library', required=False, default='demo_stars', dest='library')
+parser.add_argument('--log-file', required=False, default='/tmp/turbospec_test.log', dest='log_to')
 parser.add_argument('--line-lists-dir', required=False,
                     default=os_path.join(our_path, "..", "..", "fromBengt", "line_lists", "3700-9500"),
                     dest='lines_dir')
@@ -44,23 +45,42 @@ library = SpectrumLibrarySqlite(path=library_path, create=True, binary_spectra=F
 synthesizer = TurboSpectrum()
 
 # Iterate over the spectra we're supposed to be synthesizing
-for t_eff in (4000, 5000, 6000):
-    synthesizer.configure(t_eff=t_eff,
-                          metallicity=0,
-                          lambda_min=3700,
-                          lambda_max=9500,
-                          lambda_delta=1,
-                          line_list_paths=args.lines_dir
-                          )
+with open(args.log_to, "w") as result_log:
+    for t_eff in (3500, 4000, 4500, 5000, 5500, 6000):
+        synthesizer.configure(t_eff=t_eff,
+                              metallicity=0,
+                              log_g=2,
+                              lambda_min=3700,
+                              lambda_max=9500,
+                              lambda_delta=1,
+                              line_list_paths=args.lines_dir
+                              )
 
-    # Make spectrum
-    turbospectrum_out = synthesizer.synthesise()
-    filepath = os_path.join(turbospectrum_out["output_file"])
+        # Make spectrum
+        turbospectrum_out = synthesizer.synthesise()
 
-    # Insert spectrum into SpectrumLibrary
-    spectrum = Spectrum.from_file(filename=filepath, metadata={'t_eff': t_eff}, binary=False)
-    filename = os_path.split(filepath)[1]
-    library.insert(spectra=spectrum, filenames=filename)
+        # Check for errors
+        errors = turbospectrum_out['errors']
+        if errors:
+            result_log.write("{:.0f}: {}\n".format(t_eff, errors))
+            result_log.flush()
+            continue
+
+        # Fetch filename of the spectrum we just generated
+        filepath = os_path.join(turbospectrum_out["output_file"])
+
+        # Insert spectrum into SpectrumLibrary
+        try:
+            spectrum = Spectrum.from_file(filename=filepath, metadata={'t_eff': t_eff}, binary=False)
+            filename = os_path.split(filepath)[1]
+            library.insert(spectra=spectrum, filenames=filename)
+        except ValueError:
+            result_log.write("{:.0f}: {}\n".format(t_eff, "Could not read bsyn output"))
+            result_log.flush()
+            continue
+
+        result_log.write("{:.0f}: {}\n".format(t_eff, "OK"))
+        result_log.flush()
 
 # Close TurboSpectrum synthesizer instance
 synthesizer.close()
