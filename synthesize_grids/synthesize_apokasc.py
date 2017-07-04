@@ -119,14 +119,23 @@ with open(args.log_to, "w") as result_log:
 
         # Insert spectrum into SpectrumLibrary
         try:
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, binary=False)
             filename = os_path.split(filepath)[1]
+
+            # First import continuum-normalised spectrum, which is in columns 1 and 2
+            metadata['continuum_normalised'] = 1
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1,2), binary=False)
+            library.insert(spectra=spectrum, filenames=filename)
+
+            # Then import version with continuum, which is in columns 1 and 3
+            metadata['continuum_normalised'] = 0
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1,3), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except ValueError:
             result_log.write("{}: {}\n".format(metadata['Starname'], "Could not read bsyn output"))
             result_log.flush()
             continue
 
+        # Update log file to show our progress
         result_log.write("{}: {}\n".format(metadata['Starname'], "OK"))
         result_log.flush()
 

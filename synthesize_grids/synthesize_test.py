@@ -70,9 +70,18 @@ with open(args.log_to, "w") as result_log:
         filepath = os_path.join(turbospectrum_out["output_file"])
 
         # Insert spectrum into SpectrumLibrary
+        metadata = {'Teff': t_eff, '[Fe/H]': 0, 'logg': 2}
         try:
-            spectrum = Spectrum.from_file(filename=filepath, metadata={'t_eff': t_eff}, binary=False)
             filename = os_path.split(filepath)[1]
+
+            # First import continuum-normalised spectrum, which is in columns 1 and 2
+            metadata['continuum_normalised'] = 1
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 1), binary=False)
+            library.insert(spectra=spectrum, filenames=filename)
+
+            # Then import version with continuum, which is in columns 1 and 3
+            metadata['continuum_normalised'] = 0
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except ValueError:
             result_log.write("{:.0f}: {}\n".format(t_eff, "Could not read bsyn output"))

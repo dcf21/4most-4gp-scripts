@@ -65,7 +65,7 @@ for test_set_dir in ["testset/HRS", "testset/LRS"]:
     # Import each star in turn
     test_set = glob.glob(os_path.join(test_spectra_path, test_set_dir, "star*_SNR*.txt"))
     for filepath in test_set:
-        # Identify which star it is, etc.
+        # Identify which star it is, and its SNR
         basename = os_path.basename(filepath)
         star_number = int(basename.split("_")[0].lstrip("star"))
         snr = int(basename.split("_")[1].split(".")[0].lstrip("SNR"))
@@ -74,6 +74,7 @@ for test_set_dir in ["testset/HRS", "testset/LRS"]:
         metadata = expected_test_output_dict[star_name]
         metadata.update({"star": star_number, "snr": snr})
 
+        # Read star from text file and import it into our SpectrumLibrary
         spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, binary=False)
         filename = os_path.split(filepath)[1]
         library.insert(spectra=spectrum, filenames=filename)

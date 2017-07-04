@@ -34,22 +34,21 @@ mkdir -p workspace
 rm -Rf workspace/*
 
 # Import test spectra
-# cd import_grids/
-# python import_brani_grid.py
-# python import_apokasc.py
+cd import_grids/
+python import_brani_grid.py
+python import_apokasc.py
 
 # Synthesize test spectra
 cd ../synthesize_grids/
+python synthesize_test.py
 python synthesize_apokasc.py --output_library APOKASC_trainingset_turbospec \
-                             --star_list ../../4MOST_testspectra/trainingset_param.tab \
-                             --limit 5
+                             --star_list ../../4MOST_testspectra/trainingset_param.tab
 
 python synthesize_apokasc.py --output_library APOKASC_testset_turbospec \
-                             --star_list ../../4MOST_testspectra/testset_param.tab \
-                             --limit 5
+                             --star_list ../../4MOST_testspectra/testset_param.tab
 
 # Test RV determination
-# cd ../test_rv_determination
+cd ../test_rv_determination
 # python rv_test.py &> /tmp/rv_test_out.txt
 
 # Test Cannon

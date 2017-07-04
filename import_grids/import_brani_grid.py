@@ -78,8 +78,11 @@ for i, axis_indices in enumerate(grid_axis_index_combinations):
         metadata[metadata_key+"_index"] = index
         item = item[index]
 
+    # Turn data into a Spectrum object
     spectrum = Spectrum(wavelengths=wavelength_raster,
                         values=item,
                         value_errors=errors_dummy,
                         metadata=metadata)
+
+    # Import spectrum into our SpectrumLibrary
     library.insert(spectra=spectrum, filenames=filename)
