@@ -35,9 +35,10 @@ logger.info("Synthesizing APOKASC grid of spectra")
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
+pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output_library', required=False, default="APOKASC_trainingset_turbospec", dest="library")
-parser.add_argument('--log-file', required=False, default="/tmp/turbospec_apokasc.log", dest="log_to")
+parser.add_argument('--log-file', required=False, default="/tmp/turbospec_apokasc_{}.log".format(pid), dest="log_to")
 parser.add_argument('--star_list', required=False, default="../../4MOST_testspectra/trainingset_param.tab",
                     dest="star_list")
 parser.add_argument('--line-lists-dir', required=False, default=os_path.join(our_path, "..", ".."), dest="lines_dir")
@@ -94,16 +95,18 @@ with open(args.log_to, "w") as result_log:
         # Pass list of the abundances of individual elements to TurboSpectrum
         free_abundances = {}
         for element in element_list:
-            chemical_symbol = element.split("/")[0][1:]
-            free_abundances[chemical_symbol] = metadata[element]
+            if element in metadata:
+                chemical_symbol = element.split("/")[0][1:]
+                free_abundances[chemical_symbol] = metadata[element]
 
         # If Sr and Ba are not already set, use Galactic trends
-        if not (np.isfinite(free_abundances['Sr']) and np.isfinite(free_abundances['Ba'])):
-            sr_dispersion = 0.2
-            ba_dispersion = 0.15
-            free_abundances['Sr'] = np.random.normal(0, sr_dispersion) + \
-                                    (-0.1 + -0.52 * metadata['[Fe/H]']) + metadata['[Fe/H]']
-            free_abundances['Ba'] = np.random.normal(0, ba_dispersion) + metadata['[Fe/H]']
+        if ('Sr' in free_abundances) and ('Ba' in free_abundances):
+            if not (np.isfinite(free_abundances['Sr']) and np.isfinite(free_abundances['Ba'])):
+                sr_dispersion = 0.2
+                ba_dispersion = 0.15
+                free_abundances['Sr'] = np.random.normal(0, sr_dispersion) + \
+                                        (-0.1 + -0.52 * metadata['[Fe/H]']) + metadata['[Fe/H]']
+                free_abundances['Ba'] = np.random.normal(0, ba_dispersion) + metadata['[Fe/H]']
 
         # Set free abundances
         synthesizer.configure(free_abundances=free_abundances)
@@ -127,14 +130,14 @@ with open(args.log_to, "w") as result_log:
 
             # First import continuum-normalised spectrum, which is in columns 1 and 2
             metadata['continuum_normalised'] = 1
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1, 2), binary=False)
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 1), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
 
             # Then import version with continuum, which is in columns 1 and 3
             metadata['continuum_normalised'] = 0
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1, 3), binary=False)
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
-        except ValueError:
+        except (ValueError, IndexError):
             result_log.write("[{}] {}: {}\n".format(time.asctime(), metadata['Starname'], "Could not read bsyn output"))
             result_log.flush()
             continue

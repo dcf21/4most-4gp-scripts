@@ -22,9 +22,10 @@ logger.info("Synthesizing spectra for some simple test stars")
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
+pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output_library', required=False, default='demo_stars', dest='library')
-parser.add_argument('--log-file', required=False, default='/tmp/turbospec_test.log', dest='log_to')
+parser.add_argument('--log-file', required=False, default='/tmp/turbospec_test_{}.log'.format(pid), dest='log_to')
 parser.add_argument('--line-lists-dir', required=False,
                     default=os_path.join(our_path, "..", "..", "fromBengt", "line_lists", "3700-9500"),
                     dest='lines_dir')
@@ -84,7 +85,7 @@ with open(args.log_to, "w") as result_log:
             metadata['continuum_normalised'] = 0
             spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
-        except ValueError:
+        except (ValueError, IndexError):
             result_log.write("[{}] {:.0f}: {}\n".format(time.asctime(), t_eff, "Could not read bsyn output"))
             result_log.flush()
             continue
