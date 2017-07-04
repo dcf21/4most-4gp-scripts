@@ -14,7 +14,8 @@ from astropy.table import Table
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
+                    datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
 logger.info("Importing APOKASC grid of spectra")
 
@@ -30,6 +31,7 @@ os.system("mkdir -p {}".format(workspace))
 # Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
 def astropy_row_to_dict(x):
     return dict([(i, x[i]) for i in x.columns])
+
 
 # Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
 training_set = Table.read(os_path.join(test_spectra_path, "trainingset_param.tab"), format="ascii")

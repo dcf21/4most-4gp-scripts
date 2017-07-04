@@ -7,6 +7,7 @@ Synthesize a handful of test stars using TurboSpectrum.
 
 import os
 import re
+import time
 import argparse
 from os import path as os_path
 import logging
@@ -46,7 +47,7 @@ synthesizer = TurboSpectrum()
 
 # Iterate over the spectra we're supposed to be synthesizing
 with open(args.log_to, "w") as result_log:
-    for t_eff in (3500, 4000, 4500, 5000, 5500, 6000):
+    for t_eff in (3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000):
         synthesizer.configure(t_eff=t_eff,
                               metallicity=0,
                               log_g=2,
@@ -62,7 +63,7 @@ with open(args.log_to, "w") as result_log:
         # Check for errors
         errors = turbospectrum_out['errors']
         if errors:
-            result_log.write("{:.0f}: {}\n".format(t_eff, errors))
+            result_log.write("[{}] {:.0f}: {}\n".format(time.asctime(), t_eff, errors))
             result_log.flush()
             continue
 
@@ -84,11 +85,11 @@ with open(args.log_to, "w") as result_log:
             spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except ValueError:
-            result_log.write("{:.0f}: {}\n".format(t_eff, "Could not read bsyn output"))
+            result_log.write("[{}] {:.0f}: {}\n".format(time.asctime(), t_eff, "Could not read bsyn output"))
             result_log.flush()
             continue
 
-        result_log.write("{:.0f}: {}\n".format(t_eff, "OK"))
+        result_log.write("[{}] {:.0f}: {}\n".format(time.asctime(), t_eff, "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance

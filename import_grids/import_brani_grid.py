@@ -18,7 +18,8 @@ import logging
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
+                    datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
 logger.info("Importing grid of template spectra for Brani's RV code")
 
@@ -75,7 +76,7 @@ for i, axis_indices in enumerate(grid_axis_index_combinations):
         metadata_key = grid_axes[axis_counter][0]
         metadata_value = grid_axis_values[axis_counter][index]
         metadata[metadata_key] = metadata_value
-        metadata[metadata_key+"_index"] = index
+        metadata[metadata_key + "_index"] = index
         item = item[index]
 
     # Turn data into a Spectrum object

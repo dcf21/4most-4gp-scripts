@@ -7,6 +7,7 @@ Take stellar parameters of the APOKASC training set and test sets, and synthesiz
 
 import os
 import re
+import time
 import argparse
 import numpy as np
 from os import path as os_path
@@ -77,11 +78,14 @@ with open(args.log_to, "w") as result_log:
         if (args.limit is not None) and (counter_output > args.limit):
             break
         metadata = astropy_row_to_dict(star)
+        stellar_mass = 1  # If mass of star is not specified, default to 1 solar mass
+        if 'Mass' in metadata:
+            stellar_mass = metadata['Mass']
         synthesizer.configure(lambda_min=lambda_min,
                               lambda_max=lambda_max,
                               lambda_delta=float(lambda_min) / spectral_resolution,
                               line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
-                              stellar_mass=metadata['Mass'],
+                              stellar_mass=stellar_mass,
                               t_eff=metadata['Teff'],
                               metallicity=metadata['[Fe/H]'],
                               log_g=metadata['logg']
@@ -110,7 +114,7 @@ with open(args.log_to, "w") as result_log:
         # Check for errors
         errors = turbospectrum_out['errors']
         if errors:
-            result_log.write("{}: {}\n".format(metadata['Starname'], errors))
+            result_log.write("[{}] {}: {}\n".format(time.asctime(), metadata['Starname'], errors))
             result_log.flush()
             continue
 
@@ -123,20 +127,20 @@ with open(args.log_to, "w") as result_log:
 
             # First import continuum-normalised spectrum, which is in columns 1 and 2
             metadata['continuum_normalised'] = 1
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1,2), binary=False)
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
 
             # Then import version with continuum, which is in columns 1 and 3
             metadata['continuum_normalised'] = 0
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1,3), binary=False)
+            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(1, 3), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except ValueError:
-            result_log.write("{}: {}\n".format(metadata['Starname'], "Could not read bsyn output"))
+            result_log.write("[{}] {}: {}\n".format(time.asctime(), metadata['Starname'], "Could not read bsyn output"))
             result_log.flush()
             continue
 
         # Update log file to show our progress
-        result_log.write("{}: {}\n".format(metadata['Starname'], "OK"))
+        result_log.write("[{}] {}: {}\n".format(time.asctime(), metadata['Starname'], "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance
