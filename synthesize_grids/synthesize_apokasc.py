@@ -42,7 +42,9 @@ parser.add_argument('--log-file', required=False, default="/tmp/turbospec_apokas
 parser.add_argument('--star_list', required=False, default="../../4MOST_testspectra/trainingset_param.tab",
                     dest="star_list")
 parser.add_argument('--line-lists-dir', required=False, default=os_path.join(our_path, "..", ".."), dest="lines_dir")
-parser.add_argument('--limit', required=False, default=None, type=int, dest="limit")
+parser.add_argument('--every', required=False, default=1, type=int, dest="every")
+parser.add_argument('--skip', required=False, default=0, type=int, dest="skip")
+parser.add_argument('--limit', required=False, default=0, type=int, dest="limit")
 args = parser.parse_args()
 
 logger.info("Synthesizing spectra with arguments <{}> <{}>".format(args.library, args.star_list))
@@ -69,15 +71,24 @@ line_lists_path = FourMostData.bands["LRS"]["line_lists_edvardsson"]
 spectral_resolution = 50000
 
 # Invoke a TurboSpectrum synthesizer instance
-synthesizer = TurboSpectrum()
+synthesizer = TurboSpectrum(
+    turbospec_path=os_path.join(root_path, "turbospectrum-15.1/exec-gf-v15.1"),
+    interpol_path=os_path.join(root_path, "interpol_marcs"),
+    line_list_paths=os_path.join(root_path, "fromBengt/line_lists/3700-9500"),
+    marcs_grid_path=os_path.join(root_path, "fromBengt/marcs_grid"))
 counter_output = 0
 
 # Iterate over the spectra we're supposed to be synthesizing
 with open(args.log_to, "w") as result_log:
     for star in star_list:
+        # User can specify that we should only do every nth spectrum, if we're running in parallel
         counter_output += 1
-        if (args.limit is not None) and (counter_output > args.limit):
+        if (args.limit > 0) and (counter_output > args.limit):
             break
+        if (counter_output - args.skip) % args.every != 0:
+            continue
+
+        # Look up stellar parameters of the star we're about to synthesize
         metadata = astropy_row_to_dict(star)
         stellar_mass = 1  # If mass of star is not specified, default to 1 solar mass
         if 'Mass' in metadata:
