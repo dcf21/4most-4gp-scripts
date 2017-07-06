@@ -12,24 +12,35 @@ The path to it is hard-coded below in the variable <template_spectra_path>, whic
 
 import os
 from os import path as os_path
+import argparse
 import numpy as np
 import itertools
 import logging
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
+# Path to where we find Brani's <4MOST_forward_modeling>
+our_path = os_path.split(os_path.abspath(__file__))[0]
+brani_code_path = os_path.join(our_path, "..", "..", "forwardModelling", "4MOST_forward_modeling")
+
+# Read input parameters
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--brani-code-path',
+                    required=False,
+                    default=brani_code_path,
+                    dest="brani_code_path",
+                    help="Specify the path where we can find the original data files for Brani's RV code.")
+args = parser.parse_args()
+
+# Path to Brani's template wavelength grid and templates
+wavelength_raster_path = os_path.join(args.brani_code_path, "LAMBDA_RAV.DAT")
+template_spectra_path = os_path.join(args.brani_code_path, "templates.npy")
+
+# Start logger
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
 logger.info("Importing grid of template spectra for Brani's RV code")
-
-# Path to where we find Brani's <4MOST_forward_modeling>
-our_path = os_path.split(os_path.abspath(__file__))[0]
-brani_code_path = os_path.join(our_path, "..", "..", "forwardModelling", "4MOST_forward_modeling")
-template_spectra_path = os_path.join(brani_code_path, "templates.npy")
-
-# Path to Brani's template wavelength grid
-wavelength_raster_path = os_path.join(brani_code_path, "LAMBDA_RAV.DAT")
 
 # Set path to workspace where we create libraries of spectra
 workspace = os_path.join(our_path, "..", "workspace")

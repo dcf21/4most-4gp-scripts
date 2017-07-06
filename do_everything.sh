@@ -35,17 +35,47 @@ rm -Rf workspace/*
 
 # Import test spectra
 cd import_grids/
-python import_brani_grid.py
-python import_apokasc.py
+# python import_brani_grid.py
+# python import_apokasc.py
+
+# Count number of CPU cores. This tell us how many copies of TurboSpectrum we can run at once.
+n_cores_less_one=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | tail -1`
+n_cores=$((${n_cores_less_one} + 1))
 
 # Synthesize test spectra
 cd ../synthesize_grids/
-python synthesize_test.py
-python synthesize_apokasc.py --output_library APOKASC_testset_turbospec \
-                             --star_list ../../4MOST_testspectra/testset_param.tab
+create="--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
+python synthesize_test.py --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create="--no-create"
+done
+wait
 
+# Synthesize APOKASC test set
+create="--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
+python synthesize_apokasc.py --output_library APOKASC_testset_turbospec \
+                             --star_list ../../4MOST_testspectra/testset_param.tab \
+                             --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create="--no-create"
+done
+wait
+
+# Synthesize APOKASC training set
+create = "--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
 python synthesize_apokasc.py --output_library APOKASC_trainingset_turbospec \
-                             --star_list ../../4MOST_testspectra/trainingset_param.tab
+                             --star_list ../../4MOST_testspectra/trainingset_param.tab \
+                             --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create = "--no-create"
+done
+wait
 
 # Test RV determination
 cd ../test_rv_determination

@@ -8,16 +8,12 @@ Take the APOKASC training set and test sets, and turn them into SpectrumLibrarie
 import os
 import re
 import glob
+import argparse
 from os import path as os_path
 import logging
 from astropy.table import Table
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
-
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
-                    datefmt='%d/%m/%Y %H:%M:%S')
-logger = logging.getLogger(__name__)
-logger.info("Importing APOKASC grid of spectra")
 
 # Path to where we find Keith Hawkins's <4MOST_testspectra>
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -33,11 +29,31 @@ def astropy_row_to_dict(x):
     return dict([(i, x[i]) for i in x.columns])
 
 
-# Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
-training_set = Table.read(os_path.join(test_spectra_path, "trainingset_param.tab"), format="ascii")
+# Read input parameters
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--training-set',
+                    required=False,
+                    default=os_path.join(test_spectra_path, "trainingset_param.tab"),
+                    dest="training_set",
+                    help="Specify an ASCII table which lists the stellar parameters of the training stars.")
+parser.add_argument('--test-set',
+                    required=False,
+                    default=os_path.join(test_spectra_path, "testset_param.tab"),
+                    dest="test_set",
+                    help="Specify an ASCII table which lists the stellar parameters of the test stars.")
+args = parser.parse_args()
 
-# Table supplies list of expected stellar labels for each star in the test dataset
-expected_test_output = Table.read(os_path.join(test_spectra_path, "testset_param.tab"), format="ascii")
+# Start logger
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
+                    datefmt='%d/%m/%Y %H:%M:%S')
+logger = logging.getLogger(__name__)
+logger.info("Importing APOKASC grid of spectra")
+
+# Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
+training_set = Table.read(args.training_set, format="ascii")
+
+# Table supplies list of expected stellar labels for each star in the test data set
+expected_test_output = Table.read(args.test_set, format="ascii")
 expected_test_output_dict = dict([(star['Starname'], astropy_row_to_dict(star)) for star in expected_test_output])
 
 # Import high-resolution and low-resolution training sets into SpectrumLibraries
