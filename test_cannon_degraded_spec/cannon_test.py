@@ -18,7 +18,8 @@ from astropy.io import fits
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
+                    datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
 
 # Read input parameters
