@@ -11,10 +11,22 @@ import argparse
 import logging
 import time
 import random
-import numpy as np
 
 from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
 from fourgp_rv import RvInstance
+
+# Read input parameters
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--template-library', required=False, dest='template_library',
+                    help="Library of template spectra we match spectra against.")
+parser.add_argument('--test-library', required=False, dest='test_library',
+                    help="Library of spectra to test the RV code on.")
+parser.add_argument('--vary-mcmc-steps', action='store_true', dest="vary_mcmc_steps",
+                    help="If set, we vary the number of MCMC steps used to try to match the RV, "
+                         "making it possible to guage how many steps are needed to get good results.")
+parser.add_argument('--output_file', default="./test_cannon.out", dest='output_file',
+                    help="Data file to write output to")
+args = parser.parse_args()
 
 # Set up logger
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
@@ -23,16 +35,10 @@ logger = logging.getLogger(__name__)
 
 logger.info("Testing fourgp_rv")
 
-# Read input parameters
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--vary_mcmc_steps', action='store_true')
-parser.add_argument('--output_file', default="./test_cannon.out", dest='output_file')
-args = parser.parse_args()
-
 # Set path to workspace where we expect to find a library of template spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "..", "workspace")
-target_library_name = "brani_rv_grid"
+target_library_name = args.template_library
 library_path = os_path.join(workspace, target_library_name)
 
 # Instantiate the RV code
@@ -44,7 +50,7 @@ time_end = time.time()
 logger.info("Set up time was {:.2f} sec".format(time_end - time_start))
 
 # Open the library of APOKASC test spectra
-test_library_name = "testset_HRS"
+test_library_name = args.test_library
 test_library_path = os_path.join(workspace, test_library_name)
 test_library = SpectrumLibrarySqlite(path=test_library_path, create=False)
 
@@ -83,6 +89,7 @@ with open(args.output_file, "w") as output:
         stellar_labels = rv_code.fit_rv(test_spectrum_with_rv)
         time_end = time.time()
 
-        output.write("{:5d} {:9.1f} {:11.3f} {:11.3f}\n".format(rv_code.n_steps, time_end-time_start, radial_velocity, stellar_labels["velocity"]))
+        output.write("{:5d} {:9.1f} {:11.3f} {:11.3f}\n".format(rv_code.n_steps, time_end-time_start, radial_velocity,
+                                                                stellar_labels["velocity"]))
         output.flush()
 

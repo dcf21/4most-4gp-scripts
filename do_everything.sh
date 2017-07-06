@@ -35,8 +35,8 @@ rm -Rf workspace/*
 
 # Import test spectra
 cd import_grids/
-# python import_brani_grid.py
-# python import_apokasc.py
+python import_brani_grid.py
+python import_apokasc.py
 
 # Count number of CPU cores. This tell us how many copies of TurboSpectrum we can run at once.
 n_cores_less_one=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | tail -1`
@@ -57,8 +57,8 @@ wait
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
-python synthesize_apokasc.py --output_library APOKASC_testset_turbospec \
-                             --star_list ../../4MOST_testspectra/testset_param.tab \
+python synthesize_apokasc.py --output-library APOKASC_testset_turbospec \
+                             --star-list ../../4MOST_testspectra/testset_param.tab \
                              --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
@@ -66,14 +66,14 @@ done
 wait
 
 # Synthesize APOKASC training set
-create = "--create"  # Only create clean SpectrumLibrary in first thread
+create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
-python synthesize_apokasc.py --output_library APOKASC_trainingset_turbospec \
-                             --star_list ../../4MOST_testspectra/trainingset_param.tab \
+python synthesize_apokasc.py --output-library APOKASC_trainingset_turbospec \
+                             --star-list ../../4MOST_testspectra/trainingset_param.tab \
                              --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
-create = "--no-create"
+create="--no-create"
 done
 wait
 
@@ -85,16 +85,16 @@ cd ../test_rv_determination
 # cd ../test_cannon_degraded_spec/
 # 
 # python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
-#                       --output_file /tmp/cannon_test_hrs
+#                       --output-file /tmp/cannon_test_hrs
 # 
 # python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
 #                       --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                       --output_file /tmp/cannon_test_hrs_censored
+#                       --output-file /tmp/cannon_test_hrs_censored
 # 
 # python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
-#                       --output_file /tmp/cannon_test_lrs
+#                       --output-file /tmp/cannon_test_lrs
 # 
 # python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
 #                       --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                       --output_file /tmp/cannon_test_lrs_censored
+#                       --output-file /tmp/cannon_test_lrs_censored
 

@@ -23,10 +23,14 @@ logger = logging.getLogger(__name__)
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--test', required=True, dest='test_library')
-parser.add_argument('--train', required=True, dest='train_library')
-parser.add_argument('--censor', default="", dest='censor_line_list')
-parser.add_argument('--output_file', default="./test_cannon.out", dest='output_file')
+parser.add_argument('--test', required=True, dest='test_library',
+                    help="Library of spectra to test the trained Cannon on.")
+parser.add_argument('--train', required=True, dest='train_library',
+                    help="Library of labelled spectra to train the Cannon on.")
+parser.add_argument('--censor', default="", dest='censor_line_list',
+                    help="Optional list of line positions for the Cannon to fit, ignoring continuum between.")
+parser.add_argument('--output-file', default="./test_cannon.out", dest='output_file',
+                    help="Data file to write output to.")
 args = parser.parse_args()
 
 logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test_library,
