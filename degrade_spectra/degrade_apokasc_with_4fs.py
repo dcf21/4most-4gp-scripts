@@ -26,12 +26,12 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--input-library',
                     required=False,
-                    default="APOKASC_trainingset_turbospec",
+                    default="turbospec_apokasc_training_set",
                     dest="input_library",
                     help="Specify the name of the SpectrumLibrary we are to read input spectra from.")
 parser.add_argument('--output-library',
                     required=False,
-                    default="APOKASC_trainingset_4fs",
+                    default="4fs_apokasc_training_set",
                     dest="output_library",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
 parser.add_argument('--binary-path',
@@ -52,7 +52,7 @@ parser.add_argument('--no-create',
 parser.set_defaults(create=True)
 parser.add_argument('--log-file',
                     required=False,
-                    default="/tmp/turbospec_apokasc_{}.log".format(pid),
+                    default="/tmp/fourfs_apokasc_{}.log".format(pid),
                     dest="log_to",
                     help="Specify a log file where we log our progress.")
 args = parser.parse_args()
@@ -85,23 +85,24 @@ input_spectra_ids = input_library.search(continuum_normalised=0)
 with open(args.log_to, "w") as result_log:
     for input_spectrum_id in input_spectra_ids:
         # Open Spectrum data from disk
-        input_spectrum = input_library.open(ids=input_spectrum_id['specId'])
+        input_spectrum_array = input_library.open(ids=input_spectrum_id['specId'])
+        input_spectrum = input_spectrum_array.extract_item(0)
 
         # Look up the name of the star we've just loaded
         object_name = input_spectrum.metadata['Starname']
 
         # Write log message
-        result_log.write("[{}] {}... ".format(time.asctime(), object_name))
+        result_log.write("\n[{}] {}... ".format(time.asctime(), object_name))
         result_log.flush()
 
         # Search for the continuum-normalised version of this same object
-        continuum_normalised_spectrum_id = input_spectrum.search(Starname=object_name, continuum_normalised=1)
+        continuum_normalised_spectrum_id = input_library.search(Starname=object_name, continuum_normalised=1)
 
         # Check that continuum-normalised spectrum exists
         assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
 
         # Load the continuum-normalised version
-        input_spectrum_continuum_normalised = input_library.open(ids=continuum_normalised_spectrum_id['specId'])
+        input_spectrum_continuum_normalised = input_library.open(ids=continuum_normalised_spectrum_id[0]['specId'])
 
 # Clean up 4FS
 etc_wrapper.close()
