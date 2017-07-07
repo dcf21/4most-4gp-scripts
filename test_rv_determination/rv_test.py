@@ -17,15 +17,31 @@ from fourgp_rv import RvInstance
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--template-library', required=False, dest='template_library',
+parser.add_argument('--template-library',
+                    required=False,
+                    default='brani_rv_grid',
+                    dest='template_library',
                     help="Library of template spectra we match spectra against.")
-parser.add_argument('--test-library', required=False, dest='test_library',
+parser.add_argument('--test-library',
+                    required=False,
+                    default='testset_HRS',
+                    dest='test_library',
                     help="Library of spectra to test the RV code on.")
-parser.add_argument('--vary-mcmc-steps', action='store_true', dest="vary_mcmc_steps",
+parser.add_argument('--vary-mcmc-steps',
+                    action='store_true',
+                    dest="vary_mcmc_steps",
                     help="If set, we vary the number of MCMC steps used to try to match the RV, "
-                         "making it possible to guage how many steps are needed to get good results.")
-parser.add_argument('--output_file', default="./test_cannon.out", dest='output_file',
+                         "making it possible to gauge how many steps are needed to get good results.")
+parser.add_argument('--output-file',
+                    default="./test_rv_code.out",
+                    dest='output_file',
                     help="Data file to write output to")
+parser.add_argument('--test-count',
+                    required=False,
+                    default=400,
+                    type=int,
+                    dest="test_count",
+                    help="Run n tests.")
 args = parser.parse_args()
 
 # Set up logger
@@ -58,7 +74,7 @@ test_library = SpectrumLibrarySqlite(path=test_library_path, create=False)
 test_library_ids = [i["specId"] for i in test_library.search()]
 
 # Pick some random spectra
-indices = [random.randint(0, len(test_library_ids) - 1) for i in range(400)]
+indices = [random.randint(0, len(test_library_ids) - 1) for i in range(args.test_count)]
 
 # Start writing output
 with open(args.output_file, "w") as output:

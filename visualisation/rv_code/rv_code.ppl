@@ -1,0 +1,12 @@
+#!/usr/bin/pyxplot
+
+!mkdir -p ../../output_plots
+set output ../../output_plots/rv_test.eps
+set term eps
+set width 16
+set nokey
+
+set xlabel 'Target radial velocity [km/s]'
+set ylabel 'Absolute error in inferred radial velocity [km/s]'
+
+plot '../../output_data/rv_test.out' using 3:abs($3-$4) with points

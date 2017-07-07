@@ -57,11 +57,11 @@ expected_test_output = Table.read(args.test_set, format="ascii")
 expected_test_output_dict = dict([(star['Starname'], astropy_row_to_dict(star)) for star in expected_test_output])
 
 # Import high-resolution and low-resolution training sets into SpectrumLibraries
-for training_set_dir in ["APOKASC_trainingset/HRS", "APOKASC_trainingset/LRS"]:
+for training_set_dir, out_library in (("APOKASC_trainingset/HRS", "hawkins_apokasc_training_set_hrs"),
+                                      ("APOKASC_trainingset/LRS", "hawkins_apokasc_training_set_lrs")):
 
     # Turn training set into a SpectrumLibrary with path specified above
-    library_name = re.sub("/", "_", training_set_dir)
-    library_path = os_path.join(workspace, library_name)
+    library_path = os_path.join(workspace, out_library)
     library = SpectrumLibrarySqlite(path=library_path, create=True)
 
     # Import each star in turn
@@ -73,11 +73,11 @@ for training_set_dir in ["APOKASC_trainingset/HRS", "APOKASC_trainingset/LRS"]:
         library.insert(spectra=spectrum, filenames=filename)
 
 # Import high-resolution and low-resolution test sets into SpectrumLibraries
-for test_set_dir in ["testset/HRS", "testset/LRS"]:
+for test_set_dir, out_library in (("testset/HRS", "hawkins_apokasc_test_set_hrs"),
+                                  ("testset/LRS", "hawkins_apokasc_test_set_lrs")):
 
     # Turn training set into a SpectrumLibrary with path specified above
-    library_name = re.sub("/", "_", test_set_dir)
-    library_path = os_path.join(workspace, library_name)
+    library_path = os_path.join(workspace, out_library)
     library = SpectrumLibrarySqlite(path=library_path, create=True)
 
     # Import each star in turn
@@ -90,7 +90,8 @@ for test_set_dir in ["testset/HRS", "testset/LRS"]:
         star_name = "star{:04d}".format(star_number)
 
         metadata = expected_test_output_dict[star_name]
-        metadata.update({"star": star_number, "snr": snr})
+        metadata.update({"star": star_number,
+                         "snr": snr})
 
         # Read star from text file and import it into our SpectrumLibrary
         spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, binary=False)

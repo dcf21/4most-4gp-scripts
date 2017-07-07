@@ -1,5 +1,7 @@
 .idea
 workspace
+output_data
+output_plots
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

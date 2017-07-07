@@ -40,7 +40,7 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output-library',
                     required=False,
-                    default="APOKASC_trainingset_turbospec",
+                    default="turbospec_apokasc_training_set",
                     dest="library",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
 parser.add_argument('--create',

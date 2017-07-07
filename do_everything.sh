@@ -32,6 +32,8 @@ python -m unittest discover -v
 cd ../../../../../../4most-4gp-scripts
 mkdir -p workspace
 rm -Rf workspace/*
+mkdir -p output_data
+rm -Rf output_data/*
 
 # Import test spectra
 cd import_grids/
@@ -47,7 +49,8 @@ cd ../synthesize_grids/
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
-python synthesize_test.py --every ${n_cores} --skip ${item} ${create} &
+python synthesize_test.py --every ${n_cores} --skip ${item} ${create} \
+                          --log-file output_data/turbospec_demo_stars_${item}.log &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
 done
@@ -57,9 +60,10 @@ wait
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
-python synthesize_apokasc.py --output-library APOKASC_testset_turbospec \
+python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
                              --star-list ../../4MOST_testspectra/testset_param.tab \
-                             --every ${n_cores} --skip ${item} ${create} &
+                             --log-file output_data/turbospec_apokasc_test_set_${item}.log \
+                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
 done
@@ -69,9 +73,10 @@ wait
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
-python synthesize_apokasc.py --output-library APOKASC_trainingset_turbospec \
+python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
                              --star-list ../../4MOST_testspectra/trainingset_param.tab \
-                             --every ${n_cores} --skip ${item} ${create} &
+                             --log-file output_data/turbospec_apokasc_training_set_${item}.log \
+                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
 done
@@ -79,22 +84,26 @@ wait
 
 # Test RV determination
 cd ../test_rv_determination
-# python rv_test.py &> /tmp/rv_test_out.txt
+python rv_test.py --test-count=10 --vary-mcmc-steps --output-file output_data/rv_test_vary_steps.out
+python rv_test.py --test-count=10 --output-file output_data/rv_test.out
 
 # Test Cannon
-# cd ../test_cannon_degraded_spec/
-# 
-# python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
-#                       --output-file /tmp/cannon_test_hrs
-# 
-# python cannon_test.py --train APOKASC_trainingset_HRS --test testset_HRS \
-#                       --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                       --output-file /tmp/cannon_test_hrs_censored
-# 
-# python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
-#                       --output-file /tmp/cannon_test_lrs
-# 
-# python cannon_test.py --train APOKASC_trainingset_LRS --test testset_LRS \
-#                       --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                       --output-file /tmp/cannon_test_lrs_censored
+cd ../test_cannon_degraded_spec/
 
+python cannon_test.py --train hawkins_apokasc_training_set_hrs \
+                      --test hawkins_apokasc_test_set_hrs \
+                      --output-file output_data/cannon_test_hrs
+
+#python cannon_test.py --train hawkins_apokasc_training_set_hrs \
+#                      --test hawkins_apokasc_test_set_hrs \
+#                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
+#                      --output-file output_data/cannon_test_hrs_censored
+#
+#python cannon_test.py --train hawkins_apokasc_training_set_lrs \
+#                      --test hawkins_apokasc_test_set_lrs \
+#                      --output-file output_data/cannon_test_lrs
+#
+#python cannon_test.py --train hawkins_apokasc_training_set_lrs \
+#                      --test hawkins_apokasc_test_set_lrs \
+#                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
+#                      --output-file output_data/cannon_test_lrs_censored

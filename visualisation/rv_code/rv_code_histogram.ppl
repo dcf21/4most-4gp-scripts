@@ -1,0 +1,14 @@
+#!/usr/bin/pyxplot
+
+!mkdir -p ../../output_plots
+set output ../../output_plots/rv_test_histogram.eps
+set term eps
+set width 16
+set nokey
+
+set xlabel 'Absolute error in inferred radial velocity [km/s]'
+set ylabel 'Frequency'
+
+histogram h() '../../output_data/rv_test.out' using abs($3-$4)
+
+plot h(x) with boxes

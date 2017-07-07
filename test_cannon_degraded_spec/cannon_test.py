@@ -131,9 +131,10 @@ logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spe
                                                                                                np.mean(time_taken),
                                                                                                np.std(time_taken)))
 
-# Write results to a file
+# Write results to JSON file
 with open(args.output_file + ".json", "w") as f:
     f.write(json.dumps(results))
 
+# Write results to textual table
 results = Table(rows=results)
-results.write(args.output_file + ".fits")
+results.write(args.output_file + ".dat", format='ascii')

@@ -1,0 +1,12 @@
+#!/usr/bin/pyxplot
+
+!mkdir -p ../../output_plots
+set output ../../output_plots/rv_test_vary_steps.eps
+set term eps
+set width 16
+set nokey
+
+set xlabel 'Number of MCMC iterations'
+set ylabel 'Absolute error in radial velocity [km/s]'
+
+plot '../../output_data/rv_test_vary_steps.out' using 1:abs($3-$4) with points
