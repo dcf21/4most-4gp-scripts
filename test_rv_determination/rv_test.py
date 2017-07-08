@@ -24,7 +24,7 @@ parser.add_argument('--template-library',
                     help="Library of template spectra we match spectra against.")
 parser.add_argument('--test-library',
                     required=False,
-                    default='testset_HRS',
+                    default='hawkins_apokasc_test_set_hrs',
                     dest='test_library',
                     help="Library of spectra to test the RV code on.")
 parser.add_argument('--vary-mcmc-steps',

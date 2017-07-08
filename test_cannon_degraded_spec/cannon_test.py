@@ -100,7 +100,6 @@ results = []
 for index in range(N):
     test_spectrum_array = test_library.open(ids=test_library_ids[index])
     spectrum = test_spectrum_array.extract_item(0)
-    star_name = spectrum.metadata["Starname"]
     # logger.info("Testing {}/{}: {}".format(index + 1, N, star_name))
 
     time_start = time.time()
@@ -109,8 +108,8 @@ for index in range(N):
     time_taken[index] = time_end - time_start
 
     # Identify which star it is and what the SNR is
-    star_number = spectrum.metadata["star"]
-    snr = spectrum.metadata["snr"]
+    star_name = spectrum.metadata["Starname"]
+    snr = spectrum.metadata["SNR"]
 
     # From the label covariance matrix extract the standard deviation in each label value
     # (diagonal terms in the matrix are variances)
@@ -123,7 +122,7 @@ for index in range(N):
     result.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
 
     # Add the APOGEE star number and the SNR ratio of the test spectrum
-    result.update({"star": star_number, "snr": snr})
+    result.update({"Starname": star_name, "SNR": snr})
     results.append(result)
 
 # Report time taken

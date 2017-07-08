@@ -5,10 +5,13 @@
 # It is provided for two reasons: firstly it demonstrates the correct command-line syntax for running each script.
 # Secondly, it is useful as a test. If all the scripts below complete without error, then everything is working.
 
+cwd=`pwd`
+
 # Activate python virtual environment
 source ../virtualenv/bin/activate
 
 # Make sure we've got the latest version of the 4GP libraries installed in virtual environment
+cd ${cwd}
 cd ../4most-4gp/src/pythonModules/fourgp_speclib
 python setup.py install
 cd ../fourgp_cannon
@@ -25,17 +28,19 @@ cd ../fourgp_fourfs
 python setup.py install
 
 # Do unit testing
-cd ../fourgp_speclib/fourgp_speclib/tests
+cd ${cwd}
+cd ../4most-4gp/src/pythonModules/fourgp_speclib/fourgp_speclib/tests
 python -m unittest discover -v
 
 # Wipe our temporary workspace
-cd ../../../../../../4most-4gp-scripts
+cd ${cwd}
 mkdir -p workspace
 rm -Rf workspace/*
 mkdir -p output_data
 rm -Rf output_data/*
 
 # Import test spectra
+cd ${cwd}
 cd import_grids/
 python import_brani_grid.py
 python import_apokasc.py
@@ -45,24 +50,27 @@ n_cores_less_one=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | tail -1`
 n_cores=$((${n_cores_less_one} + 1))
 
 # Synthesize test spectra
-cd ../synthesize_grids/
+cd ${cwd}
+cd synthesize_grids/
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_test.py --every ${n_cores} --skip ${item} ${create} \
-                          --log-file output_data/turbospec_demo_stars_${item}.log &
+                          --log-file ../output_data/turbospec_demo_stars_${item}.log &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
 done
 wait
 
 # Synthesize APOKASC test set
+cd ${cwd}
+cd synthesize_grids/
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
                              --star-list ../../4MOST_testspectra/testset_param.tab \
-                             --log-file output_data/turbospec_apokasc_test_set_${item}.log \
+                             --log-file ../output_data/turbospec_apokasc_test_set_${item}.log \
                              --every ${n_cores} --skip ${item} ${create} --limit 8 &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
@@ -70,12 +78,14 @@ done
 wait
 
 # Synthesize APOKASC training set
+cd ${cwd}
+cd synthesize_grids/
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
                              --star-list ../../4MOST_testspectra/trainingset_param.tab \
-                             --log-file output_data/turbospec_apokasc_training_set_${item}.log \
+                             --log-file ../output_data/turbospec_apokasc_training_set_${item}.log \
                              --every ${n_cores} --skip ${item} ${create} --limit 8 &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
@@ -83,27 +93,37 @@ done
 wait
 
 # Test RV determination
-cd ../test_rv_determination
-python rv_test.py --test-count=10 --vary-mcmc-steps --output-file output_data/rv_test_vary_steps.out
-python rv_test.py --test-count=10 --output-file output_data/rv_test.out
+cd ${cwd}
+cd test_rv_determination
+python rv_test.py --test-count=5 --vary-mcmc-steps --output-file ../output_data/rv_test_vary_steps.out &
+python rv_test.py --test-count=5 --output-file ../output_data/rv_test.out &
+wait
 
 # Test Cannon
-cd ../test_cannon_degraded_spec/
+cd ${cwd}
+cd test_cannon_degraded_spec/
 
 python cannon_test.py --train hawkins_apokasc_training_set_hrs \
                       --test hawkins_apokasc_test_set_hrs \
-                      --output-file output_data/cannon_test_hrs
+                      --output-file ../output_data/cannon_test_hrs
 
 #python cannon_test.py --train hawkins_apokasc_training_set_hrs \
 #                      --test hawkins_apokasc_test_set_hrs \
 #                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                      --output-file output_data/cannon_test_hrs_censored
+#                      --output-file ../output_data/cannon_test_hrs_censored
 #
 #python cannon_test.py --train hawkins_apokasc_training_set_lrs \
 #                      --test hawkins_apokasc_test_set_lrs \
-#                      --output-file output_data/cannon_test_lrs
+#                      --output-file ../output_data/cannon_test_lrs
 #
 #python cannon_test.py --train hawkins_apokasc_training_set_lrs \
 #                      --test hawkins_apokasc_test_set_lrs \
 #                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                      --output-file output_data/cannon_test_lrs_censored
+#                      --output-file ../output_data/cannon_test_lrs_censored
+
+# Plot performance of RV code
+cd ${cwd}
+cd visualisation/rv_code/
+pyxplot rv_code.ppl
+pyxplot rv_code_histogram.ppl
+pyxplot rv_code_varying_mcmc_steps.ppl

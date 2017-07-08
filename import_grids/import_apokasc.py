@@ -85,13 +85,11 @@ for test_set_dir, out_library in (("testset/HRS", "hawkins_apokasc_test_set_hrs"
     for filepath in test_set:
         # Identify which star it is, and its SNR
         basename = os_path.basename(filepath)
-        star_number = int(basename.split("_")[0].lstrip("star"))
+        star_name = basename.split("_")[0]
         snr = int(basename.split("_")[1].split(".")[0].lstrip("SNR"))
-        star_name = "star{:04d}".format(star_number)
 
         metadata = expected_test_output_dict[star_name]
-        metadata.update({"star": star_number,
-                         "snr": snr})
+        metadata["SNR"] = snr
 
         # Read star from text file and import it into our SpectrumLibrary
         spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, binary=False)
