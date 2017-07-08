@@ -75,7 +75,7 @@ output_library = SpectrumLibrarySqlite(path=library_path, create=args.create)
 
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
-    path_to_4fs=os_path.join(args.binary_path, "OpSys/OpSim")
+    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC")
 )
 
 # Fetch list of spectra to process
@@ -103,6 +103,10 @@ with open(args.log_to, "w") as result_log:
 
         # Load the continuum-normalised version
         input_spectrum_continuum_normalised = input_library.open(ids=continuum_normalised_spectrum_id[0]['specId'])
+
+        # Process spectra through 4FS
+        etc_wrapper.process_spectra(spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
+                                    )
 
 # Clean up 4FS
 etc_wrapper.close()
