@@ -62,7 +62,9 @@ parser.add_argument('--log-file',
                     help="Specify a log file where we log our progress.")
 args = parser.parse_args()
 
-logger.info("Running 4FS on spectra with arguments <{}> <{}>".format(args.input_library, args.output_library))
+logger.info("Running 4FS on spectra with arguments <{}> <{}> <{}>".format(args.input_library,
+                                                                          args.output_library_lrs,
+                                                                          args.output_library_hrs))
 
 # Set path to workspace where we create libraries of spectra
 workspace = os_path.join(our_path, "..", "workspace")
@@ -93,6 +95,7 @@ input_spectra_ids = input_library.search(continuum_normalised=0)
 # Loop over spectra to process
 with open(args.log_to, "w") as result_log:
     for input_spectrum_id in input_spectra_ids:
+        logger.info("Working on <{}>".format(input_spectrum_id['filename']))
         # Open Spectrum data from disk
         input_spectrum_array = input_library.open(ids=input_spectrum_id['specId'])
         input_spectrum = input_spectrum_array.extract_item(0)

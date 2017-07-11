@@ -63,34 +63,49 @@ done
 wait
 
 # Synthesize APOKASC test set
-cd ${cwd}
-cd synthesize_grids/
-create="--create"  # Only create clean SpectrumLibrary in first thread
-for item in `seq 0 ${n_cores_less_one}`
-do
-python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
-                             --star-list ../../4MOST_testspectra/testset_param.tab \
-                             --log-file ../output_data/turbospec_apokasc_test_set_${item}.log \
-                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
-sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
-create="--no-create"
-done
-wait
+#cd ${cwd}
+#cd synthesize_grids/
+#create="--create"  # Only create clean SpectrumLibrary in first thread
+#for item in `seq 0 ${n_cores_less_one}`
+#do
+#python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
+#                             --star-list ../../4MOST_testspectra/testset_param.tab \
+#                             --log-file ../output_data/turbospec_apokasc_test_set_${item}.log \
+#                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
+#sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+#create="--no-create"
+#done
+#wait
 
 # Synthesize APOKASC training set
+#cd ${cwd}
+#cd synthesize_grids/
+#create="--create"  # Only create clean SpectrumLibrary in first thread
+#for item in `seq 0 ${n_cores_less_one}`
+#do
+#python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
+#                             --star-list ../../4MOST_testspectra/trainingset_param.tab \
+#                             --log-file ../output_data/turbospec_apokasc_training_set_${item}.log \
+#                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
+#sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+#create="--no-create"
+#done
+#wait
+
+# Copy synthesized APOKASC test set and training set
 cd ${cwd}
-cd synthesize_grids/
-create="--create"  # Only create clean SpectrumLibrary in first thread
-for item in `seq 0 ${n_cores_less_one}`
-do
-python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
-                             --star-list ../../4MOST_testspectra/trainingset_param.tab \
-                             --log-file ../output_data/turbospec_apokasc_training_set_${item}.log \
-                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
-sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
-create="--no-create"
-done
-wait
+rsync -av /mnt/data/ganymede_mirror/astrolabe/iwg7_pipeline/4most-4gp-scripts/workspace/turbospec_apokasc_* workspace
+
+# Use 4FS to degrade the APOKASC spectra
+cd ${cwd}
+cd degrade_spectra
+python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_set
+                                   --output-library-lrs 4fs_apokasc_training_set_lrs
+                                   --output-library-hrs 4fs_apokasc_training_set_hrs
+
+python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set
+                                   --output-library-lrs 4fs_apokasc_test_set_lrs
+                                   --output-library-hrs 4fs_apokasc_test_set_hrs
 
 # Test RV determination
 cd ${cwd}
