@@ -29,11 +29,16 @@ parser.add_argument('--input-library',
                     default="turbospec_apokasc_training_set",
                     dest="input_library",
                     help="Specify the name of the SpectrumLibrary we are to read input spectra from.")
-parser.add_argument('--output-library',
+parser.add_argument('--output-library-lrs',
                     required=False,
-                    default="4fs_apokasc_training_set",
-                    dest="output_library",
-                    help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
+                    default="4fs_apokasc_training_set_lrs",
+                    dest="output_library_lrs",
+                    help="Specify the name of the SpectrumLibrary we are to feed synthesized LRS spectra into.")
+parser.add_argument('--output-library-hrs',
+                    required=False,
+                    default="4fs_apokasc_training_set_hrs",
+                    dest="output_library_hrs",
+                    help="Specify the name of the SpectrumLibrary we are to feed synthesized HRS spectra into.")
 parser.add_argument('--binary-path',
                     required=False,
                     default=root_path,
@@ -69,9 +74,13 @@ library_path = os_path.join(workspace, library_name)
 input_library = SpectrumLibrarySqlite(path=library_path, create=False)
 
 # Create new SpectrumLibrary
-library_name = re.sub("/", "_", args.output_library)
-library_path = os_path.join(workspace, library_name)
-output_library = SpectrumLibrarySqlite(path=library_path, create=args.create)
+output_libraries = {}
+
+for mode in ({"name": "LRS", "library": args.output_library_lrs},
+             {"name": "HRS", "library": args.output_library_hrs}):
+    library_name = re.sub("/", "_", mode['library'])
+    library_path = os_path.join(workspace, library_name)
+    output_libraries[mode['name']] = SpectrumLibrarySqlite(path=library_path, create=args.create)
 
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
@@ -105,8 +114,17 @@ with open(args.log_to, "w") as result_log:
         input_spectrum_continuum_normalised = input_library.open(ids=continuum_normalised_spectrum_id[0]['specId'])
 
         # Process spectra through 4FS
-        etc_wrapper.process_spectra(spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
-                                    )
+        degraded_spectra = etc_wrapper.process_spectra(
+            spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
+        )
+
+        # Import degraded spectra into output spectrum library
+        for mode in degraded_spectra:
+            for index in degraded_spectra[mode]:
+                for snr in degraded_spectra[mode][index]:
+                    for spectrum_type in degraded_spectra[mode][index][snr]:
+                        output_libraries[mode].insert(spectra=degraded_spectra[mode][index][snr][spectrum_type],
+                                                      filenames=input_spectrum_id['filename'])
 
 # Clean up 4FS
 etc_wrapper.close()

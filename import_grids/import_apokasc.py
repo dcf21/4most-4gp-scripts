@@ -68,7 +68,11 @@ for training_set_dir, out_library in (("APOKASC_trainingset/HRS", "hawkins_apoka
     for star in training_set:
         filepath = os_path.join(test_spectra_path, training_set_dir, "{}_SNR250.txt".format(star["Starname"]))
         filename = os_path.split(filepath)[1]
+
         metadata = astropy_row_to_dict(star)
+        metadata["continuum_normalised"] = 1
+        metadata["SNR"] = 250
+
         spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, binary=False)
         library.insert(spectra=spectrum, filenames=filename)
 
@@ -89,6 +93,7 @@ for test_set_dir, out_library in (("testset/HRS", "hawkins_apokasc_test_set_hrs"
         snr = int(basename.split("_")[1].split(".")[0].lstrip("SNR"))
 
         metadata = expected_test_output_dict[star_name]
+        metadata["continuum_normalised"] = 1
         metadata["SNR"] = snr
 
         # Read star from text file and import it into our SpectrumLibrary
