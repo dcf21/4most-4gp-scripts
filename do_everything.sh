@@ -99,12 +99,12 @@ rsync -av /mnt/data/ganymede_mirror/astrolabe/iwg7_pipeline/4most-4gp-scripts/wo
 # Use 4FS to degrade the APOKASC spectra
 cd ${cwd}
 cd degrade_spectra
-python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_set
-                                   --output-library-lrs 4fs_apokasc_training_set_lrs
+python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_set \
+                                   --output-library-lrs 4fs_apokasc_training_set_lrs \
                                    --output-library-hrs 4fs_apokasc_training_set_hrs
 
-python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set
-                                   --output-library-lrs 4fs_apokasc_test_set_lrs
+python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
+                                   --output-library-lrs 4fs_apokasc_test_set_lrs \
                                    --output-library-hrs 4fs_apokasc_test_set_hrs
 
 # Test RV determination
@@ -118,23 +118,22 @@ wait
 cd ${cwd}
 cd test_cannon_degraded_spec/
 
-python cannon_test.py --train hawkins_apokasc_training_set_hrs \
-                      --test hawkins_apokasc_test_set_hrs \
-                      --output-file ../output_data/cannon_test_hrs
+for mode in LRS HRS
+do
+for source in hawkins 4fs
+do
 
-#python cannon_test.py --train hawkins_apokasc_training_set_hrs \
-#                      --test hawkins_apokasc_test_set_hrs \
-#                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                      --output-file ../output_data/cannon_test_hrs_censored
-#
-#python cannon_test.py --train hawkins_apokasc_training_set_lrs \
-#                      --test hawkins_apokasc_test_set_lrs \
-#                      --output-file ../output_data/cannon_test_lrs
-#
-#python cannon_test.py --train hawkins_apokasc_training_set_lrs \
-#                      --test hawkins_apokasc_test_set_lrs \
-#                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                      --output-file ../output_data/cannon_test_lrs_censored
+python cannon_test.py --train ${source}_apokasc_training_set_${mode} \
+                      --test ${source}_apokasc_test_set_${mode} \
+                      --output-file ../output_data/cannon_test_${source}_${mode}
+
+python cannon_test.py --train ${source}_apokasc_training_set_${mode} \
+                      --test ${source}_apokasc_test_set_${mode} \
+                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
+                      --output-file ../output_data/cannon_test_${source}_${mode}_censored
+
+done
+done
 
 # Plot performance of RV code
 cd ${cwd}

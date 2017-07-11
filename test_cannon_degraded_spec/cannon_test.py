@@ -57,12 +57,12 @@ test_library_path = os_path.join(workspace, args.test_library)
 test_library = SpectrumLibrarySqlite(path=test_library_path, create=False)
 
 # Load training set
-training_library_ids = [i["specId"] for i in training_library.search()]
+training_library_ids = [i["specId"] for i in training_library.search(continuum_normalised=1)]
 training_spectra = training_library.open(ids=training_library_ids)
 raster = training_spectra.wavelengths
 
 # Load test set
-test_library_ids = [i["specId"] for i in test_library.search()]
+test_library_ids = [i["specId"] for i in test_library.search(continuum_normalised=1)]
 
 # If required, generate the censoring masks
 censoring_masks = None
