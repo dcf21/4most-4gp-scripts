@@ -118,7 +118,7 @@ wait
 cd ${cwd}
 cd test_cannon_degraded_spec/
 
-for mode in LRS HRS
+for mode in lrs hrs
 do
 for source in hawkins 4fs
 do
