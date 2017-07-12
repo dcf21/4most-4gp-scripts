@@ -101,17 +101,19 @@ cd ${cwd}
 cd degrade_spectra
 python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_set \
                                    --output-library-lrs 4fs_apokasc_training_set_lrs \
-                                   --output-library-hrs 4fs_apokasc_training_set_hrs
+                                   --output-library-hrs 4fs_apokasc_training_set_hrs \
+                                   --snr-list "250"
 
 python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs \
-                                   --output-library-hrs 4fs_apokasc_test_set_hrs
+                                   --output-library-hrs 4fs_apokasc_test_set_hrs \
+                                   --snr-list "05,10,15,20,50,100,250"
 
 # Test RV determination
 cd ${cwd}
 cd test_rv_determination
-python rv_test.py --test-count=5 --vary-mcmc-steps --output-file ../output_data/rv_test_vary_steps.out &
-python rv_test.py --test-count=5 --output-file ../output_data/rv_test.out &
+python rv_test.py --test-count=3 --vary-mcmc-steps --output-file ../output_data/rv_test_vary_steps.out &
+python rv_test.py --test-count=3 --output-file ../output_data/rv_test.out &
 wait
 
 # Test Cannon
@@ -127,10 +129,10 @@ python cannon_test.py --train ${source}_apokasc_training_set_${mode} \
                       --test ${source}_apokasc_test_set_${mode} \
                       --output-file ../output_data/cannon_test_${source}_${mode}
 
-python cannon_test.py --train ${source}_apokasc_training_set_${mode} \
-                      --test ${source}_apokasc_test_set_${mode} \
-                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-                      --output-file ../output_data/cannon_test_${source}_${mode}_censored
+#python cannon_test.py --train ${source}_apokasc_training_set_${mode} \
+#                      --test ${source}_apokasc_test_set_${mode} \
+#                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
+#                      --output-file ../output_data/cannon_test_${source}_${mode}_censored
 
 done
 done

@@ -39,6 +39,11 @@ parser.add_argument('--output-library-hrs',
                     default="4fs_apokasc_training_set_hrs",
                     dest="output_library_hrs",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized HRS spectra into.")
+parser.add_argument('--snr-list',
+                    required=False,
+                    default="05,10,15,20,50,100,250",
+                    dest="snr_list",
+                    help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
 parser.add_argument('--binary-path',
                     required=False,
                     default=root_path,
@@ -86,7 +91,8 @@ for mode in ({"name": "LRS", "library": args.output_library_lrs},
 
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
-    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC")
+    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
+    snr_list=[item.strip() for item in args.snr_list.split(",")]
 )
 
 # Fetch list of spectra to process
