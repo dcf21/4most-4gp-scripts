@@ -135,7 +135,7 @@ class PlotLabelPrecision:
                 reference = label_reference_values[j]
 
                 # Filter the reference labels down to the set which matches the star we're looking at
-                idx = np.where(reference[star_id_column] == cannon_output[star_id_column][si])[0][0]
+                star_name = cannon_output[star_id_column][si]
 
                 # Loop over the Cannon's various attempts to match this star (e.g. at different SNR values)
                 for result in cannon_output[si:ei]:
@@ -143,7 +143,7 @@ class PlotLabelPrecision:
                     for label_name in label_names:
                         # Fetch the reference value for this label
                         try:
-                            ref = reference[label_name][idx]
+                            ref = reference[star_name][label_name]
 
                         except KeyError:
                             ref = np.nan
@@ -291,11 +291,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--library', required=True, action="append", dest='spectrum_libraries',
                         help="Library of spectra that the Cannon tried to fit.")
-    parser.add_argument('--cannon-output', required=True, dest='cannon_output',
+    parser.add_argument('--cannon-output', required=True, action="append", dest='cannon_output',
                         help="ASCII table containing the label values estimated by the Cannon.")
-    parser.add_argument('--dataset-label', required=True, dest='data_set_label',
+    parser.add_argument('--dataset-label', required=True, action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
-    parser.add_argument('--output-file', default="./test_cannon.out", dest='output_file',
+    parser.add_argument('--output-file', default="/tmp/cannon_performance_plot.pdf", dest='output_file',
                         help="Data file to write output to.")
     parser.add_argument('--use-reference-labels',
                         required=False,
@@ -313,10 +313,12 @@ if __name__ == "__main__":
     # Check that we have a matching number of libraries and sets of Cannon output
     assert len(args.spectrum_libraries) == len(args.cannon_output), \
         "Must have a matching number of libraries and sets of Cannon output."
+    assert len(args.spectrum_libraries) == len(args.data_set_label), \
+        "Must have a matching number of libraries and data set labels."
 
     # Set path to workspace where we expect to find libraries of spectra
     our_path = os_path.split(os_path.abspath(__file__))[0]
-    workspace = os_path.join(our_path, "..", "workspace")
+    workspace = os_path.join(our_path, "..", "..", "workspace")
 
     # Assemble list of input SpectrumLibraries with list of Cannon output data
     cannon_outputs = []
