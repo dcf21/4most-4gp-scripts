@@ -120,7 +120,8 @@ with open(args.log_to, "w") as result_log:
         assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
 
         # Load the continuum-normalised version
-        input_spectrum_continuum_normalised = input_library.open(ids=continuum_normalised_spectrum_id[0]['specId'])
+        input_spectrum_continuum_normalised_arr = input_library.open(ids=continuum_normalised_spectrum_id[0]['specId'])
+        input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
 
         # Process spectra through 4FS
         degraded_spectra = etc_wrapper.process_spectra(
