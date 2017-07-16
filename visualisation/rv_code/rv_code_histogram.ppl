@@ -6,6 +6,7 @@ set term eps
 set width 16
 set nokey
 
+set log x
 set xlabel 'Absolute error in inferred radial velocity [km/s]'
 set ylabel 'Frequency'
 

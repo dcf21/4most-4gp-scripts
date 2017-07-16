@@ -100,7 +100,7 @@ results = []
 for index in range(N):
     test_spectrum_array = test_library.open(ids=test_library_ids[index])
     spectrum = test_spectrum_array.extract_item(0)
-    # logger.info("Testing {}/{}: {}".format(index + 1, N, star_name))
+    logger.info("Testing {}/{}: {}".format(index + 1, N, spectrum.metadata['Starname']))
 
     time_start = time.time()
     labels, cov, meta = model.fit_spectrum(spectrum=spectrum)

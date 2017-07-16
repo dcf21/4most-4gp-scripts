@@ -13,7 +13,7 @@ import time
 import random
 
 from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
-from fourgp_rv import RvInstance
+from fourgp_rv import RvInstance, random_radial_velocity
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -60,7 +60,7 @@ library_path = os_path.join(workspace, target_library_name)
 # Instantiate the RV code
 time_start = time.time()
 rv_code = RvInstance.from_spectrum_library_sqlite(library_path=library_path)
-n_burn_default= rv_code.n_burn
+n_burn_default = rv_code.n_burn
 n_steps_default = rv_code.n_steps
 time_end = time.time()
 logger.info("Set up time was {:.2f} sec".format(time_end - time_start))
@@ -78,6 +78,8 @@ indices = [random.randint(0, len(test_library_ids) - 1) for i in range(args.test
 
 # Start writing output
 with open(args.output_file, "w") as output:
+    column_headings_written = False
+    stellar_label_names = []
 
     # Loop over the spectra we are going to test
     for index in indices:
@@ -87,25 +89,51 @@ with open(args.output_file, "w") as output:
         # Load test spectrum
         test_spectrum = test_library.open(ids=[test_id]).extract_item(0)
 
-        # Pick a random number of MCMC steps to do
+        # Pick a number of MCMC steps to do
         if args.vary_mcmc_steps:
-            rv_code.n_burn = rv_code.n_steps = random.randint(200, 1500)
+            rv_code.n_burn = rv_code.n_steps = random.randint(100, 1000)
+        else:
+            rv_code.n_burn = rv_code.n_steps = 500
 
         # Pick a random radial velocity
-        radial_velocity = random.uniform(-200, 200)  # Unit km/s
+        radial_velocity = random_radial_velocity()  # Unit km/s
 
         # Pick coefficients for some random continuum
         continuum = (random.uniform(1, 100), random.uniform(-1e-2, 1e-2), random.uniform(-1e-8, 1e-8))
         continuum_spectrum = SpectrumPolynomial(wavelengths=test_spectrum.wavelengths, terms=2, coefficients=continuum)
 
         test_spectrum_with_continuum = test_spectrum * continuum_spectrum
-        test_spectrum_with_rv = test_spectrum_with_continuum.apply_radial_velocity(radial_velocity*1000)  # Unit m/s
+        test_spectrum_with_rv = test_spectrum_with_continuum.apply_radial_velocity(radial_velocity * 1000)  # Unit m/s
 
+        # Run RV code and calculate how much CPU time we used
         time_start = time.time()
         stellar_labels = rv_code.fit_rv(test_spectrum_with_rv)
         time_end = time.time()
 
-        output.write("{:5d} {:9.1f} {:11.3f} {:11.3f}\n".format(rv_code.n_steps, time_end-time_start, radial_velocity,
-                                                                stellar_labels["velocity"]))
-        output.flush()
+        # If this is the first object, write column headers
+        if not column_headings_written:
+            line1 = "# {:5s} {:7s} {:11s} ".format("Steps", "Time", "RV_in")
+            line2 = "# {:5d} {:7d} {:11d} ".format(1, 2, 3)
+            column_counter = 3
+            stellar_label_names = stellar_labels.keys()
+            stellar_label_names.sort()
+            for key in stellar_label_names:
+                column_counter += 1
+                line2 = "%-*s %s" % (len(line1), line2, column_counter)
+                line1 += "{}_out ".format(key)
+            for key in test_library.list_metadata_fields():
+                column_counter += 1
+                line2 = "%-*s %s" % (len(line1), line2, column_counter)
+                line1 += "{} ".format(key)
+            output.write("{}\n{}\n".format(line1, line2))
+            column_headings_written = True
 
+        # Write a line to the output data file
+        line = "{:5d} {:9.1f} {:11.3f} ".format(rv_code.n_steps, time_end - time_start, radial_velocity)
+        for key in stellar_label_names:
+            line += "{} ".format(stellar_labels.get(key, "-"))
+        for key in test_library.list_metadata_fields():
+            line += "{} ".format(test_spectrum.metadata.get(key, "-"))
+
+        output.write(line + "\n")
+        output.flush()
