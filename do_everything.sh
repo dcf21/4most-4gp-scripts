@@ -140,6 +140,14 @@ done
 # Plot performance of RV code
 cd ${cwd}
 cd visualisation/rv_code/
-pyxplot rv_code.ppl
-pyxplot rv_code_histogram.ppl
-pyxplot rv_code_varying_mcmc_steps.ppl
+for all in *.ppl ; do pyxplot ${all} ; done
+
+cd visualisation/stellar_parameters/
+for all in *.ppl ; do pyxplot ${all} ; done
+
+cd ${cwd}
+cd visualisation/cannon_performance
+python plot_performance.py --library hawkins_apokasc_test_set_lrs --cannon-output ../../output_data/cannon_test_hawkins_lrs.dat --dataset-label "Hawkins LRS" \
+                           --library hawkins_apokasc_test_set_hrs --cannon-output ../../output_data/cannon_test_hawkins_hrs.dat --dataset-label "Hawkins HRS" \
+                           --library 4fs_apokasc_test_set_lrs --cannon-output ../../output_data/cannon_test_4fs_lrs.dat --dataset-label "Ford LRS" \
+                           --library 4fs_apokasc_test_set_hrs --cannon-output ../../output_data/cannon_test_4fs_hrs.dat --dataset-label "Ford HRS"

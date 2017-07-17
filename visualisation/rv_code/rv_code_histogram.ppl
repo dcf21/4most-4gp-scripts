@@ -10,6 +10,7 @@ set log x
 set xlabel 'Absolute error in inferred radial velocity [km/s]'
 set ylabel 'Frequency'
 
-histogram h() '../../output_data/rv_test.out' using abs($3-$4)
+histogram h() '../../output_data/rv_test.out' using abs($3-$11)
 
-plot h(x) with boxes
+
+plot h(x) using $1:$2*$1 with boxes fillcolor red

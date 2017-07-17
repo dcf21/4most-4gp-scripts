@@ -8,6 +8,7 @@ set nokey
 
 set log y
 set xlabel 'Target radial velocity [km/s]'
+set xrange [-200:200]
 set ylabel 'Absolute error in inferred radial velocity [km/s]'
 
-plot '../../output_data/rv_test.out' using 3:abs($3-$4) with points
+plot '../../output_data/rv_test.out' using 3:abs($3-$11) with dots ps 10

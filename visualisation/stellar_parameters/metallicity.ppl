@@ -1,0 +1,19 @@
+
+!python label_tabulator.py --library 4fs_apokasc_test_set_hrs --label "[Fe/H]" --output-file /tmp/fe1.dat
+!python label_tabulator.py --library 4fs_apokasc_training_set_hrs --label "[Fe/H]" --output-file /tmp/fe2.dat
+
+!mkdir -p ../../output_plots
+set output ../../output_plots/metallicity.eps
+set term eps
+set width 16
+set nokey
+
+set xlabel "[Fe/H]"
+set xrange [-1:1]
+set ylabel "Stars per unit [Fe/H]"
+
+set binwidth 0.05
+histogram h1() "/tmp/fe1.dat"
+histogram h2() "/tmp/fe2.dat"
+
+plot h1(x) with histeps c red, h2(x) with histeps c blue
