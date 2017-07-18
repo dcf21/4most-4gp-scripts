@@ -5,13 +5,12 @@
 Plot results of testing the Cannon against noisy test spectra, to see how well it reproduces stellar labels.
 """
 
+import os
 from os import path as os_path
 from operator import itemgetter
 import argparse
-import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import Table
-from matplotlib.ticker import MaxNLocator
 
 from fourgp_speclib import SpectrumLibrarySqlite
 
@@ -28,98 +27,107 @@ class PlotLabelPrecision:
     :ivar latex_labels:
         A tuple containing LaTeX labels to use on the figure axes.
 
-    :ivar fig:
-        A `matplotlib` figure that has at least as many axes as the
-        number of `label_names`.
+    :ivar plot_counter:
+        An integer counter used to give plots for each stellar label a unique filename.
     """
 
-    def __init__(self):
-        self.latex_labels = {
-            "Teff": r"$T_{\rm eff}$ $[{\rm K}]$",
-            "logg": r"$\log{g}$ $[{\rm dex}]$",
-            "[Fe/H]": r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$",
-            "[C/H]": r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$",
-            "[N/H]": r"$[{\rm N}/{\rm H}]$ $[{\rm dex}]$",
-            "[O/H]": r"$[{\rm O}/{\rm H}]$ $[{\rm dex}]$",
-            "[Na/H]": r"$[{\rm Na}/{\rm H}]$ $[{\rm dex}]$",
-            "[Mg/H]": r"$[{\rm Mg}/{\rm H}]$ $[{\rm dex}]$",
-            "[Al/H]": r"$[{\rm Al}/{\rm H}]$ $[{\rm dex}]$",
-            "[Si/H]": r"$[{\rm Si}/{\rm H}]$ $[{\rm dex}]$",
-            "[Ca/H]": r"$[{\rm Ca}/{\rm H}]$ $[{\rm dex}]$",
-            "[Ti/H]": r"$[{\rm Ti}/{\rm H}]$ $[{\rm dex}]$",
-            "[Mn/H]": r"$[{\rm Mn}/{\rm H}]$ $[{\rm dex}]$",
-            "[Co/H]": r"$[{\rm Co}/{\rm H}]$ $[{\rm dex}]$",
-            "[Ni/H]": r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$",
-            "[Ba/H]": r"$[{\rm Ba}/{\rm H}]$ $[{\rm dex}]$",
-            "[Sr/H]": r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$",
-        }
-
-        self.fig = None
-
-    def set_latex_label(self, label, latex):
-        self.latex_labels[label] = latex
-
-    def plot_label_precision(self, cannon_output, label_names, label_reference_values,
-                             legend_labels=None,
-                             colors=("r", "k"),
-                             star_id_column="Starname",
-                             snr_column="SNR", pixels_per_angstrom=1.0, common_y_axes=None, n_plots=None,
-                             common_x_limits=None, metric=np.std):
+    def __init__(self,
+                 label_names,
+                 common_x_limits=None,
+                 output_figure_stem="/tmp/cannon_performance"):
         """
-        Plot the precision in labels as a function of S/N.
-
-        :param cannon_output:
-            A table containing results for stars at many S/N ratios.
 
         :param label_names:
-            A tuple containing the label names.
+            A tuple containing the names of the labels we are to plot the precision for.
 
-        :param label_reference_values:
-            A list of astropy tables containing the expected labels for each star.
-
-        :param legend_labels: [optional]
-            A list-like containing labels that will appear in the legend.
-
-        :param pixels_per_angstrom: [optional]
-            The number of pixels per Angstrom. If this is set to anything other than
-            1, the S/N on the x-axis will be shown per Angstrom, not per pixel.
-
-        :param common_y_axes: [optional]
-            Specify axes indices that should have the same y-axis limits and
-            markers.
-
-        :param common_x_limits: [optional]
+        :param common_x_limits:
             A two-length tuple containing the lower and upper limits to set on all
             x axes.
 
-        :returns:
+        :param output_figure_stem:
+            The file path and filename stem where we are to save plots, pyxplot scripts and data files.
+        """
+
+        self.latex_labels = {
+            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 350, []),
+            "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 1, []),
+            "[Fe/H]": (r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[C/H]": (r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[N/H]": (r"$[{\rm N}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[O/H]": (r"$[{\rm O}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Na/H]": (r"$[{\rm Na}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Mg/H]": (r"$[{\rm Mg}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Al/H]": (r"$[{\rm Al}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Si/H]": (r"$[{\rm Si}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Ca/H]": (r"$[{\rm Ca}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Ti/H]": (r"$[{\rm Ti}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Mn/H]": (r"$[{\rm Mn}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Co/H]": (r"$[{\rm Co}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Ni/H]": (r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Ba/H]": (r"$[{\rm Ba}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Sr/H]": (r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+        }
+
+        self.label_names = label_names
+        self.common_x_limits = common_x_limits
+        self.output_figure_stem = os_path.abspath(output_figure_stem)
+        self.data_set_counter = 0
+        self.plot_items = [[] for i in label_names]
+
+    def set_latex_label(self, label, latex, axis_min=0, axis_max=1.1):
+        self.latex_labels[label] = (latex, axis_min, axis_max)
+
+    def add_data_set(self, cannon_output, label_reference_values,
+                     legend_label=None,
+                     colour="red",
+                     star_id_column="Starname",
+                     snr_column="SNR",
+                     pixels_per_angstrom=1.0,
+                     metric=np.std):
+        """
+        Add a data set to a set of precision plots.
+
+        :param cannon_output:
+            An astropy Table object containing the label values output by the Cannon.
+
+        :param label_reference_values:
+            An astropy Table object containing reference values for the labels for each star.
+
+        :param legend_label:
+            The label which should appear in the figure legend for this data set.
+
+        :param colour:
+            The colour of this data set. Should be specified as a valid Pyxplot string describing a colour object.
+
+        :param star_id_column:
+            The name of the column of cannon_output which identifies each star individually.
+
+        :param snr_column:
+            The name of the column in cannon_output which identifies the SNR.
+
+        :param pixels_per_angstrom:
+            The number of pixels per angstrom in the spectrum. Used to convert SNR per pixel into SNR per A.
+
+        :param metric:
+            The metric used to convert a list of absolute offsets into an average offset.
+
+        :return:
             None
         """
 
         # LaTeX strings to use to label each stellar label on graph axes
-        latex_labels = [self.latex_labels.get(ln, ln) for ln in label_names]
-
-        # Count how many stellar labels we're plotting
-        n_labels = len(label_names)
+        latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
 
         # Create a sorted list of all the SNR values we've got
         snr_values = np.sort(np.unique(cannon_output[snr_column]))
-
-        # label_reference_values should be a list of `astropy` tables.
-        # We plot performance of Cannon relative to each set of reference values provided.
-        # If only one astropy table is provided, create a list of length one.
-        if not isinstance(label_reference_values, (list, tuple)):
-            label_reference_values = [label_reference_values]
 
         # Construct the dictionary for storing the Cannon's mismatch to each stellar label
         # label_offset[snr][label_name][reference_value_set_counter] = offset
         label_offset = {}
         for snr in snr_values:
             label_offset[snr] = {}
-            for label_name in label_names:
-                label_offset[snr][label_name] = {}
-                for j in range(len(label_reference_values)):
-                    label_offset[snr][label_name][j] = []
+            for label_name in self.label_names:
+                label_offset[snr][label_name] = []
 
         # Sort Cannon's output by the star it was trying to fit
         cannon_output = cannon_output.group_by(star_id_column)
@@ -129,88 +137,87 @@ class PlotLabelPrecision:
         for i, si in enumerate(group_indices[:-1]):
             ei = group_indices[i + 1]
 
-            # Loop over the sets of reference values that we have
-            for j in range(len(label_reference_values)):
-                # Get the reference labels
-                reference = label_reference_values[j]
+            # Filter the reference labels down to the set which matches the star we're looking at
+            star_name = cannon_output[star_id_column][si]
 
-                # Filter the reference labels down to the set which matches the star we're looking at
-                star_name = cannon_output[star_id_column][si]
+            # Loop over the Cannon's various attempts to match this star (e.g. at different SNR values)
+            for result in cannon_output[si:ei]:
+                # Loop over the labels the Cannon tried to match
+                for label_name in self.label_names:
+                    # Fetch the reference value for this label
+                    try:
+                        ref = label_reference_values[star_name][label_name]
 
-                # Loop over the Cannon's various attempts to match this star (e.g. at different SNR values)
-                for result in cannon_output[si:ei]:
-                    # Loop over the labels the Cannon tried to match
-                    for label_name in label_names:
-                        # Fetch the reference value for this label
-                        try:
-                            ref = reference[star_name][label_name]
+                    except KeyError:
+                        ref = np.nan
 
-                        except KeyError:
-                            ref = np.nan
+                    # Calculate the offset of the Cannon's output from the reference value
+                    label_offset[result[snr_column]][label_name].append(result[label_name] - ref)
 
-                        # Calculate the offset of the Cannon's output from the reference value
-                        label_offset[result[snr_column]][label_name][j].append(result[label_name] - ref)
+        self.data_set_counter += 1
+        for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
 
-        # If we haven't started building a MatPlotLib figure yet, create it now
-        if self.fig is None:
-            if n_plots is None:
-                n_plots = n_labels
-            self.fig, _ = plt.subplots(n_plots, 1, figsize=(6, n_plots * 4))
+            y = np.nan * np.ones_like(snr_values)
+            for k, xk in enumerate(snr_values):
+                diffs = label_offset[xk][label_name]
+                y[k] = metric(diffs)
 
-        for i, (ax, label_name, latex_label) in enumerate(
-                zip(np.array(self.fig.axes).flatten(), label_names, latex_labels)):
+            scale = np.sqrt(pixels_per_angstrom)
 
-            for j, color in enumerate(colors):
+            np.savetxt("{}_{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter),
+                       np.transpose([snr_values * scale, y]))
 
-                legend_label = None if legend_labels is None else legend_labels[j]
+            self.plot_items[i].append("\"{}_{:d}_{:d}.dat\" title \"{}\" "
+                                      "with lp pt 17 col {}".format(self.output_figure_stem,
+                                                                    i, self.data_set_counter,
+                                                                    legend_label,
+                                                                    colour))
 
-                y = np.nan * np.ones_like(snr_values)
-                for k, xk in enumerate(snr_values):
-                    diffs = label_offset[xk][label_name][j]
-                    y[k] = metric(diffs)
+            for target_value in latex_label[3]:
+                self.plot_items[i].append("{} with lines col grey(0.75) notitle".format(target_value))
 
-                scale = np.sqrt(pixels_per_angstrom)
-                ax.plot(snr_values * scale, y, c=color, label=legend_label)
-                ax.scatter(snr_values * scale, y, s=100, facecolor=color, zorder=10, alpha=0.75, label=None)
+    def make_plots(self, snr_per_angstrom):
 
-            ax.set_ylabel(latex_label)
+        # LaTeX strings to use to label each stellar label on graph axes
+        latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
 
-            if ax.is_last_row():
-                if pixels_per_angstrom != 1:
-                    ax.set_xlabel(r"$S/N$ $[{\rm \AA}^{-1}]$")
+        for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
+            # Create a new pyxplot script
+            with open("{}_{:d}.ppl".format(self.output_figure_stem, i), "w") as ppl:
+                ppl.write("""
+                set width 14
+                set key top right
+                set nodisplay
+                set label 1 "{}" graph 1.5, graph 8
+                """.format(latex_label[0]))
+
+                ppl.write("set ylabel \"{}\"\n".format(latex_label[0]))
+
+                if snr_per_angstrom:
+                    ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
                 else:
-                    ax.set_xlabel(r"$S/N$ $[{\rm pixel}^{-1}]$")
-            else:
-                ax.set_xticklabels([])
+                    ppl.write("set xlabel \"$S/N$ $[{\\rm pixel}^{-1}]$\"\n")
 
-            # Set axis limits
-            ax.set_ylim(0, ax.get_ylim()[1])
-            ax.set_xlim(0, ax.get_xlim()[1])
-            ax.yaxis.set_major_locator(MaxNLocator(5))
+                # Set axis limits
+                ppl.write("set yrange [{}:{}]\n".format(latex_label[1], latex_label[2]))
 
-            # Set axis ticks
-            ax.set_xticks([0, 10, 20, 30, 40, 50, 100, 200])
+                # Set axis ticks
+                ppl.write("set xtics (0, 10, 20, 30, 40, 50, 100, 200)\n")
 
-            if common_x_limits is not None:
-                ax.set_xlim(common_x_limits)
+                if self.common_x_limits is not None:
+                    ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
 
-        if legend_labels is not None:
-            self.fig.axes[0].legend(frameon=False)
+                ppl.write("plot {}\n".format(",".join(self.plot_items[i])))
 
-        if common_y_axes is not None:
-            limit = max([ax.get_ylim()[1] for i, ax in enumerate(self.fig.axes) if i in common_y_axes])
-            for i, ax in enumerate(self.fig.axes):
-                if i not in common_y_axes:
-                    continue
-                ax.set_ylim(0, limit)
-
-                ax.axhline(0.1, linestyle=":", c="#666666", zorder=-1)
-                ax.axhline(0.2, linestyle="--", c="#666666", zorder=-1)
-
-        self.fig.tight_layout()
+                ppl.write("""
+                set term eps ; set output '{}_{:d}.eps' ; set display ; refresh
+                set term png ; set output '{}_{:d}.png' ; set display ; refresh\n
+                """.format(self.output_figure_stem, i, self.output_figure_stem, i))
+                ppl.close()
+                os.system("pyxplot {}_{:d}.ppl".format(self.output_figure_stem, i))
 
 
-def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure, run_title):
+def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
     # List of labels to plot
     label_names = ("Teff", "logg", "[Fe/H]",
                    "[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]",
@@ -218,10 +225,12 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
     # n_labels = len(label_names)
 
     # List of colours
-    colour_list = ("#2980b9", "#e67e22")
+    colour_list = ("red", "blue", "orange", "green")
 
     # Instantiate plotter
-    plotter = PlotLabelPrecision()
+    plotter = PlotLabelPrecision(label_names=label_names,
+                                 common_x_limits=(0, 250),
+                                 output_figure_stem=output_figure_stem)
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
@@ -273,16 +282,13 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
         colour = colour_list[counter % len(colour_list)]
 
         # Add data set to plot
-        plotter.plot_label_precision(data_set['cannon_data_filtered'],
-                                     label_names,
-                                     label_reference_values=(data_set['reference_values'],),
-                                     colors=(colour,),
-                                     legend_labels=("{} ({})".format(data_set['title'], run_title),),
-                                     common_x_limits=(0, 250),
-                                     common_y_axes=range(2, 18),
-                                     pixels_per_angstrom=np.median(1.0 / np.diff(data_set['wavelength_raster'])))
+        plotter.add_data_set(data_set['cannon_data_filtered'],
+                             label_reference_values=data_set['reference_values'],
+                             colour=colour,
+                             legend_label="{} ({})".format(data_set['title'], run_title),
+                             pixels_per_angstrom=np.median(1.0 / np.diff(data_set['wavelength_raster'])))
 
-    plotter.fig.savefig(output_figure)
+    plotter.make_plots(snr_per_angstrom=True)
 
 
 if __name__ == "__main__":
@@ -295,7 +301,7 @@ if __name__ == "__main__":
                         help="ASCII table containing the label values estimated by the Cannon.")
     parser.add_argument('--dataset-label', required=True, action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
-    parser.add_argument('--output-file', default="/tmp/cannon_performance_plot.pdf", dest='output_file',
+    parser.add_argument('--output-file', default="/tmp/cannon_performance_plot", dest='output_file',
                         help="Data file to write output to.")
     parser.add_argument('--use-reference-labels',
                         required=False,
@@ -335,6 +341,6 @@ if __name__ == "__main__":
 
     generate_set_of_plots(data_sets=cannon_outputs,
                           compare_against_reference_labels=args.use_reference_labels,
-                          output_figure=args.output_file,
+                          output_figure_stem=args.output_file,
                           run_title="External" if args.use_reference_labels else "Internal"
                           )
