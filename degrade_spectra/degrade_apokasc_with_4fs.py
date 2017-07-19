@@ -96,7 +96,7 @@ etc_wrapper = FourFS(
 )
 
 # Fetch list of spectra to process
-input_spectra_ids = input_library.search(continuum_normalised=0)
+input_spectra_ids = input_library.search(continuum_normalised=0, Starname="star5000")
 
 # Loop over spectra to process
 with open(args.log_to, "w") as result_log:

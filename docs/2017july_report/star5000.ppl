@@ -1,0 +1,90 @@
+
+# BEGIN
+set multiplot
+set nodisplay
+width=7
+
+set width width
+set xrange [3700:9500]
+set nokey
+set texthalign left
+set textvalign center
+
+stepa = 16
+stepb = 40
+
+# Plot 1 (bottom left)
+set xlabel "Wavelength / \AA"
+set ylabel "SNR per \AA"
+set ytics (50,100,150,200,250)
+set label 1 "\bf (g)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_4fs_hrs.dat" every stepa using $1:$2/$3 with lines
+
+set axis x linked item 1 x
+set axis y linked item 1 y
+
+# Plot 2 (bottom right)
+set origin 1*width, 0*width/goldenRatio
+set yformat "" ; set ylabel ""
+set label 1 "\bf (h)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_4fs_lrs.dat" every stepa using $1:$2/$3 with lines
+
+set axis y notlinked
+unset ytics
+
+# Plot 3
+set origin 0*width, 1*width/goldenRatio
+set xformat "" ; set xlabel ""
+unset yformat ; set ylabel "Flux / arbitrary units"
+set label 1 "\bf (e)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_4fs_hrs.dat" every stepa using $1:$2 / 1e5 with lines
+
+set axis y linked item 3 y
+
+# Plot 4
+set origin 1*width, 1*width/goldenRatio
+set yformat "" ; set ylabel ""
+set label 1 "\bf (f)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_4fs_lrs.dat" every stepa using $1:$2 / 1e5 with lines
+
+set axis y notlinked
+unset ytics
+
+# Plot 5
+set origin 0*width, 2*width/goldenRatio
+set xformat "" ; set xlabel ""
+unset yformat ; set ylabel "Flux / arbitrary units"
+set label 1 "\bf (c)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_4fs_hrs_red.dat" every stepa using $1:$2 / 1e5 with lines col red, "star5000_4fs_hrs_grn.dat" every stepa using $1:$2 / 1e5 with lines col green, "star5000_4fs_hrs_blu.dat" every stepa using $1:$2 / 1e5 with lines col blue
+
+set axis y linked item 5 y
+
+# Plot 6
+set origin 1*width, 2*width/goldenRatio
+set yformat "" ; set ylabel ""
+set label 1 "\bf (d)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_4fs_lrs_red.dat" every stepa using $1:$2 / 1e5 with lines col red, "star5000_4fs_lrs_grn.dat" every stepa using $1:$2 / 1e5 with lines col green, "star5000_4fs_lrs_blu.dat" every stepa using $1:$2 / 1e5 with lines col blue
+
+set axis y notlinked
+unset ytics
+
+# Plot 7
+set origin 0*width, 3*width/goldenRatio
+set xformat "" ; set xlabel ""
+unset yformat ; set ylabel "Flux / arbitrary units"
+set label 1 "\bf (a)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_turbospec_3.dat" every stepb using $1:$2 / 3.4e6 with lines
+
+set axis y linked item 7 y
+
+# Plot 8
+set origin 1*width, 3*width/goldenRatio
+set yformat "" ; set ylabel ""
+set label 1 "\bf (b)" at graph width*0.03 , graph width/goldenRatio*0.9
+plot "star5000_turbospec_3.dat" every stepb using $1:$2/$3 / 3.4e6 with lines
+
+
+# Now that we are finished preparing multiplot, turn display on
+set term eps ; set output "star5000.eps" ; set display ; refresh
+set term png ; set output "star5000.png" ; set display ; refresh
+

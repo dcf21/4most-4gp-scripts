@@ -3,10 +3,9 @@
 !python label_tabulator.py --library 4fs_apokasc_training_set_hrs --label "[Fe/H]" --output-file /tmp/fe2.dat
 
 !mkdir -p ../../output_plots
-set output ../../output_plots/metallicity.eps
-set term eps
-set width 16
-set nokey
+set nodisplay
+set width 14
+# set nokey
 
 set xlabel "[Fe/H]"
 set xrange [-1:1]
@@ -16,4 +15,8 @@ set binwidth 0.05
 histogram h1() "/tmp/fe1.dat"
 histogram h2() "/tmp/fe2.dat"
 
-plot h1(x) with histeps c red, h2(x) with histeps c blue
+plot h1(x) title "Test set" with histeps c red, h2(x) title "Training set" with histeps c blue
+
+set term eps ; set output "../../output_plots/metallicity.eps" ; set display ; refresh
+set term png ; set output "../../output_plots/metallicity.png" ; set display ; refresh
+

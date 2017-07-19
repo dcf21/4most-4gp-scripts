@@ -49,8 +49,8 @@ class PlotLabelPrecision:
         """
 
         self.latex_labels = {
-            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 350, []),
-            "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 1, []),
+            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 350, [100]),
+            "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 1, [0.3]),
             "[Fe/H]": (r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
             "[C/H]": (r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
             "[N/H]": (r"$[{\rm N}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),

@@ -3,14 +3,17 @@
 !python label_tabulator.py --library 4fs_apokasc_training_set_hrs --label "Teff" --label "logg" --output-file /tmp/tg2.dat
 
 !mkdir -p ../../output_plots
-set output ../../output_plots/teff_logg.eps
-set term eps
-set width 16
-set nokey
+set nodisplay
+set width 14
+set key top left
 
 set xlabel "Teff"
-set xrange [8000:3000]
+set xrange [5100:4000]
 set ylabel "log(g)"
-set yrange [5:0]
+set yrange [3.8:1.2]
 
-plot "/tmp/tg1.dat" using $1:$2 with dots c red ps 8, "/tmp/tg2.dat" using $1:$2 with dots c blue ps 8
+plot "/tmp/tg1.dat" title "Test set" using $1:$2 with dots c red ps 8, "/tmp/tg2.dat" title "Training set" using $1:$2 with dots c blue ps 8
+
+set term eps ; set output "../../output_plots/teff_logg.eps" ; set display ; refresh
+set term png ; set output "../../output_plots/teff_logg.png" ; set display ; refresh
+
