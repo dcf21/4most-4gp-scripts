@@ -15,8 +15,8 @@ stepb = 40
 
 # Plot 1 (bottom left)
 set xlabel "Wavelength / \AA"
-set ylabel "SNR per \AA"
-set ytics (50,100,150,200,250)
+set ylabel "SNR per pixel"
+set ytics (50,100,150,200,250,300)
 set label 1 "\bf (g)" at graph width*0.03 , graph width/goldenRatio*0.9
 plot "star5000_4fs_hrs.dat" every stepa using $1:$2/$3 with lines
 
