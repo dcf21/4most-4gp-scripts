@@ -13,6 +13,7 @@ from os import path as os_path
 import logging
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
+from fourgp_telescope_data import FourMost
 from fourgp_specsynth import TurboSpectrum
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
@@ -48,8 +49,8 @@ parser.add_argument('--log-file',
                     help="Specify a log file where we log our progress.")
 parser.add_argument('--line-lists-dir',
                     required=False,
-                    default=os_path.join(our_path, "..", "..", "fromBengt", "line_lists", "3700-9500"),
-                    dest='lines_dir',
+                    default=root_path,
+                    dest="lines_dir",
                     help="Specify a directory where line lists for TurboSpectrum can be found.")
 parser.add_argument('--binary-path',
                     required=False,
@@ -90,17 +91,42 @@ library_name = re.sub("/", "_", args.library)
 library_path = os_path.join(workspace, library_name)
 library = SpectrumLibrarySqlite(path=library_path, create=args.create, binary_spectra=False)
 
+# Invoke FourMost data class. Ensure that the spectra we produce are much higher resolution than 4MOST.
+# We down-sample them later to whatever resolution we actually want.
+FourMostData = FourMost()
+lambda_min = FourMostData.bands["LRS"]["lambda_min"]
+lambda_max = FourMostData.bands["LRS"]["lambda_max"]
+line_lists_path = FourMostData.bands["LRS"]["line_lists_edvardsson"]
+spectral_resolution = 50000
+
 # Invoke a TurboSpectrum synthesizer instance
 synthesizer = TurboSpectrum(
     turbospec_path=os_path.join(args.binary_path, "turbospectrum-15.1/exec-gf-v15.1"),
     interpol_path=os_path.join(args.binary_path, "interpol_marcs"),
-    line_list_paths=args.lines_dir,
-    marcs_grid_path=os_path.join(args.binary_path, "fromBengt/marcs_grid"))
+    line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
+    marcs_grid_path=os_path.join(args.binary_path, "fromBengt/marcs_grid")
+)
+
+synthesizer.configure(
+    lambda_min=lambda_min,
+    lambda_max=lambda_max,
+    lambda_delta=float(lambda_min) / spectral_resolution
+)
 counter_output = 0
 
 # Iterate over the spectra we're supposed to be synthesizing
 with open(args.log_to, "w") as result_log:
-    for t_eff in (3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000):
+    for (name, t_eff, log_g, metallicity) in (
+            ("Sun", 5771.8, 4.44, 0),
+            ("test_3500", 3500, 2, 0),
+            ("test_4000", 4000, 2, 0),
+            ("test_4500", 4500, 2, 0),
+            ("test_5000", 5000, 2, 0),
+            ("test_5500", 5500, 2, 0),
+            ("test_6000", 6000, 2, 0),
+            ("test_6500", 6500, 2, 0),
+            ("test_7000", 7000, 2, 0),
+    ):
         # User can specify that we should only do every nth spectrum, if we're running in parallel
         counter_output += 1
         if (args.limit > 0) and (counter_output > args.limit):
@@ -109,14 +135,11 @@ with open(args.log_to, "w") as result_log:
             continue
 
         # Configure Turbospectrum with the stellar parameters of the next star
-        synthesizer.configure(t_eff=t_eff,
-                              metallicity=0,
-                              log_g=2,
-                              lambda_min=3700,
-                              lambda_max=9500,
-                              lambda_delta=1,
-                              line_list_paths=args.lines_dir
-                              )
+        synthesizer.configure(
+            t_eff=t_eff,
+            metallicity=metallicity,
+            log_g=log_g
+        )
 
         # Make spectrum
         turbospectrum_out = synthesizer.synthesise()
@@ -132,7 +155,7 @@ with open(args.log_to, "w") as result_log:
         filepath = os_path.join(turbospectrum_out["output_file"])
 
         # Insert spectrum into SpectrumLibrary
-        metadata = {'Teff': t_eff, '[Fe/H]': 0, 'logg': 2}
+        metadata = {'name': name, 'Teff': t_eff, '[Fe/H]': metallicity, 'log_g': log_g}
         try:
             filename = os_path.split(filepath)[1]
 
