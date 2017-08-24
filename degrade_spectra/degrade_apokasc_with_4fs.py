@@ -39,11 +39,25 @@ parser.add_argument('--output-library-hrs',
                     default="4fs_apokasc_training_set_hrs",
                     dest="output_library_hrs",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized HRS spectra into.")
+parser.add_argument('--snr-definition',
+                    action="append",
+                    dest="snr_definitions",
+                    help="Specify a way of defining SNR, in the form 'name,minimum,maximum', meaning we calculate the median SNR per pixel between minimum and maximum wavelengths in Angstrom.")
 parser.add_argument('--snr-list',
                     required=False,
-                    default="05,10,15,20,50,100,250",
+                    default="5,10,15,20,50,100,250",
                     dest="snr_list",
                     help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
+parser.add_argument('--snr-definitions-lrs',
+                    required=False,
+                    default="",
+                    dest="snr_definitions_lrs",
+                    help="Specify the SNR definitions to use for the R, G and B bands of 4MOST LRS.")
+parser.add_argument('--snr-definitions-hrs',
+                    required=False,
+                    default="",
+                    dest="snr_definitions_hrs",
+                    help="Specify the SNR definitions to use for the R, G and B bands of 4MOST HRS.")
 parser.add_argument('--binary-path',
                     required=False,
                     default=root_path,
@@ -89,10 +103,30 @@ for mode in ({"name": "LRS", "library": args.output_library_lrs},
     library_path = os_path.join(workspace, library_name)
     output_libraries[mode['name']] = SpectrumLibrarySqlite(path=library_path, create=args.create)
 
+# Definitions of SNR
+snr_definitions = args.snr_definitions
+if len(snr_definitions) < 1:
+    snr_definitions = None
+
+if len(args.snr_definitions_lrs) < 1:
+    snr_definitions_lrs = None
+else:
+    snr_definitions_lrs = args.snr_definitions_lrs.split(",")
+
+if len(args.snr_definitions_hrs) < 1:
+    snr_definitions_hrs = None
+else:
+    snr_definitions_hrs = args.snr_definitions_hrs.split(",")
+
+snr_list = [float(item.strip()) for item in args.snr_list.split(",")]
+
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
-    snr_list=[item.strip() for item in args.snr_list.split(",")]
+    snr_definitions=snr_definitions,
+    lrs_use_snr_definitions=snr_definitions_lrs,
+    hrs_use_snr_definitions=snr_definitions_hrs,
+    snr_list=snr_list
 )
 
 # Fetch list of spectra to process

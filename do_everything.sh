@@ -107,7 +107,31 @@ python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_se
 python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs \
                                    --output-library-hrs 4fs_apokasc_test_set_hrs \
-                                   --snr-list "05,10,15,20,50,100,250"
+                                   --snr-list "5,10,15,20,50,100,250"
+
+python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
+                                   --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband \
+                                   --output-library-hrs 4fs_apokasc_test_set_hrs_snrperband \
+                                   --snr_definition "RH,4130,4150" \
+                                   --snr_definition "GH,5435,5455" \
+                                   --snr_definition "BH,6435,6455" \
+                                   --snr_definition "RL,4503,4523" \
+                                   --snr_definition "GL,6170,6190" \
+                                   --snr_definition "BL,8255,8275" \
+                                   --lrs_use_snr_definitions "RL,GL,BL" \
+                                   --hrs_use_snr_definitions "RH,GH,BH" \
+                                   --snr-list "5,10,15,20,50,100,250"
+
+python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
+                                   --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband_nored \
+                                   --output-library-hrs 4fs_apokasc_test_set_hrs_snrperband_nored \
+                                   --snr_definition "GH,5435,5455" \
+                                   --snr_definition "BH,6435,6455" \
+                                   --snr_definition "GL,6170,6190" \
+                                   --snr_definition "BL,8255,8275" \
+                                   --lrs_use_snr_definitions ",GL,BL" \
+                                   --hrs_use_snr_definitions ",GH,BH" \
+                                   --snr-list "5,10,15,20,50,100,250"
 
 # Test RV determination
 cd ${cwd}
