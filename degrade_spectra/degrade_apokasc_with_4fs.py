@@ -104,19 +104,25 @@ for mode in ({"name": "LRS", "library": args.output_library_lrs},
     output_libraries[mode['name']] = SpectrumLibrarySqlite(path=library_path, create=args.create)
 
 # Definitions of SNR
-snr_definitions = args.snr_definitions
-if len(snr_definitions) < 1:
+if (args.snr_definitions is None) or (len(args.snr_definitions) < 1):
     snr_definitions = None
+else:
+    snr_definitions = []
+    for snr_definition in args.snr_definitions:
+        words = snr_definition.split(",")
+        snr_definitions.append([words[0], float(words[1]), float(words[2])])
 
 if len(args.snr_definitions_lrs) < 1:
     snr_definitions_lrs = None
 else:
     snr_definitions_lrs = args.snr_definitions_lrs.split(",")
+    assert len(snr_definitions_lrs) == 3
 
 if len(args.snr_definitions_hrs) < 1:
     snr_definitions_hrs = None
 else:
     snr_definitions_hrs = args.snr_definitions_hrs.split(",")
+    assert len(snr_definitions_hrs) == 3
 
 snr_list = [float(item.strip()) for item in args.snr_list.split(",")]
 
