@@ -104,6 +104,13 @@ python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_se
                                    --output-library-hrs 4fs_apokasc_training_set_hrs \
                                    --snr-list "250"
 
+python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_set \
+                                   --output-library-lrs 4fs_apokasc_training_set_lrs_nored \
+                                   --output-library-hrs 4fs_apokasc_training_set_hrs_nored \
+                                   --snr-definitions-lrs ",MEDIANSNR,MEDIANSNR" \
+                                   --snr-definitions-hrs ",MEDIANSNR,MEDIANSNR" \
+                                   --snr-list "250"
+
 python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs \
                                    --output-library-hrs 4fs_apokasc_test_set_hrs \
