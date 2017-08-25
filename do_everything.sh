@@ -155,16 +155,19 @@ for mode in lrs hrs
 do
 for source in hawkins 4fs
 do
+for settings in '' '_snrperband' '_snrperband_noblue'
+do
 
-python cannon_test.py --train ${source}_apokasc_training_set_${mode} \
-                      --test ${source}_apokasc_test_set_${mode} \
-                      --output-file ../output_data/cannon_test_${source}_${mode}
+python cannon_test.py --train ${source}_apokasc_training_set_${mode}${settings} \
+                      --test ${source}_apokasc_test_set_${mode}${settings} \
+                      --output-file ../output_data/cannon_test_${source}_${mode}${settings}
 
-#python cannon_test.py --train ${source}_apokasc_training_set_${mode} \
-#                      --test ${source}_apokasc_test_set_${mode} \
+#python cannon_test.py --train ${source}_apokasc_training_set_${mode}${settings} \
+#                      --test ${source}_apokasc_test_set_${mode}${settings} \
 #                      --censor ../../4MOST_testspectra/ges_master_v5.fits \
-#                      --output-file ../output_data/cannon_test_${source}_${mode}_censored
+#                      --output-file ../output_data/cannon_test_${source}_${mode}${settings}_censored
 
+done
 done
 done
 
