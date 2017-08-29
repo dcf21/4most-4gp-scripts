@@ -33,8 +33,9 @@ class PlotLabelPrecision:
 
     def __init__(self,
                  label_names,
+                 number_data_sets,
                  common_x_limits=None,
-                 output_figure_stem="/tmp/cannon_performance"):
+                 output_figure_stem="/tmp/cannon_performance/"):
         """
 
         :param label_names:
@@ -45,8 +46,12 @@ class PlotLabelPrecision:
             x axes.
 
         :param output_figure_stem:
-            The file path and filename stem where we are to save plots, pyxplot scripts and data files.
+            The file path where we are to save plots, pyxplot scripts and data files.
         """
+
+        # Create directory to store output files in
+        os.system("mkdir -p {}".format(output_figure_stem))
+        os.system("rm -f {}/*".format(output_figure_stem))
 
         self.latex_labels = {
             "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 350, [100]),
@@ -68,11 +73,15 @@ class PlotLabelPrecision:
             "[Sr/H]": (r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
         }
 
+        self.datasets = []
         self.label_names = label_names
+        self.number_data_sets = number_data_sets
         self.common_x_limits = common_x_limits
-        self.output_figure_stem = os_path.abspath(output_figure_stem)
-        self.data_set_counter = 0
-        self.plot_items = [[] for i in label_names]
+        self.output_figure_stem = os_path.abspath(output_figure_stem)+"/"
+        self.data_set_counter = -1
+        self.plot_precision = [[] for i in label_names]
+        self.plot_box_whiskers = [[[] for j in range(number_data_sets)] for i in label_names]
+        self.plot_histograms = [[{} for j in range(number_data_sets)] for i in label_names]
 
     def set_latex_label(self, label, latex, axis_min=0, axis_max=1.1):
         self.latex_labels[label] = (latex, axis_min, axis_max)
@@ -115,6 +124,8 @@ class PlotLabelPrecision:
             None
         """
 
+        self.datasets.append(legend_label)
+
         # LaTeX strings to use to label each stellar label on graph axes
         latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
 
@@ -155,35 +166,64 @@ class PlotLabelPrecision:
                     label_offset[result[snr_column]][label_name].append(result[label_name] - ref)
 
         self.data_set_counter += 1
+
+        # Extract list of label offsets for each label, and for each SNR
         for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
-
-            y = np.nan * np.ones_like(snr_values)
-            for k, xk in enumerate(snr_values):
-                diffs = label_offset[xk][label_name]
-                y[k] = metric(diffs)
-
             scale = np.sqrt(pixels_per_angstrom)
 
-            np.savetxt("{}_{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter),
-                       np.transpose([snr_values * scale, y]))
+            y = []
+            for k, xk in enumerate(snr_values):
+                snr_per_a = xk * scale
 
-            self.plot_items[i].append("\"{}_{:d}_{:d}.dat\" title \"{}\" "
+                # List of offsets
+                diffs = label_offset[xk][label_name]
+
+                # Sort list
+                diffs.sort()
+
+                def percentile(fraction):
+                    return diffs[int(fraction/100.*len(diffs))]
+
+                y.append([])
+                y[-1].extend([snr_per_a])
+                y[-1].extend([metric(diffs), percentile(5), percentile(25), percentile(50), percentile(75), percentile(95)])
+
+                # Output histogram of label mismatches at this SNR
+                np.savetxt("{}{:d}_{:d}_{:06.1f}.dat".format(self.output_figure_stem, i, self.data_set_counter, snr_per_a),
+                           np.transpose(diffs))
+
+                self.plot_histograms[i][self.data_set_counter][snr_per_a] = [
+                    "{}{:d}_{:d}_{:06.1f}.dat".format(
+                    self.output_figure_stem, i, self.data_set_counter, snr_per_a)
+                    ]
+
+            # Output table of statistical measures of label-mismatch-distribution as a function of SNR (first column)
+            np.savetxt("{}{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter), y)
+
+            self.plot_precision[i].append("\"{}{:d}_{:d}.dat\" using 1:2 title \"{}\" "
                                       "with lp pt 17 col {}".format(self.output_figure_stem,
                                                                     i, self.data_set_counter,
                                                                     legend_label,
                                                                     colour))
 
-            for target_value in latex_label[3]:
-                self.plot_items[i].append("{} with lines col grey(0.75) notitle".format(target_value))
+            self.plot_box_whiskers[i][self.data_set_counter] = [
+                "\"{}{:d}_{:d}.dat\" using 1:4:6  with yerrorshaded fc red, "
+                "\"\" using 1:5:3:7 with yerrorrange col black".format(
+                    self.output_figure_stem, i, self.data_set_counter)
+                ]
 
-    def make_plots(self, snr_per_angstrom):
+            for target_value in latex_label[3]:
+                self.plot_precision[i].append("{} with lines col grey(0.75) notitle".format(target_value))
+
+    def make_plots(self):
 
         # LaTeX strings to use to label each stellar label on graph axes
         latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
 
         for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
-            # Create a new pyxplot script
-            with open("{}_{:d}.ppl".format(self.output_figure_stem, i), "w") as ppl:
+            # Create a new pyxplot script for precision plots
+            stem = "{}precision_{:d}".format(self.output_figure_stem, i)
+            with open("{}.ppl".format(stem), "w") as ppl:
                 ppl.write("""
                 set width 14
                 set key top right
@@ -192,11 +232,7 @@ class PlotLabelPrecision:
                 """.format(latex_label[0]))
 
                 ppl.write("set ylabel \"{}\"\n".format(latex_label[0]))
-
-                if snr_per_angstrom:
-                    ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
-                else:
-                    ppl.write("set xlabel \"$S/N$ $[{\\rm pixel}^{-1}]$\"\n")
+                ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
 
                 # Set axis limits
                 ppl.write("set yrange [{}:{}]\n".format(latex_label[1], latex_label[2]))
@@ -207,14 +243,71 @@ class PlotLabelPrecision:
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
 
-                ppl.write("plot {}\n".format(",".join(self.plot_items[i])))
+                ppl.write("plot {}\n".format(",".join(self.plot_precision[i])))
 
                 ppl.write("""
-                set term eps ; set output '{}_{:d}.eps' ; set display ; refresh
-                set term png ; set output '{}_{:d}.png' ; set display ; refresh\n
-                """.format(self.output_figure_stem, i, self.output_figure_stem, i))
+                set term eps ; set output '{}.eps' ; set display ; refresh
+                set term png ; set output '{}.png' ; set display ; refresh\n
+                """.format(stem, stem))
                 ppl.close()
-                os.system("pyxplot {}_{:d}.ppl".format(self.output_figure_stem, i))
+                os.system("pyxplot {}.ppl".format(stem))
+
+            # Create a new pyxplot script for box and whisker plots
+            for data_set_counter, plot_items in enumerate(self.plot_box_whiskers[i]):
+                stem = "{}whiskers_{:d}_{:d}".format(self.output_figure_stem, i, data_set_counter)
+                with open("{}.ppl".format(stem), "w") as ppl:
+                    ppl.write("""
+                    set width 14
+                    set nokey
+                    set nodisplay
+                    set label 1 "{}; {}" graph 1.5, graph 8
+                    """.format(latex_label[0], self.datasets[data_set_counter]))
+
+                    ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                    ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
+
+                    # Set axis limits
+                    ppl.write("set yrange [{}:{}]\n".format(-latex_label[2], latex_label[2]))
+
+                    # Set axis ticks
+                    ppl.write("set xtics (0, 10, 20, 30, 40, 50, 100, 200)\n")
+
+                    if self.common_x_limits is not None:
+                        ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
+
+                    ppl.write("plot {}\n".format(",".join(plot_items)))
+
+                    ppl.write("""
+                    set term eps ; set output '{}.eps' ; set display ; refresh
+                    set term png ; set output '{}.png' ; set display ; refresh\n
+                    """.format(stem, stem))
+                    ppl.close()
+                    os.system("pyxplot {}.ppl".format(stem))
+
+            # Create a new pyxplot script for histogram plots
+            for data_set_counter, data_set_items in enumerate(self.plot_histograms[i]):
+             for snr, plot_items in data_set_items.iteritems():
+                stem = "{}histogram_{:d}_{:d}_{:06.1f}".format(self.output_figure_stem, i, data_set_counter, snr)
+                with open("{}.ppl".format(stem), "w") as ppl:
+                    ppl.write("""
+                    set width 14
+                    set nokey
+                    set nodisplay
+                    set label 1 "{}; {}; SNR {:.1f}" graph 1.5, graph 8
+                    """.format(latex_label[0], self.datasets[data_set_counter], snr))
+
+                    ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                    ppl.write("# set xrange [{}:{}]\n".format(-latex_label[2], latex_label[2]))
+                    for j, plot_item in enumerate(plot_items):
+                        ppl.write("histogram f_{:d}() \"{}\"\n".format(j, plot_item))
+                        ppl.write("plot f_{:d}(x) with boxes fc red\n".format(j))
+
+                    ppl.write("""
+                    set term eps ; set output '{}.eps' ; set display ; refresh
+                    set term png ; set output '{}.png' ; set display ; refresh\n
+                    """.format(stem, stem))
+                    ppl.close()
+                    os.system("pyxplot {}.ppl".format(stem))
 
 
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
@@ -230,6 +323,7 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
     # Instantiate plotter
     plotter = PlotLabelPrecision(label_names=label_names,
                                  common_x_limits=(0, 250),
+                                 number_data_sets=len(data_sets),
                                  output_figure_stem=output_figure_stem)
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
@@ -288,7 +382,7 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
                              legend_label="{} ({})".format(data_set['title'], run_title),
                              pixels_per_angstrom=np.median(1.0 / np.diff(data_set['wavelength_raster'])))
 
-    plotter.make_plots(snr_per_angstrom=True)
+    plotter.make_plots()
 
 
 if __name__ == "__main__":
