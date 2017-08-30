@@ -207,13 +207,24 @@ class PlotLabelPrecision:
                                                                     colour))
 
             self.plot_box_whiskers[i][self.data_set_counter] = [
-                "\"{}{:d}_{:d}.dat\" using 1:4:6  with yerrorshaded fc red, "
-                "\"\" using 1:5:3:7 with yerrorrange col black".format(
+                "\"{0}{1:d}_{2:d}.dat\" using 1:5:3:7 with yerrorrange col black".format(
                     self.output_figure_stem, i, self.data_set_counter)
                 ]
 
             for target_value in latex_label[3]:
                 self.plot_precision[i].append("{} with lines col grey(0.75) notitle".format(target_value))
+
+            with open("{}{:d}_{:d}_cracktastic.dat".format(self.output_figure_stem, i, self.data_set_counter), "w") as f:
+                for j, datum in enumerate(y):
+                    w = 2
+                    f.write("{} {}\n".format(datum[0]-w, datum[3]))
+                    f.write("{} {}\n".format(datum[0]-w, datum[5]))
+                    f.write("{} {}\n".format(datum[0]+w, datum[5]))
+                    f.write("{} {}\n\n\n".format(datum[0]+w, datum[3]))
+
+                    self.plot_box_whiskers[i][self.data_set_counter].insert(0,
+                        "\"{0}{1:d}_{2:d}_cracktastic.dat\" using 1:2  with filledregion fc red col black lw 0.5 index {3}".format(
+                            self.output_figure_stem, i, self.data_set_counter, j))
 
     def make_plots(self):
 
@@ -267,7 +278,7 @@ class PlotLabelPrecision:
                     ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
 
                     # Set axis limits
-                    ppl.write("set yrange [{}:{}]\n".format(-latex_label[2], latex_label[2]))
+                    ppl.write("set yrange [{}:{}]\n".format(-2*latex_label[2], 2*latex_label[2]))
 
                     # Set axis ticks
                     ppl.write("set xtics (0, 10, 20, 30, 40, 50, 100, 200)\n")
@@ -293,11 +304,12 @@ class PlotLabelPrecision:
                     set width 14
                     set nokey
                     set nodisplay
+                    set binwidth {}
                     set label 1 "{}; {}; SNR {:.1f}" graph 1.5, graph 8
-                    """.format(latex_label[0], self.datasets[data_set_counter], snr))
+                    """.format(latex_label[2]/25, latex_label[0], self.datasets[data_set_counter], snr))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
-                    ppl.write("# set xrange [{}:{}]\n".format(-latex_label[2], latex_label[2]))
+                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2]*3, latex_label[2]*3))
                     for j, plot_item in enumerate(plot_items):
                         ppl.write("histogram f_{:d}() \"{}\"\n".format(j, plot_item))
                         ppl.write("plot f_{:d}(x) with boxes fc red\n".format(j))
@@ -307,7 +319,7 @@ class PlotLabelPrecision:
                     set term png ; set output '{}.png' ; set display ; refresh\n
                     """.format(stem, stem))
                     ppl.close()
-                    os.system("pyxplot {}.ppl".format(stem))
+                    os.system("timeout 10s pyxplot {}.ppl".format(stem))
 
 
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
