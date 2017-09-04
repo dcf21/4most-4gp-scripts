@@ -19,7 +19,13 @@ from fourgp_telescope_data import FourMost
 from fourgp_specsynth import TurboSpectrum
 
 # List of elements whose abundances we pass to TurboSpectrum
-element_list = ("He", "Li", "C", "N", "O", "Ne", "Na", "Mg", "Al", "Si", "S", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Co", "Ni", "Cu", "Zn", "Sr", "Y", "Zr", "Nb", "Mo", "Ru")
+# Elements with neutral abundances, e.g. LI1
+element_list = (
+    "He", "Li", "C", "O", "Ne", "Na", "Mg", "Al", "Si", "S", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Co", "Ni", "Cu", "Zn",
+    "Sr", "Y", "Zr", "Nb", "Mo", "Ru")
+
+# Elements with ionised abundances, e.g. N2
+element_list_ionised = ("N", "Ba", "La", "Ce", "Pr", "Nd", "Sm", "Eu", "Gd", "Dy")
 
 
 # Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
@@ -163,11 +169,11 @@ ges = f[1].data
 """
 
 # Obtain solar abundances, needed to convert values in file into solar units
-sun_id = np.where(ges.OBJECT=='Sun_Benchmarks_BordeauxLib3     ')[0]
+sun_id = np.where(ges.OBJECT == 'Sun_Benchmarks_BordeauxLib3     ')[0]
 
 # Filter objects on SNR
-min_SNR=50
-selection = np.where((ges.SNR>min_SNR) & (ges.REC_WG=='WG11') & (ges.LOGG>3.5))[0]
+min_SNR = 50
+selection = np.where((ges.SNR > min_SNR) & (ges.REC_WG == 'WG11') & (ges.LOGG > 3.5))[0]
 star_list = ges[selection]
 
 # Create new SpectrumLibrary
@@ -223,15 +229,16 @@ with open(args.log_to, "w") as result_log:
 
         # Pass list of the abundances of individual elements to TurboSpectrum
         free_abundances = {}
-        for element in element_list:
-            fits_field_name = "{}1".format(element.upper())
+        for element_list, ionisation_state in ((element_list, 1), (element_list_ionised, 2)):
+            for element in element_list:
+                fits_field_name = "{}{}".format(element.upper(), ionisation_state)
 
-            # Normalise abundance of element to solar
-            abundance = star_list[fits_field_name][star] - ges[fits_field_name][sun_id]
+                # Normalise abundance of element to solar
+                abundance = star_list[fits_field_name][star] - ges[fits_field_name][sun_id]
 
-            if np.isfinite(abundance):
-                free_abundances[element] = abundance
-                metadata["[{}/H]".format(element)] = abundance
+                if np.isfinite(abundance):
+                    free_abundances[element] = abundance
+                    metadata["[{}/H]".format(element)] = abundance
 
         # Set free abundances
         synthesizer.configure(free_abundances=free_abundances)
