@@ -8,6 +8,7 @@ Take stellar parameters of GES dwarf stars and synthesize spectra using TurboSpe
 import os
 import re
 import time
+import json
 import argparse
 import numpy as np
 from os import path as os_path
@@ -110,7 +111,8 @@ os.system("mkdir -p {}".format(workspace))
 # Table supplies list of abundances for GES stars
 f = fits.open(args.star_list)
 ges = f[1].data
-# print ges.names  # To print a list of available parameters
+ges_fields = ges.names
+# print ges_fields  # To print a list of available parameters
 
 """
 >>> print ges.names
@@ -203,10 +205,11 @@ with open(args.log_to, "w") as result_log:
         star_name = star_list.CNAME[star]
 
         metadata = {
-            "Starname": star_name,
-            "Teff": star_list.TEFF[star],
-            "[Fe/H]": star_list.FEH[star],
-            "logg": star_list.LOGG[star]
+            "Starname": str(star_name),
+            "Teff": float(star_list.TEFF[star]),
+            "[Fe/H]": float(star_list.FEH[star]),
+            "logg": float(star_list.LOGG[star]),
+            "[alpha/Fe]": float(star_list.ALPHA_FE[star])
         }
 
         # User can specify that we should only do every nth spectrum, if we're running in parallel
@@ -222,23 +225,35 @@ with open(args.log_to, "w") as result_log:
                               lambda_delta=float(lambda_min) / spectral_resolution,
                               line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
                               stellar_mass=1,
-                              t_eff=star_list.TEFF[star],
-                              metallicity=star_list.FEH[star],
-                              log_g=star_list.LOGG[star]
+                              t_eff=float(star_list.TEFF[star]),
+                              metallicity=float(star_list.FEH[star]),
+                              log_g=float(star_list.LOGG[star])
                               )
 
         # Pass list of the abundances of individual elements to TurboSpectrum
         free_abundances = {}
-        for element_list, ionisation_state in ((element_list, 1), (element_list_ionised, 2)):
-            for element in element_list:
+        for elements, ionisation_state in ((element_list, 1), (element_list_ionised, 2)):
+            for element in elements:
                 fits_field_name = "{}{}".format(element.upper(), ionisation_state)
 
                 # Normalise abundance of element to solar
                 abundance = star_list[fits_field_name][star] - ges[fits_field_name][sun_id]
 
                 if np.isfinite(abundance):
-                    free_abundances[element] = abundance
-                    metadata["[{}/H]".format(element)] = abundance
+                    free_abundances[element] = float(abundance)
+                    metadata["[{}/H]".format(element)] = float(abundance)
+
+        # Propagate all ionisation states into metadata
+        for element in element_list:
+            abundances_all = []
+            for ionisation_state in range(1, 5):
+                fits_field_name = "{}{}".format(element.upper(), ionisation_state)
+                if fits_field_name in ges_fields:
+                    abundance = star_list[fits_field_name][star] - ges[fits_field_name][sun_id]
+                    abundances_all.append(float(abundance))
+                else:
+                    abundances_all.append(None)
+            metadata["[{}/H]_ionised_states"] = json.dumps(abundances_all)
 
         # Set free abundances
         synthesizer.configure(free_abundances=free_abundances)
