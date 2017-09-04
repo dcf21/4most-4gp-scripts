@@ -13,6 +13,7 @@ import argparse
 import numpy as np
 from os import path as os_path
 import logging
+import sqlite3
 from astropy.io import fits
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
@@ -178,6 +179,30 @@ min_SNR = 50
 selection = np.where((ges.SNR > min_SNR) & (ges.REC_WG == 'WG11') & (ges.LOGG > 3.5))[0]
 star_list = ges[selection]
 
+# Output data into sqlite3 db
+os.system("rm -f /tmp/ges_sample.db")
+conn = sqlite3.connect('/tmp/ges_sample.db')
+c = conn.cursor()
+columns = []
+for col_name in ges_fields:
+    col_type = ges.dtype[col_name]
+    columns.append("{} {}".format(col_name, "TEXT" if col_type.type is np.string_ else "REAL"))
+c.execute("CREATE TABLE stars (uid INTEGER PRIMARY KEY, {});".format(",".join(columns)))
+
+for i in range(len(star_list)):
+    print "%5d / %5d" % (i, len(star_list))
+    c.execute("INSERT INTO stars (CNAME) VALUES (?);", (star_list.CNAME[i],))
+    for col_name in ges_fields:
+        if col_name == "CNAME":
+            continue
+        arguments = (
+            str(star_list[col_name][i]) if ges.dtype[col_name].type is np.string_ else float(star_list[col_name][i]),
+            star_list.CNAME[i]
+        )
+        c.execute("UPDATE stars SET %s=? WHERE CNAME=?;" % col_name, arguments)
+conn.commit()
+conn.close()
+
 # Create new SpectrumLibrary
 library_name = re.sub("/", "_", args.library)
 library_path = os_path.join(workspace, library_name)
@@ -253,7 +278,7 @@ with open(args.log_to, "w") as result_log:
                     abundances_all.append(float(abundance))
                 else:
                     abundances_all.append(None)
-            metadata["[{}/H]_ionised_states"] = json.dumps(abundances_all)
+            metadata["[{}/H]_ionised_states".format(element)] = json.dumps(abundances_all)
 
         # Set free abundances
         synthesizer.configure(free_abundances=free_abundances)
