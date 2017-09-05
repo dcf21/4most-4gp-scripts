@@ -66,6 +66,11 @@ parser.add_argument('--log-file',
                     default="/tmp/turbospec_ges_dwarfs_{}.log".format(pid),
                     dest="log_to",
                     help="Specify a log file where we log our progress.")
+parser.add_argument('--dump-to-sqlite-file',
+                    required=False,
+                    default="",
+                    dest="sqlite_out",
+                    help="Specify an sqlite3 filename where we dump the stellar parameters of the stars.")
 parser.add_argument('--star-list',
                     required=False,
                     default="../../downloads/GES_iDR5_WG15_Recommended.fits",
@@ -180,28 +185,29 @@ selection = np.where((ges.SNR > min_SNR) & (ges.REC_WG == 'WG11') & (ges.LOGG > 
 star_list = ges[selection]
 
 # Output data into sqlite3 db
-os.system("rm -f /tmp/ges_sample.db")
-conn = sqlite3.connect('/tmp/ges_sample.db')
-c = conn.cursor()
-columns = []
-for col_name in ges_fields:
-    col_type = ges.dtype[col_name]
-    columns.append("{} {}".format(col_name, "TEXT" if col_type.type is np.string_ else "REAL"))
-c.execute("CREATE TABLE stars (uid INTEGER PRIMARY KEY, {});".format(",".join(columns)))
-
-for i in range(len(star_list)):
-    print "%5d / %5d" % (i, len(star_list))
-    c.execute("INSERT INTO stars (CNAME) VALUES (?);", (star_list.CNAME[i],))
+if args.sqlite_out:
+    os.system("rm -f {}".format(args.sqlite_out))
+    conn = sqlite3.connect(args.sqlite_out)
+    c = conn.cursor()
+    columns = []
     for col_name in ges_fields:
-        if col_name == "CNAME":
-            continue
-        arguments = (
-            str(star_list[col_name][i]) if ges.dtype[col_name].type is np.string_ else float(star_list[col_name][i]),
-            star_list.CNAME[i]
-        )
-        c.execute("UPDATE stars SET %s=? WHERE CNAME=?;" % col_name, arguments)
-conn.commit()
-conn.close()
+        col_type = ges.dtype[col_name]
+        columns.append("{} {}".format(col_name, "TEXT" if col_type.type is np.string_ else "REAL"))
+    c.execute("CREATE TABLE stars (uid INTEGER PRIMARY KEY, {});".format(",".join(columns)))
+
+    for i in range(len(star_list)):
+        print "%5d / %5d" % (i, len(star_list))
+        c.execute("INSERT INTO stars (CNAME) VALUES (?);", (star_list.CNAME[i],))
+        for col_name in ges_fields:
+            if col_name == "CNAME":
+                continue
+            arguments = (
+                str(star_list[col_name][i]) if ges.dtype[col_name].type is np.string_ else float(star_list[col_name][i]),
+                star_list.CNAME[i]
+            )
+            c.execute("UPDATE stars SET %s=? WHERE CNAME=?;" % col_name, arguments)
+    conn.commit()
+    conn.close()
 
 # Create new SpectrumLibrary
 library_name = re.sub("/", "_", args.library)

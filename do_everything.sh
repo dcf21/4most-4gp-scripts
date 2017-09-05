@@ -71,7 +71,7 @@ wait
 #python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
 #                             --star-list ../../4MOST_testspectra/testset_param.tab \
 #                             --log-file ../output_data/turbospec_apokasc_test_set_${item}.log \
-#                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
+#                             --every ${n_cores} --skip ${item} ${create} &
 #sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 #create="--no-create"
 #done
@@ -86,11 +86,26 @@ wait
 #python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
 #                             --star-list ../../4MOST_testspectra/trainingset_param.tab \
 #                             --log-file ../output_data/turbospec_apokasc_training_set_${item}.log \
-#                             --every ${n_cores} --skip ${item} ${create} --limit 8 &
+#                             --every ${n_cores} --skip ${item} ${create} &
 #sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 #create="--no-create"
 #done
 #wait
+
+# Synthesize dwarf stars
+cd ${cwd}
+cd synthesize_grids/
+create="--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
+python synthesize_ges_dwarfs.py --output-library turbospec_ges_dwarf_sample \
+                                --star-list ../../downloads/GES_iDR5_WG15_Recommended.fits \
+                                --log-file ../output_data/turbospec_ges_dwarfs_${item}.log \
+                                --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create="--no-create"
+done
+wait
 
 # Copy synthesized APOKASC test set and training set
 cd ${cwd}
