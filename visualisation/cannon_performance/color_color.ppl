@@ -1,0 +1,25 @@
+#!/usr/bin/pyxplot
+
+set term png dpi 200
+set width 25
+set key top left
+set xlabel "Teff"
+set xrange [5100:4000]
+set ylabel "log(g)"
+set yrange [3.8:1.2]
+set linewidth 0.4
+set output /tmp/tg_plot_training_set.png
+plot "/tmp/tg_train_lrs_250.dat" title "Training set" using $1:$2 with dots c red ps 8
+set output /tmp/tg_plot_test_set.png
+plot "/tmp/tg_test_lrs_250.dat" title "Test set" using $1:$2 with dots c red ps 8
+set output /tmp/tg_plot_test_set_lrs.png
+plot "/tmp/tg_test_lrs_100.dat" title "LRS Test output, SNR 100." using $3:$4 with dots c red ps 8
+set output /tmp/tg_plot_test_set_hrs.png
+plot "/tmp/tg_test_hrs_100.dat" title "HRS Test output, SNR 100." using $3:$4 with dots c red ps 8
+
+foreach mode in ["lrs","hrs"] {
+foreach snr in ["005","010","015","020","050","100","250"] {
+set output "/tmp/tg_plot_test_output_%s_%s.png"%(mode,snr)
+plot "/tmp/tg_test_%s_%s.dat"%(mode,snr) title "Cannon output -$>$ Synthesised values. %s, SNR %s."%(mode,snr) with arrows c red using 3:4:1:2
+}
+}
