@@ -114,24 +114,24 @@ rsync -av /mnt/data/ganymede_mirror/astrolabe/iwg7_pipeline/4most-4gp-scripts/wo
 # Use 4FS to degrade the APOKASC spectra
 cd ${cwd}
 cd degrade_spectra
-python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_set \
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_training_set \
                                    --output-library-lrs 4fs_apokasc_training_set_lrs \
                                    --output-library-hrs 4fs_apokasc_training_set_hrs \
                                    --snr-list "250"
 
-python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_training_set \
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_training_set \
                                    --output-library-lrs 4fs_apokasc_training_set_lrs_noblue \
                                    --output-library-hrs 4fs_apokasc_training_set_hrs_noblue \
                                    --snr-definitions-lrs "MEDIANSNR,MEDIANSNR," \
                                    --snr-definitions-hrs "MEDIANSNR,MEDIANSNR," \
                                    --snr-list "250"
 
-python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs \
                                    --output-library-hrs 4fs_apokasc_test_set_hrs \
                                    --snr-list "5,10,15,20,50,100,250"
 
-python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband \
                                    --output-library-hrs 4fs_apokasc_test_set_hrs_snrperband \
                                    --snr-definition "BH,4130,4150" \
@@ -144,7 +144,7 @@ python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --snr-definitions-hrs "RH,GH,BH" \
                                    --snr-list "5,10,15,20,50,100,250"
 
-python degrade_apokasc_with_4fs.py --input-library turbospec_apokasc_test_set \
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband_noblue \
                                    --output-library-hrs 4fs_apokasc_test_set_hrs_snrperband_noblue \
                                    --snr-definition "GH,5435,5455" \
