@@ -98,10 +98,10 @@ cd synthesize_grids/
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
-python synthesize_ges_dwarfs.py --output-library turbospec_ges_dwarf_sample \
-                                --star-list ../../downloads/GES_iDR5_WG15_Recommended.fits \
-                                --log-file ../output_data/turbospec_ges_dwarfs_${item}.log \
-                                --every ${n_cores} --skip ${item} ${create} &
+python synthesize_ahm2017.py --output-library turbospec_ahm2017_sample \
+                             --star-list ../../downloads/GES_iDR5_WG15_Recommended.fits \
+                             --log-file ../output_data/turbospec_ahm2017_${item}.log \
+                             --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
 done

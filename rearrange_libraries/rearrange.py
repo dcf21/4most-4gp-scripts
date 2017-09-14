@@ -131,7 +131,6 @@ with open(args.log_to, "w") as result_log:
             logger.info("Working on <{}>".format(input_spectrum['filename']))
             # Open Spectrum data from disk
             input_spectrum_array = library_obj.open(ids=input_spectrum['specId'])
-            input_spectrum_array = library_obj.open(ids=input_spectrum['specId'])
             input_spectrum = input_spectrum_array.extract_item(0)
 
             # Look up the name of the star we've just loaded
@@ -164,6 +163,3 @@ with open(args.log_to, "w") as result_log:
                         for spectrum_type in degraded_spectra[mode][index][snr]:
                             output_libraries[mode].insert(spectra=degraded_spectra[mode][index][snr][spectrum_type],
                                                           filenames=input_spectrum_id['filename'])
-
-# Clean up 4FS
-etc_wrapper.close()
