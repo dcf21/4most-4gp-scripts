@@ -39,7 +39,7 @@ def astropy_row_to_dict(x):
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
-logger.info("Synthesizing GES dwarf spectra")
+logger.info("Synthesizing AHM2017 spectra")
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -109,7 +109,7 @@ parser.add_argument('--limit',
                     help="Only process a maximum of n spectra.")
 args = parser.parse_args()
 
-logger.info("Synthesizing GES spectra with arguments <{}> <{}>".format(args.library, args.star_list))
+logger.info("Synthesizing AHM2017 with arguments <{}> <{}>".format(args.library, args.star_list))
 
 # Set path to workspace where we create libraries of spectra
 workspace = os_path.join(our_path, "..", "workspace")

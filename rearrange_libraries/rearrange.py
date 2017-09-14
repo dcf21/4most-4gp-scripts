@@ -151,15 +151,20 @@ with open(args.log_to, "w") as result_log:
                 ids=continuum_normalised_spectrum_id[0]['specId'])
             input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
 
+            # Select which output library to send this spectrum to
+            output_index = 0
+
+            # Contaminate this spectrum is requested
+
+
             # Process spectra through 4FS
             degraded_spectra = etc_wrapper.process_spectra(
                 spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
             )
 
-            # Import degraded spectra into output spectrum library
-            for mode in degraded_spectra:
-                for index in degraded_spectra[mode]:
-                    for snr in degraded_spectra[mode][index]:
-                        for spectrum_type in degraded_spectra[mode][index][snr]:
-                            output_libraries[mode].insert(spectra=degraded_spectra[mode][index][snr][spectrum_type],
-                                                          filenames=input_spectrum_id['filename'])
+            # Import spectra into output spectrum library
+            output_libraries[output_index].insert(spectra=input_spectrum,
+                                                  filenames=input_spectrum['filename'])
+
+            output_libraries[output_index].insert(spectra=input_spectrum_continuum_normalised,
+                                                  filenames=continuum_normalised_spectrum_id[0]['filename'])

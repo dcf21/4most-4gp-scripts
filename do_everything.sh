@@ -129,7 +129,7 @@ python degrade_library_with_4fs.py --input-library turbospec_apokasc_training_se
 python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs \
                                    --output-library-hrs 4fs_apokasc_test_set_hrs \
-                                   --snr-list "5,10,15,20,50,100,250"
+                                   --snr-list "10,20,50,80,100,130,180,250"
 
 python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband \
@@ -142,7 +142,7 @@ python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --snr-definition "RL,8255,8275" \
                                    --snr-definitions-lrs "RL,GL,BL" \
                                    --snr-definitions-hrs "RH,GH,BH" \
-                                   --snr-list "5,10,15,20,50,100,250"
+                                   --snr-list "10,20,50,80,100,130,180,250"
 
 python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband_noblue \
@@ -153,7 +153,7 @@ python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --snr-definition "RL,8255,8275" \
                                    --snr-definitions-lrs "RL,GL," \
                                    --snr-definitions-hrs "RH,GH," \
-                                   --snr-list "5,10,15,20,50,100,250"
+                                   --snr-list "10,20,50,80,100,130,180,250"
 
 # Test RV determination
 cd ${cwd}

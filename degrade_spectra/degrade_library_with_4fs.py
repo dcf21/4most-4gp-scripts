@@ -45,7 +45,7 @@ parser.add_argument('--snr-definition',
                     help="Specify a way of defining SNR, in the form 'name,minimum,maximum', meaning we calculate the median SNR per pixel between minimum and maximum wavelengths in Angstrom.")
 parser.add_argument('--snr-list',
                     required=False,
-                    default="5,10,15,20,50,100,250",
+                    default="10,20,50,80,100,130,180,250",
                     dest="snr_list",
                     help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
 parser.add_argument('--snr-definitions-lrs',
