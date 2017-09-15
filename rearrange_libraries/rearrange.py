@@ -104,16 +104,18 @@ def open_input_libraries(inputs):
         })
     return input_libraries
 
+
 def make_weighted_choice(weights):
     weights_sum = sum(weights)
     selected_index = 0
     output_select = random.uniform(a=0, b=weights_sum)
     for index, weight in enumerate(weights):
         output_select -= weight
-        if output_select <=0:
+        if output_select <= 0:
             selected_index = index
             break
     return selected_index
+
 
 # Open input SpectrumLibrary(s)
 input_libraries = open_input_libraries(args.input_library)
@@ -122,27 +124,27 @@ input_libraries = open_input_libraries(args.input_library)
 contamination_libraries = open_input_libraries(args.contamination_library)
 contamination_spectra = []
 for library in contamination_libraries:
-        library_obj = library["library"]
-        for item in library["items"]:
-            contamination_spectrum = library_obj.open(ids=item['specId']).extract_item(0)
-            
-            # Look up the name of the star we've just loaded
-            object_name = contamination_spectrum.metadata['Starname']
-            
-            # Search for the continuum-normalised version of this same object
-            continuum_normalised_spectrum_id = library_obj.search(Starname=object_name, continuum_normalised=1)
+    library_obj = library["library"]
+    for item in library["items"]:
+        contamination_spectrum = library_obj.open(ids=item['specId']).extract_item(0)
 
-            # Check that continuum-normalised spectrum exists
-            assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
+        # Look up the name of the star we've just loaded
+        object_name = contamination_spectrum.metadata['Starname']
 
-            # Load the continuum-normalised version
-            contamination_spectrum_continuum_normalised_arr = library_obj.open(
-                ids=continuum_normalised_spectrum_id[0]['specId'])
-            contamination_spectrum_continuum_normalised = contamination_spectrum_continuum_normalised_arr.extract_item(0)
-            
-            contamination_spectra.append(
-                [contamination_spectrum, contamination_spectrum_continuum_normalised]
-            )
+        # Search for the continuum-normalised version of this same object
+        continuum_normalised_spectrum_id = library_obj.search(Starname=object_name, continuum_normalised=1)
+
+        # Check that continuum-normalised spectrum exists
+        assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
+
+        # Load the continuum-normalised version
+        contamination_spectrum_continuum_normalised_arr = library_obj.open(
+            ids=continuum_normalised_spectrum_id[0]['specId'])
+        contamination_spectrum_continuum_normalised = contamination_spectrum_continuum_normalised_arr.extract_item(0)
+
+        contamination_spectra.append(
+            [contamination_spectrum, contamination_spectrum_continuum_normalised]
+        )
 
 # Create new SpectrumLibrary(s)
 output_libraries = []
@@ -152,7 +154,7 @@ for library_name in args.output_library:
 
 # Contamination fractions
 contamination_fractions = [float(i) for i in args.contamination_fraction]
-if len(contamination_fractions)==0:
+if len(contamination_fractions) == 0:
     contamination_fractions = [0]
 
 # Output fractions
@@ -163,59 +165,68 @@ assert len(output_fractions) == len(output_libraries), "Must have an output frac
 
 # Loop over spectra to process
 with open(args.log_to, "w") as result_log:
- for contamination_fraction in contamination_fractions:
-    for input_library in input_libraries:
-        library_obj = input_library["library"]
-        for input_spectrum in input_library["items"]:
-            logger.info("Working on <{}>".format(input_spectrum['filename']))
+    for contamination_fraction in contamination_fractions:
+        for input_library in input_libraries:
+            library_obj = input_library["library"]
+            for input_spectrum in input_library["items"]:
+                logger.info("Working on <{}>".format(input_spectrum['filename']))
 
-            # Open Spectrum data from disk
-            input_spectrum_array = library_obj.open(ids=input_spectrum['specId'])
-            input_spectrum = input_spectrum_array.extract_item(0)
+                # Open Spectrum data from disk
+                input_spectrum_array = library_obj.open(ids=input_spectrum['specId'])
+                input_spectrum = input_spectrum_array.extract_item(0)
 
-            # Look up the name of the star we've just loaded
-            object_name = input_spectrum.metadata['Starname']
+                # Look up the name of the star we've just loaded
+                object_name = input_spectrum.metadata['Starname']
 
-            # Write log message
-            result_log.write("\n[{}] {}... ".format(time.asctime(), object_name))
-            result_log.flush()
+                # Write log message
+                result_log.write("\n[{}] {}... ".format(time.asctime(), object_name))
+                result_log.flush()
 
-            # Search for the continuum-normalised version of this same object
-            continuum_normalised_spectrum_id = input_library.search(Starname=object_name, continuum_normalised=1)
+                # Search for the continuum-normalised version of this same object
+                continuum_normalised_spectrum_id = input_library.search(Starname=object_name, continuum_normalised=1)
 
-            # Check that continuum-normalised spectrum exists
-            assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
+                # Check that continuum-normalised spectrum exists
+                assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
 
-            # Load the continuum-normalised version
-            input_spectrum_continuum_normalised_arr = input_library.open(
-                ids=continuum_normalised_spectrum_id[0]['specId'])
-            input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
+                # Load the continuum-normalised version
+                input_spectrum_continuum_normalised_arr = input_library.open(
+                    ids=continuum_normalised_spectrum_id[0]['specId'])
+                input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
 
-            # Contaminate this spectrum if requested
-            if contamination_fraction > 0:
-                contamination_spectrum, contamination_spectrum_continuum_normalised = \
-                    random.choice(contamination_spectra)
+                # Contaminate this spectrum if requested
+                if contamination_fraction > 0:
+                    contamination_spectrum, contamination_spectrum_continuum_normalised = \
+                        random.choice(contamination_spectra)
 
-                input_integral = input_spectrum.integral()
-                contamination_integral = contamination_spectrum.integral()
+                    input_integral = input_spectrum.integral()
+                    contamination_integral = contamination_spectrum.integral()
 
-                # Interpolate the contamination spectrum onto the observed spectrum's wavelength
-                interpolator = fourgp_degrade.SpectrumInterpolator(contamination_spectrum)
-                contamination_resampled = interpolator.match_to_other_spectrum(other=input_spectrum,
-                                                                  interpolate_errors=False,
-                                                                               interpolate_mask=False)
+                    # Interpolate the contamination spectrum onto the observed spectrum's wavelength
+                    interpolator = fourgp_degrade.SpectrumInterpolator(contamination_spectrum)
+                    contamination_resampled = interpolator.match_to_other_spectrum(other=input_spectrum,
+                                                                                   interpolate_errors=False,
+                                                                                   interpolate_mask=False)
 
-                interpolator = fourgp_degrade.SpectrumInterpolator(contamination_spectrum_continuum_normalised)
-                contamination_cn_resampled = interpolator.match_to_other_spectrum(other=input_spectrum,
-                                                                               interpolate_errors=False,
-                                                                                  interpolate_mask=False)
+                    interpolator = fourgp_degrade.SpectrumInterpolator(contamination_spectrum_continuum_normalised)
+                    contamination_cn_resampled = interpolator.match_to_other_spectrum(other=input_spectrum,
+                                                                                      interpolate_errors=False,
+                                                                                      interpolate_mask=False)
 
-            # Select which output library to send this spectrum to
-            output_index = make_weighted_choice(output_fractions)
+                    input_spectrum.values = \
+                        (input_spectrum.values * (1 - contamination_fraction) +
+                         contamination_spectrum.values * contamination_fraction * input_integral / contamination_integral)
 
-            # Import spectra into output spectrum library
-            output_libraries[output_index].insert(spectra=input_spectrum,
-                                                  filenames=input_spectrum['filename'])
+                    input_spectrum_continuum_normalised.values = \
+                        (input_spectrum_continuum_normalised.values * (1 - contamination_fraction) +
+                         contamination_spectrum_continuum_normalised.values * contamination_fraction *
+                         input_integral / contamination_integral)
 
-            output_libraries[output_index].insert(spectra=input_spectrum_continuum_normalised,
-                                                  filenames=continuum_normalised_spectrum_id[0]['filename'])
+                # Select which output library to send this spectrum to
+                output_index = make_weighted_choice(output_fractions)
+
+                # Import spectra into output spectrum library
+                output_libraries[output_index].insert(spectra=input_spectrum,
+                                                      filenames=input_spectrum['filename'])
+
+                output_libraries[output_index].insert(spectra=input_spectrum_continuum_normalised,
+                                                      filenames=continuum_normalised_spectrum_id[0]['filename'])
