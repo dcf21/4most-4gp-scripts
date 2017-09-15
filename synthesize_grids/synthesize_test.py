@@ -155,7 +155,7 @@ with open(args.log_to, "w") as result_log:
         filepath = os_path.join(turbospectrum_out["output_file"])
 
         # Insert spectrum into SpectrumLibrary
-        metadata = {'name': name, 'Teff': t_eff, '[Fe/H]': metallicity, 'log_g': log_g}
+        metadata = {'Starname': name, 'Teff': t_eff, '[Fe/H]': metallicity, 'log_g': log_g}
         try:
             filename = os_path.split(filepath)[1]
 

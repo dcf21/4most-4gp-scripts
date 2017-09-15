@@ -80,8 +80,8 @@ errors_dummy = np.zeros_like(wavelength_raster)
 
 # Import each template spectrum in turn
 for i, axis_indices in enumerate(grid_axis_index_combinations):
-    metadata = {}
     filename = "template{:06d}".format(i)
+    metadata = {"Starname": filename}
     item = flux_templates
     for axis_counter, index in enumerate(axis_indices):
         metadata_key = grid_axes[axis_counter][0]
