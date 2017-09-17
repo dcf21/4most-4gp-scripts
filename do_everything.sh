@@ -63,36 +63,51 @@ done
 wait
 
 # Synthesize APOKASC test set
-#cd ${cwd}
-#cd synthesize_grids/
-#create="--create"  # Only create clean SpectrumLibrary in first thread
-#for item in `seq 0 ${n_cores_less_one}`
-#do
-#python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
-#                             --star-list ../../4MOST_testspectra/testset_param.tab \
-#                             --log-file ../output_data/turbospec_apokasc_test_set_${item}.log \
-#                             --every ${n_cores} --skip ${item} ${create} &
-#sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
-#create="--no-create"
-#done
-#wait
+cd ${cwd}
+cd synthesize_grids/
+create="--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
+python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
+                             --star-list ../../4MOST_testspectra/testset_param.tab \
+                             --log-file ../output_data/turbospec_apokasc_test_set_${item}.log \
+                             --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create="--no-create"
+done
+wait
 
 # Synthesize APOKASC training set
-#cd ${cwd}
-#cd synthesize_grids/
-#create="--create"  # Only create clean SpectrumLibrary in first thread
-#for item in `seq 0 ${n_cores_less_one}`
-#do
-#python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
-#                             --star-list ../../4MOST_testspectra/trainingset_param.tab \
-#                             --log-file ../output_data/turbospec_apokasc_training_set_${item}.log \
-#                             --every ${n_cores} --skip ${item} ${create} &
-#sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
-#create="--no-create"
-#done
-#wait
+cd ${cwd}
+cd synthesize_grids/
+create="--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
+python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
+                             --star-list ../../4MOST_testspectra/trainingset_param.tab \
+                             --log-file ../output_data/turbospec_apokasc_training_set_${item}.log \
+                             --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create="--no-create"
+done
+wait
 
 # Synthesize dwarf stars
+cd ${cwd}
+cd synthesize_grids/
+create="--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
+python synthesize_ges_dwarfs.py --output-library turbospec_ges_dwarf_sample \
+                                --star-list ../../downloads/GES_iDR5_WG15_Recommended.fits \
+                                --log-file ../output_data/turbospec_ges_dwarfs_${item}.log \
+                                --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create="--no-create"
+done
+wait
+
+# Synthesize AHM2017 sample of GES stars
 cd ${cwd}
 cd synthesize_grids/
 create="--create"  # Only create clean SpectrumLibrary in first thread
@@ -107,33 +122,18 @@ create="--no-create"
 done
 wait
 
-# Copy synthesized APOKASC test set and training set
-cd ${cwd}
-rsync -av /mnt/data/ganymede_mirror/astrolabe/iwg7_pipeline/4most-4gp-scripts/workspace/turbospec_apokasc_* workspace
-
 # Use 4FS to degrade the APOKASC spectra
 cd ${cwd}
 cd degrade_spectra
-python degrade_library_with_4fs.py --input-library turbospec_apokasc_training_set \
-                                   --output-library-lrs 4fs_apokasc_training_set_lrs \
-                                   --output-library-hrs 4fs_apokasc_training_set_hrs \
-                                   --snr-list "250"
+for mode in training_set test_set
+do
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
+                                   --output-library-lrs 4fs_apokasc_${mode}_lrs \
+                                   --output-library-hrs 4fs_apokasc_${mode}_hrs
 
-python degrade_library_with_4fs.py --input-library turbospec_apokasc_training_set \
-                                   --output-library-lrs 4fs_apokasc_training_set_lrs_noblue \
-                                   --output-library-hrs 4fs_apokasc_training_set_hrs_noblue \
-                                   --snr-definitions-lrs "MEDIANSNR,MEDIANSNR," \
-                                   --snr-definitions-hrs "MEDIANSNR,MEDIANSNR," \
-                                   --snr-list "250"
-
-python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
-                                   --output-library-lrs 4fs_apokasc_test_set_lrs \
-                                   --output-library-hrs 4fs_apokasc_test_set_hrs \
-                                   --snr-list "10,20,50,80,100,130,180,250"
-
-python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
-                                   --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband \
-                                   --output-library-hrs 4fs_apokasc_test_set_hrs_snrperband \
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
+                                   --output-library-lrs 4fs_apokasc_${mode}_lrs_snrperband \
+                                   --output-library-hrs 4fs_apokasc_${mode}_hrs_snrperband \
                                    --snr-definition "BH,4130,4150" \
                                    --snr-definition "GH,5435,5455" \
                                    --snr-definition "RH,6435,6455" \
@@ -141,19 +141,30 @@ python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
                                    --snr-definition "GL,6170,6190" \
                                    --snr-definition "RL,8255,8275" \
                                    --snr-definitions-lrs "RL,GL,BL" \
-                                   --snr-definitions-hrs "RH,GH,BH" \
-                                   --snr-list "10,20,50,80,100,130,180,250"
+                                   --snr-definitions-hrs "RH,GH,BH"
 
-python degrade_library_with_4fs.py --input-library turbospec_apokasc_test_set \
-                                   --output-library-lrs 4fs_apokasc_test_set_lrs_snrperband_noblue \
-                                   --output-library-hrs 4fs_apokasc_test_set_hrs_snrperband_noblue \
+python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
+                                   --output-library-lrs 4fs_apokasc_${mode}_lrs_snrperband_noblue \
+                                   --output-library-hrs 4fs_apokasc_${mode}_hrs_snrperband_noblue \
                                    --snr-definition "GH,5435,5455" \
                                    --snr-definition "RH,6435,6455" \
                                    --snr-definition "GL,6170,6190" \
                                    --snr-definition "RL,8255,8275" \
                                    --snr-definitions-lrs "RL,GL," \
-                                   --snr-definitions-hrs "RH,GH," \
-                                   --snr-list "10,20,50,80,100,130,180,250"
+                                   --snr-definitions-hrs "RH,GH,"
+done
+
+python degrade_apokasc_with_4fs.py --input-library turbospec_ges_dwarf_sample \
+                                   --output-library-lrs 4fs_ges_dwarf_sample_lrs \
+                                   --output-library-hrs 4fs_ges_dwarf_sample_hrs
+
+python degrade_apokasc_with_4fs.py --input-library turbospec_ahm2017_sample \
+                                   --output-library-lrs 4fs_ahm2017_sample_lrs \
+                                   --output-library-hrs 4fs_ahm2017_sample_hrs
+
+python degrade_apokasc_with_4fs.py --input-library demo_stars \
+                                   --output-library-lrs 4fs_demo_stars_lrs \
+                                   --output-library-hrs 4fs_demo_stars_hrs
 
 # Test RV determination
 cd ${cwd}
@@ -194,6 +205,7 @@ for all in *.ppl ; do pyxplot ${all} ; done
 cd visualisation/stellar_parameters/
 for all in *.ppl ; do pyxplot ${all} ; done
 
+# Plot performance of Cannon
 cd ${cwd}
 cd visualisation/cannon_performance
 python plot_performance.py --library hawkins_apokasc_test_set_lrs --cannon-output ../../output_data/cannon_test_hawkins_lrs.dat --dataset-label "Hawkins LRS" \
