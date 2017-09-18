@@ -122,6 +122,19 @@ create="--no-create"
 done
 wait
 
+# Synthesize grid of stars on MARCS grid of parameter values
+cd ${cwd}
+cd synthesize_grids/
+create="--create"  # Only create clean SpectrumLibrary in first thread
+for item in `seq 0 ${n_cores_less_one}`
+do
+python synthesize_marcs_grid.py --log-file ../output_data/turbospec_marcs_grid_${item}.log \
+                                --every ${n_cores} --skip ${item} ${create} &
+sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
+create="--no-create"
+done
+wait
+
 # Use 4FS to degrade the APOKASC spectra
 cd ${cwd}
 cd degrade_spectra
@@ -154,15 +167,15 @@ python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
                                    --snr-definitions-hrs "RH,GH,"
 done
 
-python degrade_apokasc_with_4fs.py --input-library turbospec_ges_dwarf_sample \
+python degrade_library_with_4fs.py --input-library turbospec_ges_dwarf_sample \
                                    --output-library-lrs 4fs_ges_dwarf_sample_lrs \
                                    --output-library-hrs 4fs_ges_dwarf_sample_hrs
 
-python degrade_apokasc_with_4fs.py --input-library turbospec_ahm2017_sample \
+python degrade_library_with_4fs.py --input-library turbospec_ahm2017_sample \
                                    --output-library-lrs 4fs_ahm2017_sample_lrs \
                                    --output-library-hrs 4fs_ahm2017_sample_hrs
 
-python degrade_apokasc_with_4fs.py --input-library demo_stars \
+python degrade_library_with_4fs.py --input-library demo_stars \
                                    --output-library-lrs 4fs_demo_stars_lrs \
                                    --output-library-hrs 4fs_demo_stars_hrs
 

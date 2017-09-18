@@ -163,6 +163,9 @@ if len(output_fractions) == 0:
     output_fractions = [1]
 assert len(output_fractions) == len(output_libraries), "Must have an output fraction specified for each output library."
 
+# Keep a record of which stars are being sent to which output
+output_destinations = {}
+
 # Loop over spectra to process
 with open(args.log_to, "w") as result_log:
     for contamination_fraction in contamination_fractions:
@@ -222,7 +225,12 @@ with open(args.log_to, "w") as result_log:
                          input_integral / contamination_integral)
 
                 # Select which output library to send this spectrum to
-                output_index = make_weighted_choice(output_fractions)
+                # Be sure to send all spectra relating to any particular star to the same destination
+                if object_name in output_destinations:
+                    output_index = output_destinations[object_name]
+                else:
+                    output_index = make_weighted_choice(output_fractions)
+                    output_destinations[object_name] = output_index
 
                 # Import spectra into output spectrum library
                 output_libraries[output_index].insert(spectra=input_spectrum,

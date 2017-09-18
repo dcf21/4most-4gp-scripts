@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Take the APOKASC training set and test sets, and see how well the Cannon can reproduce APOGEE labels on a test
+Take a training set and a test set, and see how well the Cannon can reproduce the stellar labels on the test
 set of stars.
 """
 
 import argparse
 from os import path as os_path
+import re
 import logging
 import json
 import time
@@ -48,21 +49,48 @@ test_labels = ("Teff", "logg", "[Fe/H]",
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "..", "workspace")
 
+
+# Helper for opening input SpectrumLibrary(s)
+def open_input_libraries(library_spec):
+        test = re.match("(.*)\[(.*)\]", library_spec)
+        constraints = {}
+        if test is None:
+            library_name = library_spec
+        else:
+            library_name = test.group(1)
+            for constraint in test.group(2).split(","):
+                words = constraint.split("=")
+                assert len(words) == 2, "Could not parse constraint <{}>".format(constraint)
+                constraint_name = words[0]
+                constraint_value = words[1]
+                try:
+                    constraint_value = float(words[1])
+                except ValueError:
+                    pass
+                constraints[constraint_name] = constraint_value
+        constraints["continuum_normalised"] = 1  # All input spectra must be continuum normalised
+        library_path = os_path.join(workspace, library_name)
+        input_library = SpectrumLibrarySqlite(path=library_path, create=False)
+        library_items = input_library.search(**constraints)
+        return {
+            "library": input_library,
+            "items": library_items
+        }
+
+
 # Open training set
-training_library_path = os_path.join(workspace, args.train_library)
-training_library = SpectrumLibrarySqlite(path=training_library_path, create=False)
+training_library, training_library_items = open_input_libraries(args.train_library)
 
 # Open test set
-test_library_path = os_path.join(workspace, args.test_library)
-test_library = SpectrumLibrarySqlite(path=test_library_path, create=False)
+test_library, test_library_items = open_input_libraries(args.test_library)
 
 # Load training set
-training_library_ids = [i["specId"] for i in training_library.search(continuum_normalised=1)]
+training_library_ids = [i["specId"] for i in training_library_items]
 training_spectra = training_library.open(ids=training_library_ids)
 raster = training_spectra.wavelengths
 
 # Load test set
-test_library_ids = [i["specId"] for i in test_library.search(continuum_normalised=1)]
+test_library_ids = [i["specId"] for i in test_library_items]
 
 # If required, generate the censoring masks
 censoring_masks = None
