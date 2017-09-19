@@ -32,7 +32,6 @@ parser.add_argument('--input-library',
                     help="Specify the name of the SpectrumLibrary we are to read input spectra from.")
 parser.add_argument('--output-library',
                     action="append",
-                    default="tmp_merged_output",
                     dest="output_library",
                     help="Specify the name of the SpectrumLibrary we are to feed output into.")
 parser.add_argument('--contamination-library',
@@ -76,6 +75,8 @@ os.system("mkdir -p {}".format(workspace))
 
 # Helper for opening input SpectrumLibrary(s)
 def open_input_libraries(inputs):
+    if inputs is None:
+        return []
     input_libraries = []
     for library_spec in inputs:
         test = re.match("(.*)\[(.*)\]", library_spec)
@@ -132,7 +133,13 @@ for library in contamination_libraries:
         object_name = contamination_spectrum.metadata['Starname']
 
         # Search for the continuum-normalised version of this same object
-        continuum_normalised_spectrum_id = library_obj.search(Starname=object_name, continuum_normalised=1)
+        search_constraints = {
+            "Starname": object_name,
+            "continuum_normalised": 1
+        }
+        if "SNR" in contamination_spectrum.metadata:
+            search_constraints["SNR"] = contamination_spectrum.metadata["SNR"]
+        continuum_normalised_spectrum_id = library_obj.search(**search_constraints)
 
         # Check that continuum-normalised spectrum exists
         assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
@@ -153,12 +160,16 @@ for library_name in args.output_library:
     output_libraries.append(SpectrumLibrarySqlite(path=library_path, create=args.create))
 
 # Contamination fractions
-contamination_fractions = [float(i) for i in args.contamination_fraction]
+contamination_fractions = []
+if args.contamination_fraction is not None:
+    contamination_fractions = [float(i) for i in args.contamination_fraction]
 if len(contamination_fractions) == 0:
     contamination_fractions = [0]
 
 # Output fractions
-output_fractions = [float(i) for i in args.output_fraction]
+output_fractions = []
+if args.output_fraction is not None:
+    output_fractions = [float(i) for i in args.output_fraction]
 if len(output_fractions) == 0:
     output_fractions = [1]
 assert len(output_fractions) == len(output_libraries), "Must have an output fraction specified for each output library."
@@ -171,28 +182,34 @@ with open(args.log_to, "w") as result_log:
     for contamination_fraction in contamination_fractions:
         for input_library in input_libraries:
             library_obj = input_library["library"]
-            for input_spectrum in input_library["items"]:
-                logger.info("Working on <{}>".format(input_spectrum['filename']))
+            for input_spectrum_id in input_library["items"]:
+                logger.info("Working on <{}>".format(input_spectrum_id['filename']))
 
                 # Open Spectrum data from disk
-                input_spectrum_array = library_obj.open(ids=input_spectrum['specId'])
+                input_spectrum_array = library_obj.open(ids=input_spectrum_id['specId'])
                 input_spectrum = input_spectrum_array.extract_item(0)
 
                 # Look up the name of the star we've just loaded
                 object_name = input_spectrum.metadata['Starname']
 
                 # Write log message
-                result_log.write("\n[{}] {}... ".format(time.asctime(), object_name))
+                result_log.write("\n[{}] {}".format(time.asctime(), object_name))
                 result_log.flush()
 
                 # Search for the continuum-normalised version of this same object
-                continuum_normalised_spectrum_id = input_library.search(Starname=object_name, continuum_normalised=1)
+                search_constraints = {
+                    "Starname": object_name,
+                    "continuum_normalised": 1
+                }
+                if "SNR" in input_spectrum.metadata:
+                    search_constraints["SNR"] = input_spectrum.metadata["SNR"]
+                continuum_normalised_spectrum_id = library_obj.search(**search_constraints)
 
                 # Check that continuum-normalised spectrum exists
                 assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
 
                 # Load the continuum-normalised version
-                input_spectrum_continuum_normalised_arr = input_library.open(
+                input_spectrum_continuum_normalised_arr = library_obj.open(
                     ids=continuum_normalised_spectrum_id[0]['specId'])
                 input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
 
@@ -234,7 +251,7 @@ with open(args.log_to, "w") as result_log:
 
                 # Import spectra into output spectrum library
                 output_libraries[output_index].insert(spectra=input_spectrum,
-                                                      filenames=input_spectrum['filename'])
+                                                      filenames=input_spectrum_id['filename'])
 
                 output_libraries[output_index].insert(spectra=input_spectrum_continuum_normalised,
                                                       filenames=continuum_normalised_spectrum_id[0]['filename'])
