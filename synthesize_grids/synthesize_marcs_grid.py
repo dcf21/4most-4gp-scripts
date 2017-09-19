@@ -181,8 +181,8 @@ counter_output = 0
 # Iterate over the spectra we're supposed to be synthesizing
 with open(args.log_to, "w") as result_log:
     for i1, t_eff in enumerate(parameter_values['temperature']):
-        for i2, log_g in enumerate(['log_g']):
-            for i3, fe_h in enumerate(['metallicity']):
+        for i2, log_g in enumerate(parameter_values['log_g']):
+            for i3, fe_h in enumerate(parameter_values['metallicity']):
                 # User can specify that we should only do every nth spectrum, if we're running in parallel
                 counter_output += 1
                 if (args.limit > 0) and (counter_output > args.limit):
