@@ -44,13 +44,13 @@ def tabulate_labels(output_stub, library, labels, cannon):
         words = line.split()
 
         # First row of data gives column names
-        if line_count==0:
+        if line_count == 0:
             column_headings = words
             continue
 
         # Look up name of object and SNR of spectrum used
         object_name = words[column_headings.index("Starname")]
-        snr =  words[column_headings.index("SNR")]
+        snr = words[column_headings.index("SNR")]
 
         # Look up Cannon's estimated values of the labels we're interested in
         label_values = []
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                         default="",
                         dest='cannon',
                         help="Cannon output file.")
-    parser.add_argument('--output-stub', default="/tmp/label_values.dat", dest='output_stub',
+    parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                         help="Data file to write output to.")
     args = parser.parse_args()
 

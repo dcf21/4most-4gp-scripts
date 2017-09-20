@@ -22,7 +22,7 @@ parser.add_argument('--cannon_output',
                     default="",
                     dest='cannon',
                     help="Cannon output file.")
-parser.add_argument('--output-stub', default="/tmp/label_values.dat", dest='output_stub',
+parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -59,11 +59,11 @@ set yrange [{}]
 for snr in snr_list:
     pyxplot_input += """
 set nodisplay
-set output "/tmp/tg_plot_test_output_%s_%s.png"%(mode,snr)
-plot "/tmp/tg_test_%s_%s.dat"%(mode,snr) title "Cannon output -$>$ Synthesised values. %s, SNR %s."%(mode,snr) with arrows c red using 3:4:1:2
+set output "{0}.png"
+plot "{0}" title "Cannon output -$>$ Synthesised values. SNR {1}." with arrows c red using 3:4:1:2
 set term eps ; set output "{0}.eps" ; set display ; refresh
 set term png ; set output "{0}.png" ; set display ; refresh
-""".format(args.output)
+""".format(snr["filename"], snr["snr"])
 
 # Run pyxplot
 p = os.popen("pyxplot", "w")
