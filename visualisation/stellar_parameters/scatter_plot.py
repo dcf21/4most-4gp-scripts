@@ -37,7 +37,7 @@ label_list = []
 label_command_line = ""
 for item in args.labels:
     test = re.match("(.*){(.*:.*)}", item)
-    assert test is not None, "Label names should take the form <name[:2]>, with range to plot in []."
+    assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
     label_list.append({
         "name": test.group(1),
         "range": test.group(2)
