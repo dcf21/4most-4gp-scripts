@@ -50,7 +50,7 @@ def tabulate_labels(output_stub, library, labels, cannon):
 
         # Look up name of object and SNR of spectrum used
         object_name = words[column_headings.index("Starname")]
-        snr = words[column_headings.index("SNR")]
+        snr = float(words[column_headings.index("SNR")])
 
         # Look up Cannon's estimated values of the labels we're interested in
         label_values = []
@@ -72,13 +72,13 @@ def tabulate_labels(output_stub, library, labels, cannon):
     object_names = library_values.keys()
     object_names.sort()
     for snr in snr_list:
-        filename = "{}_{:03d}.dat".format(output_stub, snr)
+        filename = "{}_{:03.0f}.dat".format(output_stub, snr)
         snr_list_with_filenames.append({
             "snr": snr,
             "filename": filename
         })
 
-        with open(filename, "w") as output_stub:
+        with open(filename, "w") as output:
             for object_name in object_names:
                 # Start line with the library parameter values
                 words = [str(i) for i in library_values[object_name]]
@@ -89,7 +89,7 @@ def tabulate_labels(output_stub, library, labels, cannon):
                 else:
                     words.extend(["-" for i in labels])
                 line = " ".join(words)
-                output_stub.write("{}\n".format(line))
+                output.write("{}\n".format(line))
     return snr_list_with_filenames
 
 

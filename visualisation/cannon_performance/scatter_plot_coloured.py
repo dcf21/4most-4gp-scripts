@@ -20,7 +20,7 @@ parser.add_argument('--label', required=True, action="append", dest='labels',
                     help="Labels we should plot on the two axes of the scatter plot.")
 parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
                     help="Titles we should put on the two axes of the scatter plot.")
-parser.add_argument('--colour-by-label', required=True, dest='colour-label',
+parser.add_argument('--colour-by-label', required=True, dest='colour_label',
                     help="Label we should use to colour code points by the Cannon's offset from library values.")
 parser.add_argument('--colour-range-min', required=True, dest='colour_range_min', type=float,
                     help="The range of parameter values to use in colouring points.")
@@ -42,7 +42,7 @@ assert len(args.label_axis_latex) == 3, "A coloured scatter plot needs label nam
 # Labels are supplied with ranges listed in {}. We extract the names to pass to label_tabulator.
 label_list = []
 label_names = []
-for item in args.labels:
+for item in args.labels + [args.colour_label]:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
     label_list.append({
@@ -58,7 +58,18 @@ snr_list = tabulate_labels(args.output_stub, args.library, label_names, args.can
 width = 14
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
+
+col_scale_z(z) = min(max(  (z-({0})) / (({1})-({0}))  ,0),1)
+
+col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
+
+""".format(args.colour_range_min, args.colour_range_max)
+
+for snr in snr_list:
+    pyxplot_input += """
+    
 set nodisplay
+set origin 0,0
 set width {}
 set size ratio {}
 set nokey
@@ -69,22 +80,17 @@ set xlabel "{}"
 set xrange [{}]
 set ylabel "{}"
 set yrange [{}]
+
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"])
 
-pyxplot_input += """
-
-col_scale_z(z) = min(max(  (z-({0})) / (({1})-({0}))  ,0),1)
-
-col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
-
-""".format(args.colour_range_min, args.colour_range_max)
-
-for snr in snr_list:
     pyxplot_input += """
-set nodisplay
+    
 set output "{0}.png"
-plot "{0}" title "Offset in {1} at SNR {2}." with dots colour col_scale($3) ps 5
+clear
+unset origin ; set axis y left ; unset xtics ; unset mxtics
+plot "{0}" title "Offset in {1} at SNR {2}." with dots colour col_scale($6-$3) ps 5
+
 """.format(snr["filename"], args.label_axis_latex[2], snr["snr"])
 
     pyxplot_input += """
@@ -110,6 +116,7 @@ plot y with colourmap
 
 set term eps ; set output "{0}.eps" ; set display ; refresh
 set term png ; set output "{0}.png" ; set display ; refresh
+set term pdf ; set output "{0}.pdf" ; set display ; refresh
 
 """.format(snr["filename"])
 

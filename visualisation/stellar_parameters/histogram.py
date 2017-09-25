@@ -77,6 +77,7 @@ pyxplot_input += "plot " + ", ".join(plot_items)
 pyxplot_input += """
 set term eps ; set output "{0}.eps" ; set display ; refresh
 set term png ; set output "{0}.png" ; set display ; refresh
+set term pdf ; set output "{0}.pdf" ; set display ; refresh
 """.format(args.output)
 
 # Run pyxplot

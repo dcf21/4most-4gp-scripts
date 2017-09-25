@@ -236,10 +236,12 @@ class PlotLabelPrecision:
             stem = "{}precision_{:d}".format(self.output_figure_stem, i)
             with open("{}.ppl".format(stem), "w") as ppl:
                 ppl.write("""
+                
                 set width 14
                 set key top right
                 set nodisplay
                 set label 1 "{}" graph 1.5, graph 8
+                
                 """.format(latex_label[0]))
 
                 ppl.write("set ylabel \"{}\"\n".format(latex_label[0]))
@@ -257,9 +259,12 @@ class PlotLabelPrecision:
                 ppl.write("plot {}\n".format(",".join(self.plot_precision[i])))
 
                 ppl.write("""
-                set term eps ; set output '{}.eps' ; set display ; refresh
-                set term png ; set output '{}.png' ; set display ; refresh\n
-                """.format(stem, stem))
+                
+                set term eps ; set output '{0}.eps' ; set display ; refresh
+                set term png ; set output '{0}.png' ; set display ; refresh
+                set term pdf ; set output "{0}.pdf" ; set display ; refresh
+
+                """.format(stem))
                 ppl.close()
                 os.system("pyxplot {}.ppl".format(stem))
 
@@ -268,10 +273,12 @@ class PlotLabelPrecision:
                 stem = "{}whiskers_{:d}_{:d}".format(self.output_figure_stem, i, data_set_counter)
                 with open("{}.ppl".format(stem), "w") as ppl:
                     ppl.write("""
+                    
                     set width 14
                     set nokey
                     set nodisplay
-                    set label 1 "{}; {}" graph 1.5, graph 8
+                    set label 1 "{0}; {1}" graph 1.5, graph 8
+                    
                     """.format(latex_label[0], self.datasets[data_set_counter]))
 
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
@@ -289,9 +296,12 @@ class PlotLabelPrecision:
                     ppl.write("plot {}\n".format(",".join(plot_items)))
 
                     ppl.write("""
-                    set term eps ; set output '{}.eps' ; set display ; refresh
-                    set term png ; set output '{}.png' ; set display ; refresh\n
-                    """.format(stem, stem))
+                    
+                    set term eps ; set output '{0}.eps' ; set display ; refresh
+                    set term png ; set output '{0}.png' ; set display ; refresh
+                    set term pdf ; set output "{0}.pdf" ; set display ; refresh
+                    
+                    """.format(stem))
                     ppl.close()
                     os.system("pyxplot {}.ppl".format(stem))
 
@@ -301,11 +311,13 @@ class PlotLabelPrecision:
                 stem = "{}histogram_{:d}_{:d}_{:06.1f}".format(self.output_figure_stem, i, data_set_counter, snr)
                 with open("{}.ppl".format(stem), "w") as ppl:
                     ppl.write("""
+                    
                     set width 14
                     set nokey
                     set nodisplay
-                    set binwidth {}
-                    set label 1 "{}; {}; SNR {:.1f}" graph 1.5, graph 8
+                    set binwidth {0}
+                    set label 1 "{1}; {2}; SNR {3:.1f}" graph 1.5, graph 8
+                    
                     """.format(latex_label[2]/25, latex_label[0], self.datasets[data_set_counter], snr))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
@@ -315,11 +327,14 @@ class PlotLabelPrecision:
                         ppl.write("plot f_{:d}(x) with boxes fc red\n".format(j))
 
                     ppl.write("""
-                    set term eps ; set output '{}.eps' ; set display ; refresh
-                    set term png ; set output '{}.png' ; set display ; refresh\n
-                    """.format(stem, stem))
+                    
+                    set term eps ; set output '{0}.eps' ; set display ; refresh
+                    set term png ; set output '{0}.png' ; set display ; refresh
+                    set term pdf ; set output "{0}.pdf" ; set display ; refresh
+                    
+                    """.format(stem))
                     ppl.close()
-                    os.system("timeout 10s pyxplot {}.ppl".format(stem))
+                    os.system("timeout 10s pyxplot {0}.ppl".format(stem))
 
 
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):

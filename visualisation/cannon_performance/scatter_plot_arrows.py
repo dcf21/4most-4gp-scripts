@@ -66,6 +66,7 @@ set output "{0}.png"
 plot "{0}" title "Cannon output -$>$ Synthesised values. SNR {1}." with arrows c red using 3:4:1:2
 set term eps ; set output "{0}.eps" ; set display ; refresh
 set term png ; set output "{0}.png" ; set display ; refresh
+set term pdf ; set output "{0}.pdf" ; set display ; refresh
 """.format(snr["filename"], snr["snr"])
 
 # Run pyxplot

@@ -32,7 +32,10 @@ with open(args.output_file, "w") as output:
         library_object = SpectrumLibrarySqlite(path=library_path, create=False)
 
         # Loop over objects in each spectrum library
-        for item in library_object.search(continuum_normalised=1, SNR=250):
+        constraints = {"continuum_normalised": 1}
+        # If we're running on 4FS output, we might want to cut on SNR as well, but assume we usually run on
+        # turbospectrum output with only one spectrum per star
+        for item in library_object.search(**constraints):
             metadata = library_object.get_metadata(ids=item['specId'])[0]
 
             for label in args.labels:
