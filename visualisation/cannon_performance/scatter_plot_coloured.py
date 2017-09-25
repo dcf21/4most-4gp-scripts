@@ -2,43 +2,46 @@
 # -*- coding: utf-8 -*-
 
 """
-Take some SpectrumLibraries and make a coloured scatter plot of the stellar parameters within it.
+Take a SpectrumLibrary containing some spectra which the Cannon has tried to fit, and produce a scatter plot of
+coloured points, with label values on the two axes and the colour of th points representing the error in one of
+the derived labels.
 """
 
 import os
-import re
 import argparse
+import re
+from label_tabulator import tabulate_labels
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--library', required=True, action="append", dest='libraries',
-                    help="Library of spectra we should plot stellar parameters from.")
-parser.add_argument('--library-title', required=True, action="append", dest='library_titles',
-                    help="Short title to give to library of spectra in plot legend.")
+parser.add_argument('--library', required=True, dest='library',
+                    help="Library of spectra that the Cannon has tried to fit.")
 parser.add_argument('--label', required=True, action="append", dest='labels',
-                    help="Labels we should put on the axes of the scatter plot (can supply more than two and supply a USING statement to combine them in an algebraic expression).")
+                    help="Labels we should plot on the two axes of the scatter plot.")
 parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
                     help="Titles we should put on the two axes of the scatter plot.")
-parser.add_argument('--using', default="1:2", dest='using',
-                    help="Pyxplot using statement we should use to get the x and y values for each point in scatter plot.")
-parser.add_argument('--using-colour', default="$3", dest='colour_expression',
-                    help="Pyxplot using statement we should use to derive the colour of each point.")
+parser.add_argument('--colour-by-label', required=True, dest='colour-label',
+                    help="Label we should use to colour code points by the Cannon's offset from library values.")
 parser.add_argument('--colour-range-min', required=True, dest='colour_range_min', type=float,
                     help="The range of parameter values to use in colouring points.")
 parser.add_argument('--colour-range-max', required=True, dest='colour_range_max', type=float,
                     help="The range of parameter values to use in colouring points.")
-parser.add_argument('--output', default="/tmp/label_values", dest='output',
-                    help="Filename to write output plot to.")
+parser.add_argument('--cannon_output',
+                    required=True,
+                    default="",
+                    dest='cannon',
+                    help="Cannon output file we should analyse.")
+parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
+                    help="Data file to write output to.")
 args = parser.parse_args()
 
-assert len(args.library_titles) == len(args.libraries), "Need a title for each library we are plotting"
-
 # Create data files listing the stellar parameters in each library we have been passed
-assert len(args.labels) >= 3, \
-    "A scatter plot needs at least three labels to plot -- one on each axis, plus one to colour."
+assert len(args.labels) == 2, "A scatter plot needs two labels to plot -- one on each axis."
+assert len(args.label_axis_latex) == 3, "A coloured scatter plot needs label names for two axes, plus the colour scale."
 
+# Labels are supplied with ranges listed in {}. We extract the names to pass to label_tabulator.
 label_list = []
-label_command_line = ""
+label_names = []
 for item in args.labels:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
@@ -46,13 +49,10 @@ for item in args.labels:
         "name": test.group(1),
         "range": test.group(2)
     })
-    label_command_line += " --label \"{}\" ".format(test.group(1))
+    label_names.append(test.group(1))
 
-for index, library in enumerate(args.libraries):
-    os.system("python label_tabulator.py --library {0} {1} --output-file /tmp/tg{2:06d}.dat".
-              format(library, label_command_line, index))
-
-#
+# Create data files listing parameter values
+snr_list = tabulate_labels(args.output_stub, args.library, label_names, args.cannon)
 
 # Create pyxplot script to produce this plot
 width = 14
@@ -80,13 +80,14 @@ col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
 
 """.format(args.colour_range_min, args.colour_range_max)
 
-plot_items = []
-for index in range(len(args.libraries)):
-    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour col_scale({}) ps 5 """.
-                      format(index, args.library_titles[index], args.using, args.colour_expression))
-pyxplot_input += "plot " + ", ".join(plot_items)
+for snr in snr_list:
+    pyxplot_input += """
+set nodisplay
+set output "{0}.png"
+plot "{0}" title "Offset in {1} at SNR {2}." with dots colour col_scale($3) ps 5
+""".format(snr["filename"], args.label_axis_latex[2], snr["snr"])
 
-pyxplot_input += """
+    pyxplot_input += """
 
 set noxlabel
 set xrange [0:1]
@@ -105,11 +106,12 @@ plot y with colourmap
 
 """.format(args.label_axis_latex[2], args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1)
 
-pyxplot_input += """
+    pyxplot_input += """
 
 set term eps ; set output "{0}.eps" ; set display ; refresh
 set term png ; set output "{0}.png" ; set display ; refresh
-""".format(args.output)
+
+""".format(snr["filename"])
 
 # Run pyxplot
 p = os.popen("pyxplot", "w")

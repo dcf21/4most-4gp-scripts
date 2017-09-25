@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Take a SpectrumLibrary containing some spectra which the Cannon has tried to fit, and a scatter plot with arrows
+Take a SpectrumLibrary containing some spectra which the Cannon has tried to fit, and produce a scatter plot with arrows
 connecting the library parameter values to those estimated by the Cannon.
 """
 
@@ -14,20 +14,23 @@ from label_tabulator import tabulate_labels
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--library', required=True, dest='library',
-                    help="Library of spectra we should output stellar labels for.")
+                    help="Library of spectra that the Cannon has tried to fit.")
 parser.add_argument('--label', required=True, action="append", dest='labels',
-                    help="Labels we should output values for.")
+                    help="Labels we should plot on the two axes of the scatter plot.")
+parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
+                    help="Titles we should put on the two axes of the scatter plot.")
 parser.add_argument('--cannon_output',
                     required=True,
                     default="",
                     dest='cannon',
-                    help="Cannon output file.")
+                    help="Cannon output file we should analyse.")
 parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
 # Create data files listing the stellar parameters in each library we have been passed
-assert len(args.labels) >= 2, "A scatter plot needs at least two labels to plot -- one on each axis."
+assert len(args.labels) == 2, "A scatter plot needs two labels to plot -- one on each axis."
+assert len(args.label_axis_latex) == 2, "A scatter plot needs label names for two axes."
 
 # Labels are supplied with ranges listed in {}. We extract the names to pass to label_tabulator.
 label_list = []
