@@ -155,7 +155,7 @@ def fetch_marcs_grid(marcs_grid_path):
 
 parameter_values = fetch_marcs_grid(args.marcs_path)
 for key, value in parameter_values.iteritems():
-    logger.info("We have {:6d} values for parameter <{}>".format(len(value), key))
+    logger.info("We have {:6d} values for parameter <{}>: {}".format(len(value), key, value))
 
 # Create new SpectrumLibrary
 library_name = re.sub("/", "_", args.library)
@@ -189,6 +189,11 @@ with open(args.log_to, "w") as result_log:
                     break
                 if (counter_output - args.skip) % args.every != 0:
                     continue
+
+                # Apply a small perturbation because the MARCs model interpolator seems to prefer it that way
+                t_eff = min(t_eff + 10, 7990)
+                log_g = min(log_g + 0.01, 5.49)
+                fe_h = min(fe_h + 0.01, 0.99)
 
                 star_name = "marcs_{:02d}_{:02d}_{:02d}".format(i1, i2, i3)
 
