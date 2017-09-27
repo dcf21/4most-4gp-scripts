@@ -234,11 +234,12 @@ with open(args.log_to, "w") as result_log:
 
                     input_spectrum.values = \
                         (input_spectrum.values * (1 - contamination_fraction) +
-                         contamination_spectrum.values * contamination_fraction * input_integral / contamination_integral)
+                         contamination_resampled.values * contamination_fraction *
+                         input_integral / contamination_integral)
 
                     input_spectrum_continuum_normalised.values = \
                         (input_spectrum_continuum_normalised.values * (1 - contamination_fraction) +
-                         contamination_spectrum_continuum_normalised.values * contamination_fraction *
+                         contamination_cn_resampled.values * contamination_fraction *
                          input_integral / contamination_integral)
 
                 # Select which output library to send this spectrum to
