@@ -52,11 +52,12 @@ n_cores=$((${n_cores_less_one} + 1))
 # Synthesize test spectra
 cd ${cwd}
 cd synthesize_grids/
+mkdir -p ../output_data/logs
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_test.py --every ${n_cores} --skip ${item} ${create} \
-                          --log-file ../output_data/turbospec_demo_stars_${item}.log &
+                          --log-dir ../output_data/logs/turbospec_demo_stars_${item} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
 done
@@ -65,12 +66,13 @@ wait
 # Synthesize APOKASC test set
 cd ${cwd}
 cd synthesize_grids/
+mkdir -p ../output_data/logs
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_apokasc.py --output-library turbospec_apokasc_test_set \
                              --star-list ../../4MOST_testspectra/testset_param.tab \
-                             --log-file ../output_data/turbospec_apokasc_test_set_${item}.log \
+                             --log-dir ../output_data/logs/turbospec_apokasc_test_set_${item} \
                              --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
@@ -80,12 +82,13 @@ wait
 # Synthesize APOKASC training set
 cd ${cwd}
 cd synthesize_grids/
+mkdir -p ../output_data/logs
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_apokasc.py --output-library turbospec_apokasc_training_set \
                              --star-list ../../4MOST_testspectra/trainingset_param.tab \
-                             --log-file ../output_data/turbospec_apokasc_training_set_${item}.log \
+                             --log-dir ../output_data/logs/turbospec_apokasc_training_set_${item} \
                              --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
@@ -95,12 +98,13 @@ wait
 # Synthesize dwarf stars
 cd ${cwd}
 cd synthesize_grids/
+mkdir -p ../output_data/logs
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_ges_dwarfs.py --output-library turbospec_ges_dwarf_sample \
                                 --star-list ../../downloads/GES_iDR5_WG15_Recommended.fits \
-                                --log-file ../output_data/turbospec_ges_dwarfs_${item}.log \
+                                --log-dir ../output_data/logs/turbospec_ges_dwarfs_${item} \
                                 --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
@@ -110,12 +114,13 @@ wait
 # Synthesize AHM2017 sample of GES stars
 cd ${cwd}
 cd synthesize_grids/
+mkdir -p ../output_data/logs
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
 python synthesize_ahm2017.py --output-library turbospec_ahm2017_sample \
                              --star-list ../../downloads/GES_iDR5_WG15_Recommended.fits \
-                             --log-file ../output_data/turbospec_ahm2017_${item}.log \
+                             --log-dir ../output_data/logs/turbospec_ahm2017_${item} \
                              --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"
@@ -125,10 +130,11 @@ wait
 # Synthesize grid of stars on MARCS grid of parameter values
 cd ${cwd}
 cd synthesize_grids/
+mkdir -p ../output_data/logs
 create="--create"  # Only create clean SpectrumLibrary in first thread
 for item in `seq 0 ${n_cores_less_one}`
 do
-python synthesize_marcs_grid.py --log-file ../output_data/turbospec_marcs_grid_${item}.log \
+python synthesize_marcs_grid.py --log-dir ../output_data/logs/turbospec_marcs_grid_${item} \
                                 --every ${n_cores} --skip ${item} ${create} &
 sleep 2  # Wait 2 seconds before launching next thread, to check SpectrumLibrary has appeared
 create="--no-create"

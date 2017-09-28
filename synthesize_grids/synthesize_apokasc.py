@@ -54,11 +54,11 @@ parser.add_argument('--no-create',
                     dest="create",
                     help="Do not create a clean SpectrumLibrary to feed synthesized spectra into")
 parser.set_defaults(create=True)
-parser.add_argument('--log-file',
+parser.add_argument('--log-dir',
                     required=False,
-                    default="/tmp/turbospec_apokasc_{}.log".format(pid),
+                    default="/tmp/turbospec_apokasc_{}".format(pid),
                     dest="log_to",
-                    help="Specify a log file where we log our progress.")
+                    help="Specify a log directory where we log our progress and configuration files.")
 parser.add_argument('--star-list',
                     required=False,
                     default="../../4MOST_testspectra/trainingset_param.tab",
@@ -138,6 +138,7 @@ with open(args.log_to, "w") as result_log:
 
         # Look up stellar parameters of the star we're about to synthesize
         metadata = astropy_row_to_dict(star)
+        star_name = metadata["Starname"]
         stellar_mass = 1  # If mass of star is not specified, default to 1 solar mass
         if 'Mass' in metadata:
             stellar_mass = metadata['Mass']
@@ -173,12 +174,15 @@ with open(args.log_to, "w") as result_log:
         synthesizer.configure(free_abundances=free_abundances)
 
         # Make spectrum
+        time_start = time.time()
         turbospectrum_out = synthesizer.synthesise()
+        time_end = time.time()
 
         # Check for errors
         errors = turbospectrum_out['errors']
         if errors:
-            result_log.write("[{}] {}: {}\n".format(time.asctime(), metadata['Starname'], errors))
+            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
+                                                              star_name, errors))
             result_log.flush()
             continue
 
@@ -187,7 +191,7 @@ with open(args.log_to, "w") as result_log:
 
         # Insert spectrum into SpectrumLibrary
         try:
-            filename = os_path.split(filepath)[1]
+            filename = "spectrum_{:08d}".format(counter_output)
 
             # First import continuum-normalised spectrum, which is in columns 1 and 2
             metadata['continuum_normalised'] = 1
@@ -199,12 +203,14 @@ with open(args.log_to, "w") as result_log:
             spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except (ValueError, IndexError):
-            result_log.write("[{}] {}: {}\n".format(time.asctime(), metadata['Starname'], "Could not read bsyn output"))
+            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
+                                                              star_name, "Could not read bsyn output"))
             result_log.flush()
             continue
 
         # Update log file to show our progress
-        result_log.write("[{}] {}: {}\n".format(time.asctime(), metadata['Starname'], "OK"))
+        result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
+                                                          star_name, "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance
