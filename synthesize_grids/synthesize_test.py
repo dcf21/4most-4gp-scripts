@@ -188,7 +188,8 @@ with open(logfile, "w") as result_log:
             result_log.flush()
             continue
 
-        result_log.write("[{}] {:.0f}: {}\n".format(time.asctime(), t_eff, "OK"))
+        result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
+                                                          star_name, "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance

@@ -5,7 +5,7 @@
 #SBATCH --qos=test
 #
 # job time, change for what your job farm requires
-#SBATCH -t 00:45:00
+#SBATCH -t 00:30:00
 #
 # job name and output file names
 #SBATCH -J demo_stars_farm

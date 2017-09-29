@@ -7,7 +7,15 @@ export item=$1
 export WRK_NB=$1
 
 # only create new spectrum library in first thread
-export create=$([ "$item" == 0 ] && echo "--create" || echo "--no-create")
+if [ "$item" == 0 ]
+then
+export create="--create"
+else
+export create="--no-create"
+sleep 10
+fi
+
+export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 
 # create worker-private subdirectory in $SNIC_TMP
 # export WRK_DIR=$SNIC_TMP/WRK_${WRK_NB}
@@ -25,8 +33,8 @@ export create=$([ "$item" == 0 ] && echo "--create" || echo "--no-create")
 # cd $WRK_DIR
 
 # run the program
-cd /home/dcf21/iwg7_pipeline/4most-4gp-scripts/synthesize_grids
-python synthesize_test.py --every 16 --skip ${item} ${create} \
+cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/synthesize_grids
+python synthesize_test.py --every 20 --skip ${item} ${create} \
                           --log-dir ../output_data/logs/turbospec_demo_stars_${item}
 
 # rescue the results back to job directory
