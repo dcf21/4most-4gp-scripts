@@ -11,6 +11,7 @@ import time
 import argparse
 from os import path as os_path
 import logging
+import json
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 from fourgp_telescope_data import FourMost
@@ -114,8 +115,12 @@ synthesizer.configure(
 )
 counter_output = 0
 
+# Start making log output
+os.system("mkdir -p {}".format(args.log_to))
+logfile = os.path.join(args.log_to, "synthesis.log")
+
 # Iterate over the spectra we're supposed to be synthesizing
-with open(args.log_to, "w") as result_log:
+with open(logfile, "w") as result_log:
     for (name, t_eff, log_g, metallicity) in (
             ("Sun", 5771.8, 4.44, 0),
             ("test_3500", 3500, 2, 0),
@@ -147,6 +152,10 @@ with open(args.log_to, "w") as result_log:
         time_start = time.time()
         turbospectrum_out = synthesizer.synthesise()
         time_end = time.time()
+
+        # Log synthesizer status
+        logfile_this = os.path.join(args.log_to, "{}.log".format(star_name))
+        open(logfile_this, "w").write(json.dumps(turbospectrum_out))
 
         # Check for errors
         errors = turbospectrum_out['errors']

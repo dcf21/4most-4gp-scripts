@@ -8,11 +8,11 @@ Take stellar parameters of GES dwarf stars and synthesize spectra using TurboSpe
 import os
 import re
 import time
-import json
 import argparse
 import numpy as np
 from os import path as os_path
 import logging
+import json
 import sqlite3
 from astropy.io import fits
 
@@ -230,8 +230,12 @@ synthesizer = TurboSpectrum(
     marcs_grid_path=os_path.join(args.binary_path, "fromBengt/marcs_grid"))
 counter_output = 0
 
+# Start making log output
+os.system("mkdir -p {}".format(args.log_to))
+logfile = os.path.join(args.log_to, "synthesis.log")
+
 # Iterate over the spectra we're supposed to be synthesizing
-with open(args.log_to, "w") as result_log:
+with open(logfile, "w") as result_log:
     for star in range(len(star_list)):
         star_name = star_list.CNAME[star]
 
@@ -293,6 +297,10 @@ with open(args.log_to, "w") as result_log:
         time_start = time.time()
         turbospectrum_out = synthesizer.synthesise()
         time_end = time.time()
+
+        # Log synthesizer status
+        logfile_this = os.path.join(args.log_to, "{}.log".format(star_name))
+        open(logfile_this, "w").write(json.dumps(turbospectrum_out))
 
         # Check for errors
         errors = turbospectrum_out['errors']

@@ -12,6 +12,7 @@ import argparse
 import numpy as np
 from os import path as os_path
 import logging
+import json
 from astropy.table import Table
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
@@ -126,8 +127,12 @@ synthesizer = TurboSpectrum(
     marcs_grid_path=os_path.join(args.binary_path, "fromBengt/marcs_grid"))
 counter_output = 0
 
+# Start making log output
+os.system("mkdir -p {}".format(args.log_to))
+logfile = os.path.join(args.log_to, "synthesis.log")
+
 # Iterate over the spectra we're supposed to be synthesizing
-with open(args.log_to, "w") as result_log:
+with open(logfile, "w") as result_log:
     for star in star_list:
         # User can specify that we should only do every nth spectrum, if we're running in parallel
         counter_output += 1
@@ -177,6 +182,10 @@ with open(args.log_to, "w") as result_log:
         time_start = time.time()
         turbospectrum_out = synthesizer.synthesise()
         time_end = time.time()
+
+        # Log synthesizer status
+        logfile_this = os.path.join(args.log_to, "{}.log".format(star_name))
+        open(logfile_this, "w").write(json.dumps(turbospectrum_out))
 
         # Check for errors
         errors = turbospectrum_out['errors']
