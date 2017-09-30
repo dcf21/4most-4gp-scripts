@@ -183,7 +183,7 @@ sun_id = np.where(ges.OBJECT == 'Sun_Benchmarks_BordeauxLib3     ')[0]
 # Filter objects as specified by Georges at Lyon meeting
 selection = np.where(
     (ges.SNR > 20) & (ges.REC_WG == 'WG11') & (ges.E_FEH < 0.15) & (ges.E_VRAD < 10.) & (ges.E_TEFF < 100.) & (
-    ges.E_LOGG < 0.2))[0]
+        ges.E_LOGG < 0.2))[0]
 star_list = ges[selection]
 
 # Output data into sqlite3 db
@@ -308,8 +308,8 @@ with open(logfile, "w") as result_log:
         # Check for errors
         errors = turbospectrum_out['errors']
         if errors:
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                              star_name, errors))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, errors))
             result_log.flush()
             continue
 
@@ -330,14 +330,14 @@ with open(logfile, "w") as result_log:
             spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except (ValueError, IndexError):
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                              star_name, "Could not read bsyn output"))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, "Could not read bsyn output"))
             result_log.flush()
             continue
 
         # Update log file to show our progress
-        result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                          star_name, "OK"))
+        result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                            star_name, "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance
