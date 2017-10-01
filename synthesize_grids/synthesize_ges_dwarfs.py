@@ -202,7 +202,8 @@ if args.sqlite_out:
             if col_name == "CNAME":
                 continue
             arguments = (
-                str(star_list[col_name][i]) if ges.dtype[col_name].type is np.string_ else float(star_list[col_name][i]),
+                str(star_list[col_name][i]) if ges.dtype[col_name].type is np.string_ else float(
+                    star_list[col_name][i]),
                 star_list.CNAME[i]
             )
             c.execute("UPDATE stars SET %s=? WHERE CNAME=?;" % col_name, arguments)
@@ -305,8 +306,8 @@ with open(logfile, "w") as result_log:
         # Check for errors
         errors = turbospectrum_out['errors']
         if errors:
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
-                                                              star_name, errors))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, errors))
             result_log.flush()
             continue
 
@@ -327,14 +328,14 @@ with open(logfile, "w") as result_log:
             spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except (ValueError, IndexError):
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
-                                                              star_name, "Could not read bsyn output"))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, "Could not read bsyn output"))
             result_log.flush()
             continue
 
         # Update log file to show our progress
-        result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
-                                                          star_name, "OK"))
+        result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                            star_name, "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance

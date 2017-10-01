@@ -158,12 +158,12 @@ for star in range(len(star_list)):
     feh = star_list.FEH[star]
     for bin in bins:
         if (
-            ("teff_min" not in bin["constraints"] or teff >= bin["constraints"]["teff_min"]) and
-            ("teff_max" not in bin["constraints"] or teff < bin["constraints"]["teff_max"]) and
-            ("logg_min" not in bin["constraints"] or logg >= bin["constraints"]["logg_min"]) and
-            ("logg_max" not in bin["constraints"] or logg < bin["constraints"]["logg_max"]) and
-            ("feh_min" not in bin["constraints"] or feh >= bin["constraints"]["feh_min"]) and
-            ("feh_max" not in bin["constraints"] or feh < bin["constraints"]["feh_max"])
+                                    ("teff_min" not in bin["constraints"] or teff >= bin["constraints"]["teff_min"]) and
+                                    ("teff_max" not in bin["constraints"] or teff < bin["constraints"]["teff_max"]) and
+                                ("logg_min" not in bin["constraints"] or logg >= bin["constraints"]["logg_min"]) and
+                            ("logg_max" not in bin["constraints"] or logg < bin["constraints"]["logg_max"]) and
+                        ("feh_min" not in bin["constraints"] or feh >= bin["constraints"]["feh_min"]) and
+                    ("feh_max" not in bin["constraints"] or feh < bin["constraints"]["feh_max"])
         ):
             bin["contents"].append(star)
             break
@@ -193,6 +193,11 @@ for bin in bins:
 
                     if np.isfinite(abundance):
                         free_abundances[element] = float(abundance) + random.gauss(0, 0.1)
+
+# import json
+# print json.dumps(test_stars)
+# import sys
+# sys.exit(0)
 
 # Create new SpectrumLibrary
 library_name = re.sub("/", "_", args.library)
@@ -269,8 +274,8 @@ with open(logfile, "w") as result_log:
         # Check for errors
         errors = turbospectrum_out['errors']
         if errors:
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                              star_name, errors))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, errors))
             result_log.flush()
             continue
 
@@ -291,14 +296,14 @@ with open(logfile, "w") as result_log:
             spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except (ValueError, IndexError):
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                              star_name, "Could not read bsyn output"))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, "Could not read bsyn output"))
             result_log.flush()
             continue
 
         # Update log file to show our progress
-        result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                          star_name, "OK"))
+        result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                            star_name, "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance

@@ -160,8 +160,8 @@ with open(logfile, "w") as result_log:
         # Check for errors
         errors = turbospectrum_out['errors']
         if errors:
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
-                                                              star_name, errors))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, errors))
             result_log.flush()
             continue
 
@@ -183,13 +183,13 @@ with open(logfile, "w") as result_log:
             spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
             library.insert(spectra=spectrum, filenames=filename)
         except (ValueError, IndexError):
-            result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
-                                                              star_name, "Could not read bsyn output"))
+            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                                star_name, "Could not read bsyn output"))
             result_log.flush()
             continue
 
-        result_log.write("[{}] {:6s} sec {}: {}\n".format(time.asctime(), time_end-time_start,
-                                                          star_name, "OK"))
+        result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
+                                                            star_name, "OK"))
         result_log.flush()
 
 # Close TurboSpectrum synthesizer instance
