@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Take parameters of GES sample of stars proposed by Georges at the AHM2017 in Lyon, and synthesize spectra using
-TurboSpectrum.
+Take stellar parameters of GES dwarf stars and synthesize spectra using TurboSpectrum.
 """
 
 import os
@@ -39,7 +38,7 @@ def astropy_row_to_dict(x):
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
-logger.info("Synthesizing AHM2017 spectra")
+logger.info("Synthesizing GES dwarf spectra")
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -48,7 +47,7 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output-library',
                     required=False,
-                    default="turbospec_ahm2017_perturbed",
+                    default="turbospec_ges_dwarf_perturbed",
                     dest="library",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
 parser.add_argument('--create',
@@ -64,7 +63,7 @@ parser.add_argument('--no-create',
 parser.set_defaults(create=True)
 parser.add_argument('--log-dir',
                     required=False,
-                    default="/tmp/turbospec_ahm2017_perturbed_{}".format(pid),
+                    default="/tmp/turbospec_ges_dwarf_perturbed_{}".format(pid),
                     dest="log_to",
                     help="Specify a log directory where we log our progress and configuration files.")
 parser.add_argument('--star-list',
@@ -104,7 +103,7 @@ parser.add_argument('--limit',
                     help="Only process a maximum of n spectra.")
 args = parser.parse_args()
 
-logger.info("Synthesizing perturbed AHM2017 with arguments <{}> <{}>".format(args.library, args.star_list))
+logger.info("Synthesizing perturbed GES dwarfs with arguments <{}> <{}>".format(args.library, args.star_list))
 
 # Set path to workspace where we create libraries of spectra
 workspace = os_path.join(our_path, "..", "workspace")
@@ -118,10 +117,9 @@ ges_fields = ges.names
 # Obtain solar abundances, needed to convert values in file into solar units
 sun_id = np.where(ges.OBJECT == 'Sun_Benchmarks_BordeauxLib3     ')[0]
 
-# Filter objects as specified by Georges at Lyon meeting
-selection = np.where(
-    (ges.SNR > 20) & (ges.REC_WG == 'WG11') & (ges.E_FEH < 0.15) & (ges.E_VRAD < 10.) & (ges.E_TEFF < 100.) & (
-        ges.E_LOGG < 0.2))[0]
+# Filter objects on SNR
+min_SNR = 50
+selection = np.where((ges.SNR > min_SNR) & (ges.REC_WG == 'WG11') & (ges.LOGG > 3.5))[0]
 star_list = ges[selection]
 
 # Create bins to divide stars into
@@ -132,12 +130,9 @@ for metallicity_bin in (
         (-1, -0.5),
         (None, -1)
 ):
-    for stellar_type in (
-            {"teff_min": 4000, "teff_max": 6000, "logg_min": 3.5},
-            {"teff_min": 6000, "logg_min": 3},
-            {"name": "giants", "logg_max": 3},
-            {"name": "misfits"}
-    ):
+    for stellar_type in [
+            {"name": "everything"}
+    ]:
         bin_constraints = {}
         if metallicity_bin[0] is not None:
             bin_constraints["feh_min"] = metallicity_bin[0]
@@ -193,12 +188,13 @@ for bin in bins:
                     if np.isfinite(abundance):
                         free_abundances[element] = float(abundance) + random.gauss(0, 0.1)
 
-# import json
-# print json.dumps(test_stars)
-# import sys
-# sys.exit(0)
+import json
+# print len(test_stars)
+print json.dumps(test_stars)
+import sys
+sys.exit(0)
 
-# test_stars = json.loads(open("ahm2017_data.json").read())
+# test_stars = json.loads(open("ges_dwarf_data.json").read())
 
 # Create new SpectrumLibrary
 library_name = re.sub("/", "_", args.library)
@@ -228,7 +224,7 @@ logfile = os.path.join(args.log_to, "synthesis.log")
 # Iterate over the spectra we're supposed to be synthesizing
 with open(logfile, "w") as result_log:
     for star in test_stars:
-        star_name = "ahm2017_perturbed_{:08d}".format(counter_output)
+        star_name = "ges_dwarf_perturbed_{:08d}".format(counter_output)
 
         metadata = {
             "Starname": str(star_name),
