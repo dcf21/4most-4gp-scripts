@@ -6,15 +6,6 @@ cat $0
 export item=$1
 export WRK_NB=$1
 
-# only create new spectrum library in first thread
-if [ "$item" == 0 ]
-then
-export create="--create"
-else
-export create="--no-create"
-sleep 10
-fi
-
 export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 
 # create worker-private subdirectory in $SNIC_TMP
@@ -34,7 +25,8 @@ export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 
 # run the program
 cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/synthesize_grids
-python synthesize_ahm2017_perturbed.py --every 80 --skip ${item} ${create} \
+python synthesize_ahm2017_perturbed.py --every 80 --skip ${item} --create \
+                                       --output-library turbospec_ahm2017_perturbed_${item} \
                                        --log-dir ../output_data/logs/turbospec_ahm2017_perturbed_${item}
 
 # rescue the results back to job directory

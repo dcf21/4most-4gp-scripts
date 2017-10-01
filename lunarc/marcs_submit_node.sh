@@ -25,9 +25,9 @@ export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 
 # run the program
 cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/synthesize_grids
-python synthesize_test.py --every 20 --skip ${item} --create \
-                          --output-library demo_stars_${item} \
-                          --log-dir ../output_data/logs/turbospec_demo_stars_${item}
+python synthesize_marcs_grid.py --every 80 --skip ${item} --create \
+                                --output-library turbospec_marcs_grid_${item} \
+                                --log-dir ../output_data/logs/marcs_stars_${item}
 
 # rescue the results back to job directory
 # cp -p result.dat ${JOB_DIR}

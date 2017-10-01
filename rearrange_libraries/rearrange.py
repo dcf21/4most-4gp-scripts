@@ -98,6 +98,8 @@ def open_input_libraries(inputs):
         constraints["continuum_normalised"] = 0  # All input spectra must not be continuum normalised
         library_path = os_path.join(workspace, library_name)
         input_library = SpectrumLibrarySqlite(path=library_path, create=False)
+        if len(input_library.search()) == 0:
+            continue
         library_items = input_library.search(**constraints)
         input_libraries.append({
             "library": input_library,
