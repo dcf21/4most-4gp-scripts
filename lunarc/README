@@ -1,0 +1,28 @@
+The scripts in this directory are used for running Turbospectrum on the LUNARC
+aurora cluster, using the slurm job submission system.
+
+To use this, simply run:
+
+sbatch demo_stars_submit.sh
+sbatch marcs_submit.sh
+sbatch ahm2017_submit.sh
+sbatch ges_dwarfs_submit.sh
+
+These typically use a total of 80 cores (4 nodes x 20 cores per node) on
+Aurora.
+
+Each core synthesises its spectra into a separate spectrum library, because
+sqlite3 tends to break if it has 80 cores attempting to access the same
+database. Consequently, the output from the 80 cores needs to be merged into a
+single spectrum library at the end. This is done with the script <merge.py>:
+
+python merge_libraries.py --input-library demo_stars
+python merge_libraries.py --input-library turbospec_ahm2017_perturbed
+python merge_libraries.py --input-library turbospec_marcs_grid
+python merge_libraries.py --input-library turbospec_ges_dwarfs_perturbed
+
+I typically also move all of the output logs that slurm generates into my log
+directory:
+
+mv worker_200058_* stdout_marcs_farm_200058.out stderr_marcs_farm_200058.out ../output_data/logs/marcs_stars_0/
+
