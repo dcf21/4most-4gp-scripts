@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Take a SpectrumLibrary containing some spectra which the Cannon has tried to fit, and produce a scatter plot with arrows
-connecting the library parameter values to those estimated by the Cannon.
+Take an output file from the Cannon, and produce a scatter plot with arrows connecting the library parameter values to
+those estimated by the Cannon.
 """
 
 import os
@@ -13,8 +13,6 @@ from label_tabulator import tabulate_labels
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--library', required=True, dest='library',
-                    help="Library of spectra that the Cannon has tried to fit.")
 parser.add_argument('--label', required=True, action="append", dest='labels',
                     help="Labels we should plot on the two axes of the scatter plot.")
 parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
@@ -28,7 +26,7 @@ parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='out
                     help="Data file to write output to.")
 args = parser.parse_args()
 
-# Create data files listing the stellar parameters in each library we have been passed
+# Check that we have one label to plot on each axis label, and a title to show on each axis
 assert len(args.labels) == 2, "A scatter plot needs two labels to plot -- one on each axis."
 assert len(args.label_axis_latex) == 2, "A scatter plot needs label names for two axes."
 
@@ -45,7 +43,7 @@ for item in args.labels:
     label_names.append(test.group(1))
 
 # Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, args.library, label_names, args.cannon)
+snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
 pyxplot_input = """
 set term png dpi 200

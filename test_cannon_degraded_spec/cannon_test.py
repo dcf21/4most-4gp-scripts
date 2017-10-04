@@ -13,8 +13,6 @@ import logging
 import json
 import time
 import numpy as np
-from astropy.table import Table
-from astropy.io import fits
 
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
@@ -31,6 +29,9 @@ parser.add_argument('--train', required=True, dest='train_library',
                     help="Library of labelled spectra to train the Cannon on.")
 parser.add_argument('--censor', default="", dest='censor_line_list',
                     help="Optional list of line positions for the Cannon to fit, ignoring continuum between.")
+parser.add_argument('--tolerance', default=1e-4, dest='tolerance', type=float,
+                    help="The parameter xtol which is passed to the scipy optimisation routines as xtol to determine "
+                         "whether they have converged.")
 parser.add_argument('--output-file', default="./test_cannon.out", dest='output_file',
                     help="Data file to write output to.")
 args = parser.parse_args()
@@ -95,6 +96,9 @@ test_library_ids = [i["specId"] for i in test_library_items]
 # If required, generate the censoring masks
 censoring_masks = None
 if args.censor_line_list != "":
+    # Only import astropy FITS reader if we actually need to use it
+    from astropy.io import fits
+
     window = 0.5  # How many Angstroms either side of the line should be used?
     censoring_masks = {}
     ges_line_list = fits.open(args.censor_line_list)[1].data
@@ -119,7 +123,12 @@ if args.censor_line_list != "":
         censoring_masks[label_name] = ~mask
 
 # Construct and train a model
-model = CannonInstance(training_set=training_spectra, label_names=test_labels, censors=censoring_masks)
+time_training_start = time.time()
+model = CannonInstance(training_set=training_spectra,
+                       label_names=test_labels,
+                       tolerance=args.tolerance,
+                       censors=censoring_masks)
+time_training_end = time.time()
 
 # Test the model
 N = len(test_library_ids)
@@ -149,8 +158,13 @@ for index in range(N):
     # Add the standard deviations of each label into the dictionary
     result.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
 
-    # Add the APOGEE star number and the SNR ratio of the test spectrum
-    result.update({"Starname": star_name, "SNR": snr})
+    # Add target values for each label into the dictionary
+    for label_name in test_labels:
+        if label_name in spectrum.metadata:
+            result["target_{}".format(label_name)] = spectrum.metadata[label_name]
+
+    # Add the star name and the SNR ratio of the test spectrum
+    result.update({"Starname": star_name, "SNR": snr, "time": time_taken[index]})
     results.append(result)
 
 # Report time taken
@@ -160,8 +174,9 @@ logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spe
 
 # Write results to JSON file
 with open(args.output_file + ".json", "w") as f:
-    f.write(json.dumps(results))
-
-# Write results to textual table
-results = Table(rows=results)
-results.write(args.output_file + ".dat", format='ascii')
+    f.write(json.dumps({
+        "start_time": time_training_start,
+        "end_time": time.time(),
+        "training_time": time_training_end - time_training_end,
+        "stars": results
+    }))
