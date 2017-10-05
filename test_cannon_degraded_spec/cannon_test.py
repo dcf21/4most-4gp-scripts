@@ -43,8 +43,8 @@ logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test
 
 # List of labels over which we are going to test the performance of the Cannon
 test_labels = ("Teff", "logg", "[Fe/H]",
-               "[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]",
-               "[Ca/H]", "[Ti/H]", "[Mn/H]", "[Co/H]", "[Ni/H]", "[Ba/H]", "[Sr/H]")
+               "[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]")
+#               "[Ca/H]", "[Ti/H]", "[Mn/H]", "[Co/H]", "[Ni/H]", "[Ba/H]", "[Sr/H]")
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -190,6 +190,6 @@ with open(args.output_file + ".json", "w") as f:
     f.write(json.dumps({
         "start_time": time_training_start,
         "end_time": time.time(),
-        "training_time": time_training_end - time_training_end,
+        "training_time": time_training_end - time_training_start,
         "stars": results
     }))
