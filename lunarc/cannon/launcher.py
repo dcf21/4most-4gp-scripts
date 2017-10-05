@@ -39,14 +39,14 @@ cat $0
 
 module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.20.1  SQLite/3.9.2
 
-cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/test_cannon_degraded_spec
+cd ${{HOME}}/iwg7_pipeline/4most-4gp-scripts/test_cannon_degraded_spec
 python cannon_test.py --train "{}" --test "{}" --output-file "../output_data/{}" --tolerance {}
 
 """
 
 counter = 0
 for job in args.jobs:
-    for line in open(job).read():
+    for line in open(job):
         # Ignore blank lines and lines which begin with a hash
         if (len(line.strip()) == 0) or (line.strip()[0] == '#'):
             continue
