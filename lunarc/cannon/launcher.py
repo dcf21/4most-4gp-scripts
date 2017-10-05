@@ -4,6 +4,9 @@
 """
 Take a list of training sets and test sets, and run the Cannon on them all using the SLURM job management system on
 lunarc.
+
+Note that before running this you may want to remove "diagnostics" from the list of modules imported by
+<AnniesLasso/AnniesLasso/__init__.py>, as this requires matplotlib to be installed.
 """
 
 import argparse
@@ -25,11 +28,10 @@ uid = os.getpid()
 slurm_script = """#!/bin/sh
 # requesting the number of nodes needed
 #SBATCH -N 1
-#SBATCH --exclusive
-#SBATCH --tasks-per-node=20
+#SBATCH --tasks-per-node=4
 #
 # job time, change for what your job requires
-#SBATCH -t 01:00:00
+#SBATCH -t 08:00:00
 #
 # job name and output file names
 #SBATCH -J cannon_farm
@@ -38,6 +40,8 @@ slurm_script = """#!/bin/sh
 cat $0
 
 module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.20.1  SQLite/3.9.2
+
+export PYTHONPATH=${{HOME}}/local/lib/python2.7/site-packages:${{PYTHONPATH}}
 
 cd ${{HOME}}/iwg7_pipeline/4most-4gp-scripts/test_cannon_degraded_spec
 python cannon_test.py --train "{}" --test "{}" --output-file "../output_data/{}" --tolerance {}
