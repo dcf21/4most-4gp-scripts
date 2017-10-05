@@ -27,6 +27,9 @@ parser.add_argument('--test', required=True, dest='test_library',
                     help="Library of spectra to test the trained Cannon on.")
 parser.add_argument('--train', required=True, dest='train_library',
                     help="Library of labelled spectra to train the Cannon on.")
+parser.add_argument('--labels', dest='labels',
+                    default="Teff,logg,[Fe/H],[C/H],[N/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H],[Ca/H],[Ti/H],[Mn/H],[Co/H],[Ni/H],[Ba/H],[Sr/H]",
+                    help="List of the labels the Cannon is to learn to estimate.")
 parser.add_argument('--censor', default="", dest='censor_line_list',
                     help="Optional list of line positions for the Cannon to fit, ignoring continuum between.")
 parser.add_argument('--tolerance', default=1e-4, dest='tolerance', type=float,
@@ -42,9 +45,7 @@ logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test
                                                                        args.output_file))
 
 # List of labels over which we are going to test the performance of the Cannon
-test_labels = ("Teff", "logg", "[Fe/H]",
-               "[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]")
-#               "[Ca/H]", "[Ti/H]", "[Mn/H]", "[Co/H]", "[Ni/H]", "[Ba/H]", "[Sr/H]")
+test_labels = args.labels.split(",")
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]

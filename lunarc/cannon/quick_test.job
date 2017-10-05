@@ -1,2 +1,2 @@
-4fs_apokasc_training_set_lrs[SNR=250,4500<Teff<9999]   4fs_apokasc_test_set_lrs[4900<Teff<9999]  cannon_quick    1e-4
+4fs_apokasc_training_set_lrs[SNR=250,4500<Teff<9999]   4fs_apokasc_test_set_lrs[4900<Teff<9999]  cannon_quick    Teff,logg,[Fe/H],[C/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H],[Ca/H]    1e-4
 
