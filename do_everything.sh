@@ -205,12 +205,12 @@ do
 
 python cannon_test.py --train "${source}_apokasc_training_set_${mode}${settings}[SNR=250]" \
                       --test "${source}_apokasc_test_set_${mode}${settings}" \
-                      --output-file "../output_data/cannon_test_${source}_${mode}${settings}"
+                      --output-file "../output_data/cannon_${source}_${mode}${settings}"
 
 #python cannon_test.py --train "${source}_apokasc_training_set_${mode}${settings}[SNR=250]" \
 #                      --test "${source}_apokasc_test_set_${mode}${settings}" \
 #                      --censor "../../4MOST_testspectra/ges_master_v5.fits" \
-#                      --output-file "../output_data/cannon_test_${source}_${mode}${settings}_censored"
+#                      --output-file "../output_data/cannon_${source}_${mode}${settings}_censored"
 
 done
 done
@@ -229,7 +229,8 @@ cd ${cwd}
 cd visualisation/cannon_performance
 
 python mean_performance_vs_snr.py \
-  --library hawkins_apokasc_test_set_lrs --cannon-output ../../output_data/cannon_test_hawkins_lrs.dat --dataset-label "Hawkins LRS" \
-  --library hawkins_apokasc_test_set_hrs --cannon-output ../../output_data/cannon_test_hawkins_hrs.dat --dataset-label "Hawkins HRS" \
-  --library 4fs_apokasc_test_set_lrs --cannon-output ../../output_data/cannon_test_4fs_lrs.dat --dataset-label "Ford LRS" \
-  --library 4fs_apokasc_test_set_hrs --cannon-output ../../output_data/cannon_test_4fs_hrs.dat --dataset-label "Ford HRS"
+  --cannon-output ../../output_data/cannon_hawkins_lrs.dat --dataset-label "Hawkins LRS" \
+  --cannon-output ../../output_data/cannon_hawkins_hrs.dat --dataset-label "Hawkins HRS" \
+  --cannon-output ../../output_data/cannon_4fs_lrs.dat --dataset-label "Ford LRS" \
+  --cannon-output ../../output_data/cannon_4fs_hrs.dat --dataset-label "Ford HRS"
+

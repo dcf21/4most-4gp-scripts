@@ -25,10 +25,11 @@ uid = os.getpid()
 slurm_script = """#!/bin/sh
 # requesting the number of nodes needed
 #SBATCH -N 1
+#SBATCH --exclusive
 #SBATCH --tasks-per-node=20
 #
 # job time, change for what your job requires
-#SBATCH -t 24:00:00
+#SBATCH -t 01:00:00
 #
 # job name and output file names
 #SBATCH -J cannon_farm
@@ -65,3 +66,4 @@ for job in args.jobs:
             f.write(slurm_script.format(training, test, output, tolerance))
 
         os.system("sbatch {}".format(slurm_tmp_filename))
+
