@@ -31,7 +31,7 @@ slurm_script = """#!/bin/sh
 #SBATCH --tasks-per-node=4
 #
 # job time, change for what your job requires
-#SBATCH -t 08:00:00
+#SBATCH -t 06:00:00
 #
 # job name and output file names
 #SBATCH -J cannon_farm
