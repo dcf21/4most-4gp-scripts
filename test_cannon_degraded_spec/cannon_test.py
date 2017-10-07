@@ -192,5 +192,8 @@ with open(args.output_file + ".json", "w") as f:
         "start_time": time_training_start,
         "end_time": time.time(),
         "training_time": time_training_end - time_training_start,
+        "labels": test_labels,
+        "wavelength_raster": tuple(raster),
         "stars": results
     }))
+

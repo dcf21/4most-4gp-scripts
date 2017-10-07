@@ -7,17 +7,11 @@ Plot results of testing the Cannon against noisy test spectra, to see how well i
 
 import os
 from os import path as os_path
+import re
 from operator import itemgetter
 import argparse
 import numpy as np
-from astropy.table import Table
-
-from fourgp_speclib import SpectrumLibrarySqlite
-
-
-# Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
-def astropy_row_to_dict(x):
-    return dict([(i, x[i]) for i in x.columns])
+import json
 
 
 class PlotLabelPrecision:
@@ -77,7 +71,7 @@ class PlotLabelPrecision:
         self.label_names = label_names
         self.number_data_sets = number_data_sets
         self.common_x_limits = common_x_limits
-        self.output_figure_stem = os_path.abspath(output_figure_stem)+"/"
+        self.output_figure_stem = os_path.abspath(output_figure_stem) + "/"
         self.data_set_counter = -1
         self.plot_precision = [[] for i in label_names]
         self.plot_box_whiskers = [[[] for j in range(number_data_sets)] for i in label_names]
@@ -89,30 +83,22 @@ class PlotLabelPrecision:
     def add_data_set(self, cannon_output, label_reference_values,
                      legend_label=None,
                      colour="red",
-                     star_id_column="Starname",
-                     snr_column="SNR",
                      pixels_per_angstrom=1.0,
                      metric=np.std):
         """
         Add a data set to a set of precision plots.
 
         :param cannon_output:
-            An astropy Table object containing the label values output by the Cannon.
+            An list of dictionaries containing the label values output by the Cannon.
 
         :param label_reference_values:
-            An astropy Table object containing reference values for the labels for each star.
+            A dictionary of dictionaries containing reference values for the labels for each star.
 
         :param legend_label:
             The label which should appear in the figure legend for this data set.
 
         :param colour:
             The colour of this data set. Should be specified as a valid Pyxplot string describing a colour object.
-
-        :param star_id_column:
-            The name of the column of cannon_output which identifies each star individually.
-
-        :param snr_column:
-            The name of the column in cannon_output which identifies the SNR.
 
         :param pixels_per_angstrom:
             The number of pixels per angstrom in the spectrum. Used to convert SNR per pixel into SNR per A.
@@ -130,7 +116,12 @@ class PlotLabelPrecision:
         latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
 
         # Create a sorted list of all the SNR values we've got
-        snr_values = np.sort(np.unique(cannon_output[snr_column]))
+        snr_values = [item['SNR'] for item in cannon_output]
+        snr_values = sorted(set(snr_values))
+
+        # Create a sorted list of all the stars we've got
+        star_names = [item['Starname'] for item in cannon_output]
+        star_names = sorted(set(star_names))
 
         # Construct the dictionary for storing the Cannon's mismatch to each stellar label
         # label_offset[snr][label_name][reference_value_set_counter] = offset
@@ -140,30 +131,21 @@ class PlotLabelPrecision:
             for label_name in self.label_names:
                 label_offset[snr][label_name] = []
 
-        # Sort Cannon's output by the star it was trying to fit
-        cannon_output = cannon_output.group_by(star_id_column)
-        group_indices = cannon_output.groups.indices
-
         # Loop over stars in the Cannon output
-        for i, si in enumerate(group_indices[:-1]):
-            ei = group_indices[i + 1]
-
-            # Filter the reference labels down to the set which matches the star we're looking at
-            star_name = cannon_output[star_id_column][si]
-
+        for star_name in star_names:
             # Loop over the Cannon's various attempts to match this star (e.g. at different SNR values)
-            for result in cannon_output[si:ei]:
-                # Loop over the labels the Cannon tried to match
-                for label_name in self.label_names:
-                    # Fetch the reference value for this label
-                    try:
-                        ref = label_reference_values[star_name][label_name]
+            for star in cannon_output:
+                if star['Starname'] == star_name:
+                    # Loop over the labels the Cannon tried to match
+                    for label_name in self.label_names:
+                        # Fetch the reference value for this label
+                        try:
+                            ref = label_reference_values[star_name][label_name]
+                        except KeyError:
+                            ref = np.nan
 
-                    except KeyError:
-                        ref = np.nan
-
-                    # Calculate the offset of the Cannon's output from the reference value
-                    label_offset[result[snr_column]][label_name].append(result[label_name] - ref)
+                        # Calculate the offset of the Cannon's output from the reference value
+                        label_offset[star['SNR']][label_name].append(star[label_name] - ref)
 
         self.data_set_counter += 1
 
@@ -182,49 +164,53 @@ class PlotLabelPrecision:
                 diffs.sort()
 
                 def percentile(fraction):
-                    return diffs[int(fraction/100.*len(diffs))]
+                    return diffs[int(fraction / 100. * len(diffs))]
 
                 y.append([])
                 y[-1].extend([snr_per_a])
-                y[-1].extend([metric(diffs), percentile(5), percentile(25), percentile(50), percentile(75), percentile(95)])
+                y[-1].extend(
+                    [metric(diffs), percentile(5), percentile(25), percentile(50), percentile(75), percentile(95)])
 
                 # Output histogram of label mismatches at this SNR
-                np.savetxt("{}{:d}_{:d}_{:06.1f}.dat".format(self.output_figure_stem, i, self.data_set_counter, snr_per_a),
-                           np.transpose(diffs))
+                np.savetxt(
+                    "{}{:d}_{:d}_{:06.1f}.dat".format(self.output_figure_stem, i, self.data_set_counter, snr_per_a),
+                    np.transpose(diffs))
 
                 self.plot_histograms[i][self.data_set_counter][snr_per_a] = [
                     "{}{:d}_{:d}_{:06.1f}.dat".format(
-                    self.output_figure_stem, i, self.data_set_counter, snr_per_a)
-                    ]
+                        self.output_figure_stem, i, self.data_set_counter, snr_per_a)
+                ]
 
             # Output table of statistical measures of label-mismatch-distribution as a function of SNR (first column)
             np.savetxt("{}{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter), y)
 
             self.plot_precision[i].append("\"{}{:d}_{:d}.dat\" using 1:2 title \"{}\" "
-                                      "with lp pt 17 col {}".format(self.output_figure_stem,
-                                                                    i, self.data_set_counter,
-                                                                    legend_label,
-                                                                    colour))
+                                          "with lp pt 17 col {}".format(self.output_figure_stem,
+                                                                        i, self.data_set_counter,
+                                                                        legend_label,
+                                                                        colour))
 
             self.plot_box_whiskers[i][self.data_set_counter] = [
                 "\"{0}{1:d}_{2:d}.dat\" using 1:5:3:7 with yerrorrange col black".format(
                     self.output_figure_stem, i, self.data_set_counter)
-                ]
+            ]
 
             for target_value in latex_label[3]:
                 self.plot_precision[i].append("{} with lines col grey(0.75) notitle".format(target_value))
 
-            with open("{}{:d}_{:d}_cracktastic.dat".format(self.output_figure_stem, i, self.data_set_counter), "w") as f:
+            with open("{}{:d}_{:d}_cracktastic.dat".format(self.output_figure_stem, i, self.data_set_counter),
+                      "w") as f:
                 for j, datum in enumerate(y):
                     w = 2
-                    f.write("{} {}\n".format(datum[0]-w, datum[3]))
-                    f.write("{} {}\n".format(datum[0]-w, datum[5]))
-                    f.write("{} {}\n".format(datum[0]+w, datum[5]))
-                    f.write("{} {}\n\n\n".format(datum[0]+w, datum[3]))
+                    f.write("{} {}\n".format(datum[0] - w, datum[3]))
+                    f.write("{} {}\n".format(datum[0] - w, datum[5]))
+                    f.write("{} {}\n".format(datum[0] + w, datum[5]))
+                    f.write("{} {}\n\n\n".format(datum[0] + w, datum[3]))
 
                     self.plot_box_whiskers[i][self.data_set_counter].insert(0,
-                        "\"{0}{1:d}_{2:d}_cracktastic.dat\" using 1:2  with filledregion fc red col black lw 0.5 index {3}".format(
-                            self.output_figure_stem, i, self.data_set_counter, j))
+                                                                            "\"{0}{1:d}_{2:d}_cracktastic.dat\" using 1:2  with filledregion fc red col black lw 0.5 index {3}".format(
+                                                                                self.output_figure_stem, i,
+                                                                                self.data_set_counter, j))
 
     def make_plots(self):
 
@@ -285,7 +271,7 @@ class PlotLabelPrecision:
                     ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
 
                     # Set axis limits
-                    ppl.write("set yrange [{}:{}]\n".format(-2*latex_label[2], 2*latex_label[2]))
+                    ppl.write("set yrange [{}:{}]\n".format(-2 * latex_label[2], 2 * latex_label[2]))
 
                     # Set axis ticks
                     ppl.write("set xtics (0, 10, 20, 30, 40, 50, 100, 200)\n")
@@ -307,10 +293,10 @@ class PlotLabelPrecision:
 
             # Create a new pyxplot script for histogram plots
             for data_set_counter, data_set_items in enumerate(self.plot_histograms[i]):
-             for snr, plot_items in data_set_items.iteritems():
-                stem = "{}histogram_{:d}_{:d}_{:06.1f}".format(self.output_figure_stem, i, data_set_counter, snr)
-                with open("{}.ppl".format(stem), "w") as ppl:
-                    ppl.write("""
+                for snr, plot_items in data_set_items.iteritems():
+                    stem = "{}histogram_{:d}_{:d}_{:06.1f}".format(self.output_figure_stem, i, data_set_counter, snr)
+                    with open("{}.ppl".format(stem), "w") as ppl:
+                        ppl.write("""
                     
                     set width 14
                     set nokey
@@ -318,31 +304,33 @@ class PlotLabelPrecision:
                     set binwidth {0}
                     set label 1 "{1}; {2}; SNR {3:.1f}" graph 1.5, graph 8
                     
-                    """.format(latex_label[2]/25, latex_label[0], self.datasets[data_set_counter], snr))
+                    """.format(latex_label[2] / 25, latex_label[0], self.datasets[data_set_counter], snr))
 
-                    ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
-                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2]*3, latex_label[2]*3))
-                    for j, plot_item in enumerate(plot_items):
-                        ppl.write("histogram f_{:d}() \"{}\"\n".format(j, plot_item))
-                        ppl.write("plot f_{:d}(x) with boxes fc red\n".format(j))
+                        ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                        ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 3, latex_label[2] * 3))
+                        for j, plot_item in enumerate(plot_items):
+                            ppl.write("histogram f_{:d}() \"{}\"\n".format(j, plot_item))
+                            ppl.write("plot f_{:d}(x) with boxes fc red\n".format(j))
 
-                    ppl.write("""
+                        ppl.write("""
                     
                     set term eps ; set output '{0}.eps' ; set display ; refresh
                     set term png ; set output '{0}.png' ; set display ; refresh
                     set term pdf ; set output "{0}.pdf" ; set display ; refresh
                     
                     """.format(stem))
-                    ppl.close()
-                    os.system("timeout 10s pyxplot {0}.ppl".format(stem))
+                        ppl.close()
+                        os.system("timeout 10s pyxplot {0}.ppl".format(stem))
 
 
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
-    # List of labels to plot
-    label_names = ("Teff", "logg", "[Fe/H]",
-                   "[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]",
-                   "[Ca/H]", "[Ti/H]", "[Mn/H]", "[Co/H]", "[Ni/H]", "[Ba/H]", "[Sr/H]")
-    # n_labels = len(label_names)
+    # Work out list of labels to plot, based on available target values for first star
+    label_names = []
+    first_star = data_sets[0]['cannon_output']['stars'][0]
+    for key in first_star.keys():
+        test = re.match("target_(.*)", key)
+        if test is not None:
+            label_names.append(test.group(1))
 
     # List of colours
     colour_list = ("red", "blue", "orange", "green")
@@ -355,59 +343,49 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
-        # Fetch wavelength raster for each data set
-        data_set['spectrum_ids'] = [i['specId'] for i in data_set['spectrum_library'].search()]
-        data_set['spectrum_ids'].sort()
-        data_set['spectrum_first'] = data_set['spectrum_library'].open(ids=data_set['spectrum_ids'][0])
-        data_set['wavelength_raster'] = data_set['spectrum_first'].wavelengths
 
         # Fetch Cannon output
-        data_set['cannon_data'] = Table.read(data_set['cannon_output'], format='ascii')
-        data_set['cannon_data_dicts'] = [astropy_row_to_dict(item) for item in data_set['cannon_data']]
+        stars = data_set['cannon_output']['stars']
 
-        # Fetch reference values
-        if compare_against_reference_labels:
-            # Look up reference values in the metadata in the SpectrumLibrary that the Cannon was trying to fit
-            data_set['metadata'] = data_set['spectrum_library'].get_metadata(ids=data_set['spectrum_ids'])
-            data_set['reference_values'] = {}
-            for item in data_set['metadata']:
-                star_name = item['Starname']
-                reference_values = dict([[label, item[label] if label in item else np.nan]
-                                         for label in label_names])
-                data_set['reference_values'][star_name] = reference_values
-        else:
-            # Use the values produced by the Cannon at the highest SNR as the target values for each star
-            star_names = [item['Starname'] for item in data_set['cannon_data_dicts']]
-            star_names_distinct = set(star_names)
+        # Fetch reference values for each star
+        star_names = [item['Starname'] for item in stars]
+        star_names_distinct = set(star_names)
 
-            # Loop over all the stars the Cannon tried to fit
-            for star_name in star_names_distinct:
-                # Create a list of all the available SNRs for this star
-                snr_list = [(index, data_set['cannon_data_dicts'][index]['SNR'])
-                            for index in range(len(data_set['cannon_data_dicts']))
-                            if data_set['cannon_data_dicts'][index]['Starname'] == star_name
-                            ]
-                # Sort the list into order of ascending SNR
-                snr_list.sort(key=itemgetter(1))
+        data_set['reference_values'] = {}
 
-                reference_run = data_set['cannon_data_dicts'][snr_list[-1][0]]
-                reference_values = dict([[label, reference_run[label] if label in reference_run else np.nan]
-                                         for label in label_names])
-                data_set['reference_values'][star_name] = reference_values
+        # Loop over all the stars the Cannon tried to fit
+        for star_name in star_names_distinct:
+            # Create a list of all the available SNRs for this star
+            snr_list = [(index, stars[index]['SNR'])
+                        for index in range(len(stars))
+                        if stars[index]['Starname'] == star_name
+                        ]
+            # Sort the list into order of ascending SNR
+            snr_list.sort(key=itemgetter(1))
+
+            reference_run = stars[snr_list[-1][0]]
+            reference_values = {}
+            for label in label_names:
+                if compare_against_reference_labels:
+                    # Use values that were used to synthesise this spectrum
+                    reference_values[label] = reference_run["target_{}".format(label)]
+                else:
+                    # Use the values produced by the Cannon at the highest SNR as the target values for each star
+                    reference_values[label] = reference_run[label]
+            data_set['reference_values'][star_name] = reference_values
 
         # Filter only those stars with metallicities >= -0.5
-        metal_rich = data_set['cannon_data']["[Fe/H]"] >= -0.5
-        data_set['cannon_data_filtered'] = data_set['cannon_data'][metal_rich]
+        stars = [item for item in stars if item["[Fe/H]"] >= -0.5]
 
         # Pick a colour for this data set
         colour = colour_list[counter % len(colour_list)]
 
         # Add data set to plot
-        plotter.add_data_set(data_set['cannon_data_filtered'],
+        plotter.add_data_set(cannon_output=stars,
                              label_reference_values=data_set['reference_values'],
                              colour=colour,
                              legend_label="{} ({})".format(data_set['title'], run_title),
-                             pixels_per_angstrom=np.median(1.0 / np.diff(data_set['wavelength_raster'])))
+                             pixels_per_angstrom=float(np.median(1.0 / np.diff(data_set['wavelength_raster']))))
 
     plotter.make_plots()
 
@@ -416,10 +394,8 @@ if __name__ == "__main__":
 
     # Read input parameters
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--library', required=True, action="append", dest='spectrum_libraries',
-                        help="Library of spectra that the Cannon tried to fit.")
     parser.add_argument('--cannon-output', required=True, action="append", dest='cannon_output',
-                        help="ASCII table containing the label values estimated by the Cannon.")
+                        help="JSON structure containing the label values estimated by the Cannon.")
     parser.add_argument('--dataset-label', required=True, action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
     parser.add_argument('--output-file', default="/tmp/cannon_performance_plot", dest='output_file',
@@ -437,27 +413,15 @@ if __name__ == "__main__":
     parser.set_defaults(use_reference_labels=True)
     args = parser.parse_args()
 
-    # Check that we have a matching number of libraries and sets of Cannon output
-    assert len(args.spectrum_libraries) == len(args.cannon_output), \
-        "Must have a matching number of libraries and sets of Cannon output."
-    assert len(args.spectrum_libraries) == len(args.data_set_label), \
+    # Check that we have a matching number of labels and sets of Cannon output
+    assert len(args.cannon_output) == len(args.data_set_label), \
         "Must have a matching number of libraries and data set labels."
 
-    # Set path to workspace where we expect to find libraries of spectra
-    our_path = os_path.split(os_path.abspath(__file__))[0]
-    workspace = os_path.join(our_path, "..", "..", "workspace")
-
-    # Assemble list of input SpectrumLibraries with list of Cannon output data
+    # Assemble list of input Cannon output data files
     cannon_outputs = []
-    for spectrum_library, cannon_output, data_set_label in \
-            zip(args.spectrum_libraries, args.cannon_output, args.data_set_label):
-        # Open training set
-        training_library_path = os_path.join(workspace, spectrum_library)
-        training_library = SpectrumLibrarySqlite(path=training_library_path, create=False)
-
+    for cannon_output, data_set_label in zip(args.cannon_output, args.data_set_label):
         # Append to list of Cannon data sets
-        cannon_outputs.append({'spectrum_library': training_library,
-                               'cannon_output': cannon_output,
+        cannon_outputs.append({'cannon_output': json.loads(open(cannon_output).read()),
                                'title': data_set_label})
 
     generate_set_of_plots(data_sets=cannon_outputs,
