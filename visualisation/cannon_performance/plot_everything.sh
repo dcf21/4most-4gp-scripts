@@ -28,9 +28,9 @@ python scatter_plot_coloured.py --label "Teff{5100:4000}" --label "logg{3.8:1.2}
 
 python scatter_plot_snr_required.py --label "Teff{5100:4000}" --label "logg{3.8:1.2}" \
                                     --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "Teff" \
-                                    --colour-by-label "Teff{:}" \
+                                    --colour-by-label "Teff" \
                                     --target-accuracy 100 \
-                                    --colour-range-min 80 --colour-range-max 180 \
+                                    --colour-range-min 50 --colour-range-max 150 \
                                     --cannon_output ../../output_data/cannon_apokasc_lrs.json \
                                     --output-stub ../../output_plots/apokasc_Teff_required_snr
 

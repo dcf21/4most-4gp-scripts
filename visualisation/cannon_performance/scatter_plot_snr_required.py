@@ -21,7 +21,7 @@ parser.add_argument('--label-axis-latex', required=True, action="append", dest='
 parser.add_argument('--colour-by-label', required=True, dest='colour_label',
                     help="Label we should use to colour code points by the SNR needed to achieve some "
                          "nominal accuracy in that label.")
-parser.add_argument('--target-accuracy', required=True, dest='target_accuracy',
+parser.add_argument('--target-accuracy', required=True, dest='target_accuracy', type=float,
                     help="The target accuracy in the label we are colour-coding.")
 parser.add_argument('--colour-range-min', required=True, dest='colour_range_min', type=float,
                     help="The range of SNR values to use in colouring points.")
@@ -43,7 +43,7 @@ assert len(args.label_axis_latex) == 3, "A coloured scatter plot needs label nam
 # Labels are supplied with ranges listed in {}. We extract the names to pass to label_tabulator.
 label_list = []
 label_names = []
-for item in args.labels + [args.colour_label]:
+for item in args.labels:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
     label_list.append({
@@ -71,7 +71,7 @@ for star in cannon_output['stars']:
     if object_name not in offsets:
         offsets[object_name] = {}
     offsets[object_name][star['SNR']] = abs(star[args.colour_label] - star["target_{}".format(args.colour_label)])
-    label_values[object_name] = [star["target_{}".format(item)] for item in args.labels]
+    label_values[object_name] = [star["target_{}".format(item)] for item in label_names]
 
 # Loop over stars, calculating the SNR needed for each one
 output = []
@@ -85,17 +85,17 @@ for star_name in star_names:
             previous_offset = new_offset
             previous_snr = snr
             continue
-        weight_a = abs(new_offset-args.target_accuracy)
-        weight_b = abs(previous_offset-args.target_accuracy)
+        weight_a = abs(new_offset - args.target_accuracy)
+        weight_b = abs(previous_offset - args.target_accuracy)
         snr_required = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
         break
     output.append(label_values[star_name] + [snr_required])
 
 # Write values to data files
 filename = "{}.dat".format(args.output_stub)
-with open(filename,"w") as f:
+with open(filename, "w") as f:
     for line in output:
-        f.write("%16s %16s %16s"%output)
+        f.write("%16s %16s %16s\n" % tuple(line))
 
 # Create pyxplot script to produce this plot
 width = 14
