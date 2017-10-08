@@ -324,13 +324,8 @@ class PlotLabelPrecision:
 
 
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
-    # Work out list of labels to plot, based on available target values for first star
-    label_names = []
-    first_star = data_sets[0]['cannon_output']['stars'][0]
-    for key in first_star.keys():
-        test = re.match("target_(.*)", key)
-        if test is not None:
-            label_names.append(test.group(1))
+    # Work out list of labels to plot, based on first data set we're provided with
+    label_names = data_sets[0]['cannon_output']['labels']
 
     # List of colours
     colour_list = ("red", "blue", "orange", "green")
@@ -385,7 +380,9 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
                              label_reference_values=data_set['reference_values'],
                              colour=colour,
                              legend_label="{} ({})".format(data_set['title'], run_title),
-                             pixels_per_angstrom=float(np.median(1.0 / np.diff(data_set['wavelength_raster']))))
+                             pixels_per_angstrom=float(np.median(
+                                 1.0 / np.diff(data_set['cannon_output']['wavelength_raster'])))
+                             )
 
     plotter.make_plots()
 

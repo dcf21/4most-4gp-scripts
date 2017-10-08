@@ -3,12 +3,13 @@
 
 """
 Take an output file from the Cannon, and produce a scatter plot of coloured points, with label values on the two axes
-and the colour of the points representing the error in one of the derived labels.
+and the colour of the points representing the SNR needed to attain some required level of accuracy in a third label.
 """
 
 import os
 import argparse
 import re
+import json
 from label_tabulator import tabulate_labels
 
 # Read input parameters
@@ -18,11 +19,14 @@ parser.add_argument('--label', required=True, action="append", dest='labels',
 parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
                     help="Titles we should put on the two axes of the scatter plot.")
 parser.add_argument('--colour-by-label', required=True, dest='colour_label',
-                    help="Label we should use to colour code points by the Cannon's offset from library values.")
+                    help="Label we should use to colour code points by the SNR needed to achieve some "
+                         "nominal accuracy in that label.")
+parser.add_argument('--target-accuracy', required=True, dest='target_accuracy',
+                    help="The target accuracy in the label we are colour-coding.")
 parser.add_argument('--colour-range-min', required=True, dest='colour_range_min', type=float,
-                    help="The range of parameter values to use in colouring points.")
+                    help="The range of SNR values to use in colouring points.")
 parser.add_argument('--colour-range-max', required=True, dest='colour_range_max', type=float,
-                    help="The range of parameter values to use in colouring points.")
+                    help="The range of SNR values to use in colouring points.")
 parser.add_argument('--cannon_output',
                     required=True,
                     default="",
@@ -48,8 +52,50 @@ for item in args.labels + [args.colour_label]:
     })
     label_names.append(test.group(1))
 
-# Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
+# Read Cannon output
+cannon_output = json.loads(open(args.cannon).read())
+
+# Create a sorted list of all the SNR values we've got
+snr_values = [item['SNR'] for item in cannon_output['stars']]
+snr_values = sorted(set(snr_values))
+
+# Create a sorted list of all the stars we've got
+star_names = [item['Starname'] for item in cannon_output['stars']]
+star_names = sorted(set(star_names))
+
+# Loop over stars, calculating offsets for the label we're colour-coding
+offsets = {}  # offsets[star_name][SNR] = dictionary of label names and absolute offsets
+label_values = {}  # label_values[star_name] = list of label values on x and y axes
+for star in cannon_output['stars']:
+    object_name = star['Starname']
+    if object_name not in offsets:
+        offsets[object_name] = {}
+    offsets[object_name][star['SNR']] = abs(star[args.colour_label] - star["target_{}".format(args.colour_label)])
+    label_values[object_name] = [star["target_{}".format(item)] for item in args.labels]
+
+# Loop over stars, calculating the SNR needed for each one
+output = []
+for star_name in star_names:
+    snr_required = 1e6
+    previous_offset = 1e6
+    previous_snr = 0
+    for snr in snr_values:
+        new_offset = offsets[star_name][snr]
+        if new_offset > args.target_accuracy:
+            previous_offset = new_offset
+            previous_snr = snr
+            continue
+        weight_a = abs(new_offset-args.target_accuracy)
+        weight_b = abs(previous_offset-args.target_accuracy)
+        snr_required = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
+        break
+    output.append(label_values[star_name] + [snr_required])
+
+# Write values to data files
+filename = "{}.dat".format(args.output_stub)
+with open(filename,"w") as f:
+    for line in output:
+        f.write("%16s %16s %16s"%output)
 
 # Create pyxplot script to produce this plot
 width = 14
@@ -62,8 +108,7 @@ col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
 
 """.format(args.colour_range_min, args.colour_range_max)
 
-for snr in snr_list:
-    pyxplot_input += """
+pyxplot_input += """
     
 set nodisplay
 set origin 0,0
@@ -81,22 +126,22 @@ set yrange [{}]
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"])
 
-    pyxplot_input += """
+pyxplot_input += """
     
 set output "{0}.png"
 clear
 unset origin ; set axis y left ; unset xtics ; unset mxtics
-plot "{0}" title "Offset in {1} at SNR {2}." with dots colour col_scale($6-$3) ps 5
+plot "{0}" title "SNR needed to achieve accuracy of {1} in {2}." with dots colour col_scale($3) ps 5
 
-""".format(snr["filename"], args.label_axis_latex[2], snr["snr"])
+""".format(filename, args.target_accuracy, args.label_axis_latex[2])
 
-    pyxplot_input += """
+pyxplot_input += """
 
 set noxlabel
 set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y right
-set ylabel "{0}"
+set ylabel "SNR needed for {0}"
 set yrange [{1}:{2}]
 set c1range [{1}:{2}] norenormalise
 set width {3}
@@ -109,13 +154,13 @@ plot y with colourmap
 
 """.format(args.label_axis_latex[2], args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1)
 
-    pyxplot_input += """
+pyxplot_input += """
 
 set term eps ; set output "{0}.eps" ; set display ; refresh
 set term png ; set output "{0}.png" ; set display ; refresh
 set term pdf ; set output "{0}.pdf" ; set display ; refresh
 
-""".format(snr["filename"])
+""".format(filename)
 
 # Run pyxplot
 p = os.popen("pyxplot", "w")
