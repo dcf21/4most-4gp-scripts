@@ -10,7 +10,8 @@ import os
 import argparse
 import re
 import json
-from label_tabulator import tabulate_labels
+from math import sqrt
+import numpy as np
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -34,6 +35,8 @@ parser.add_argument('--cannon_output',
                     help="Cannon output file we should analyse.")
 parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
+parser.add_argument('--title', default="Untitled", dest='title',
+                    help="Title to put at the top of plot")
 args = parser.parse_args()
 
 # Check that we have one label to plot on each axis label, and a title to show on each axis
@@ -63,6 +66,11 @@ snr_values = sorted(set(snr_values))
 star_names = [item['Starname'] for item in cannon_output['stars']]
 star_names = sorted(set(star_names))
 
+# Work out multiplication factor to convert SNR/pixel to SNR/A
+raster = np.array(cannon_output['wavelength_raster'])
+raster_diff = np.diff(raster[raster > 6000])
+pixels_per_angstrom = 1.0 / raster_diff[0]
+
 # Loop over stars, calculating offsets for the label we're colour-coding
 offsets = {}  # offsets[star_name][SNR] = dictionary of label names and absolute offsets
 label_values = {}  # label_values[star_name] = list of label values on x and y axes
@@ -76,7 +84,7 @@ for star in cannon_output['stars']:
 # Loop over stars, calculating the SNR needed for each one
 output = []
 for star_name in star_names:
-    snr_required = 1e6
+    snr_required_per_a = 1e6
     previous_offset = 1e6
     previous_snr = 0
     for snr in snr_values:
@@ -87,9 +95,10 @@ for star_name in star_names:
             continue
         weight_a = abs(new_offset - args.target_accuracy)
         weight_b = abs(previous_offset - args.target_accuracy)
-        snr_required = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
+        snr_required_per_pixel = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
+        snr_required_per_a = snr_required_per_pixel * sqrt(pixels_per_angstrom)
         break
-    output.append(label_values[star_name] + [snr_required])
+    output.append(label_values[star_name] + [snr_required_per_a])
 
 # Write values to data files
 filename = "{}.dat".format(args.output_stub)
@@ -98,13 +107,13 @@ with open(filename, "w") as f:
         f.write("%16s %16s %16s\n" % tuple(line))
 
 # Create pyxplot script to produce this plot
-width = 14
+width = 18
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
 col_scale_z(z) = min(max(  (z-({0})) / (({1})-({0}))  ,0),1)
 
-col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
+col_scale(z) = (z>{1}) ? colors.black : hsb(0.75 * col_scale_z(z), 1, 1)
 
 """.format(args.colour_range_min, args.colour_range_max)
 
@@ -123,8 +132,11 @@ set xrange [{}]
 set ylabel "{}"
 set yrange [{}]
 
+set label 1 "{}" at page 0.5, page {}
+
 """.format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"])
+           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
+           args.title, width*aspect-0.5)
 
 pyxplot_input += """
     
@@ -137,11 +149,12 @@ plot "{0}" title "SNR needed to achieve accuracy of {1} in {2}." with dots colou
 
 pyxplot_input += """
 
+unset label
 set noxlabel
 set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y right
-set ylabel "SNR needed for {0}"
+set ylabel "SNR/\AA (at 6000\AA) needed for {0}"
 set yrange [{1}:{2}]
 set c1range [{1}:{2}] norenormalise
 set width {3}

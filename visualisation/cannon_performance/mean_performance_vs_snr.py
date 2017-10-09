@@ -7,7 +7,6 @@ Plot results of testing the Cannon against noisy test spectra, to see how well i
 
 import os
 from os import path as os_path
-import re
 from operator import itemgetter
 import argparse
 import numpy as np
@@ -375,13 +374,17 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
         # Pick a colour for this data set
         colour = colour_list[counter % len(colour_list)]
 
+        # Convert SNR/pixel to SNR/A at 6000A
+        raster = np.array(data_set['cannon_output']['wavelength_raster'])
+        raster_diff = np.diff(raster[raster > 6000])
+        pixels_per_angstrom = 1.0 / raster_diff[0]
+
         # Add data set to plot
         plotter.add_data_set(cannon_output=stars,
                              label_reference_values=data_set['reference_values'],
                              colour=colour,
                              legend_label="{} ({})".format(data_set['title'], run_title),
-                             pixels_per_angstrom=float(np.median(
-                                 1.0 / np.diff(data_set['cannon_output']['wavelength_raster'])))
+                             pixels_per_angstrom=pixels_per_angstrom
                              )
 
     plotter.make_plots()
