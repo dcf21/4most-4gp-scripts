@@ -27,8 +27,11 @@ parser.add_argument('--test', required=True, dest='test_library',
                     help="Library of spectra to test the trained Cannon on.")
 parser.add_argument('--train', required=True, dest='train_library',
                     help="Library of labelled spectra to train the Cannon on.")
+parser.add_argument('--description', dest='description',
+                    help="A description of this fitting run.")
 parser.add_argument('--labels', dest='labels',
-                    default="Teff,logg,[Fe/H],[C/H],[N/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H],[Ca/H],[Ti/H],[Mn/H],[Co/H],[Ni/H],[Ba/H],[Sr/H]",
+                    default="Teff,logg,[Fe/H],[C/H],[N/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H],[Ca/H],[Ti/H],"
+                            "[Mn/H],[Co/H],[Ni/H],[Ba/H],[Sr/H]",
                     help="List of the labels the Cannon is to learn to estimate.")
 parser.add_argument('--censor', default="", dest='censor_line_list',
                     help="Optional list of line positions for the Cannon to fit, ignoring continuum between.")
@@ -37,6 +40,18 @@ parser.add_argument('--tolerance', default=1e-4, dest='tolerance', type=float,
                          "whether they have converged.")
 parser.add_argument('--output-file', default="./test_cannon.out", dest='output_file',
                     help="Data file to write output to.")
+parser.add_argument('--assume-scaled-solar',
+                    required=False,
+                    action='assume_scaled_solar',
+                    dest="create",
+                    help="Assume scaled solar abundances for any elements which don't have abundances individually "
+                         "specified. Useful for working with incomplete data sets.")
+parser.add_argument('--no-assume-scaled-solar',
+                    required=False,
+                    action='store_false',
+                    dest="assume_scaled_solar",
+                    help="Do not assume scaled solar abundances; throw an error if training set is has missing labels.")
+parser.set_defaults(assume_scaled_solar=False)
 args = parser.parse_args()
 
 logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test_library,
@@ -101,39 +116,59 @@ test_library, test_library_items = [spectra[i] for i in ("library", "items")]
 
 # Load training set
 training_library_ids = [i["specId"] for i in training_library_items]
-training_spectra = training_library.open(ids=training_library_ids)
+training_spectra = training_library.open(ids=training_library_ids, shared_memory=True)
 raster = training_spectra.wavelengths
 
 # Load test set
 test_library_ids = [i["specId"] for i in test_library_items]
 
+# If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
+if args.assume_scaled_solar:
+    for index in range(len(training_spectra)):
+        metadata = training_spectra.get_metadata(index)
+        for label in test_labels:
+            if label not in metadata:
+                metadata[label] = metadata["[Fe/H]"]
+
 # If required, generate the censoring masks
 censoring_masks = None
 if args.censor_line_list != "":
-    # Only import astropy FITS reader if we actually need to use it
-    from astropy.io import fits
-
-    window = 0.5  # How many Angstroms either side of the line should be used?
+    window = 1  # How many Angstroms either side of the line should be used?
     censoring_masks = {}
-    ges_line_list = fits.open(args.censor_line_list)[1].data
+    line_list_txt = open(args.censor_line_list).readlines()
 
-    for label_name in test_labels[3:]:
+    for label_name in test_labels:
+        allowed_lines = 0
         mask = np.zeros(raster.size, dtype=bool)
 
-        # Find instances of this element in the line list
-        element = label_name.lstrip("[").split("/")[0]
-        match = np.any(ges_line_list["NAME"] == element, axis=1)
+        # Loop over the lines in the line list and see which ones to include
+        for line in line_list_txt:
+            line = line.strip()
 
-        # Get corresponding wavelengths
-        matching_wavelengths = ges_line_list["LAMBDA"][match]
+            # Ignore comment lines
+            if (len(line)==0) or (line[0]=="#"):
+                continue
+            words = line.split()
+            element_symbol = words[0]
+            wavelength = words[2]
 
-        # For each wavelength, allow +/- window that line.
-        for i, wavelength in enumerate(matching_wavelengths):
-            window_mask = ((wavelength + window) >= raster) * (raster >= (wavelength - window))
+            # Only select lines from elements we're trying to fit
+            if "[{}/H]".format(element_symbol) not in test_labels:
+                continue
+
+            # Is line specified as a range (broad), or a single central wavelength (assume narrow)
+            if "-" in wavelength:
+                passband = [float(i) for i in wavelength.split("-")]
+            else:
+                passband = [float(wavelength)-window, float(wavelength)+window]
+
+            # Allow this line
+            allowed_lines += 1
+            window_mask = (raster >= passband[0]) * (passband[1] >= raster)
             mask[window_mask] = True
 
         logger.info("Pixels used for label {}: {} of {} (in {} lines)".format(label_name, mask.sum(),
-                                                                              len(raster), len(matching_wavelengths)))
+                                                                              len(raster), allowed_lines))
         censoring_masks[label_name] = ~mask
 
 # Construct and train a model
@@ -189,6 +224,9 @@ logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spe
 # Write results to JSON file
 with open(args.output_file + ".json", "w") as f:
     f.write(json.dumps({
+        "description": args.description,
+        "assume_scaled_solar": args.assume_scaled_solar,
+        "line_list": args.censor_line_list,
         "start_time": time_training_start,
         "end_time": time.time(),
         "training_time": time_training_end - time_training_start,

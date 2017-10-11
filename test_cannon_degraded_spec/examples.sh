@@ -5,6 +5,66 @@ source ../../virtualenv/bin/activate
 
 python cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4800<Teff<9999]" \
                       --test "4fs_apokasc_test_set_lrs[4900<Teff<9999]" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_quick_3label"
+
+python cannon_test.py --train "hawkins_apokasc_training_set_lrs[SNR=250]" \
+                      --test "hawkins_apokasc_test_set_lrs" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_hawkins_lrs_3label"
+python cannon_test.py --train "hawkins_apokasc_training_set_lrs_snrperband[SNR=250]" \
+                      --test "hawkins_apokasc_test_set_lrs_snrperband" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_hawkins_lrs_snrperband_3label"
+python cannon_test.py --train "hawkins_apokasc_training_set_lrs_snrperband_noblue[SNR=250]" \
+                      --test "hawkins_apokasc_test_set_lrs_snrperband_noblue" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_hawkins_lrs_snrperband_noblue_3label"
+
+python cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250]" \
+                      --test "4fs_apokasc_test_set_lrs" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_apokasc_lrs_3label"
+python cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband[SNR=250]" \
+                      --test "4fs_apokasc_test_set_lrs_snrperband" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_apokasc_lrs_snrperband_3label"
+python cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband_noblue[SNR=250]" \
+                      --test "4fs_apokasc_test_set_lrs_snrperband_noblue" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_apokasc_lrs_snrperband_noblue_3label"
+
+python cannon_test.py --train "hawkins_apokasc_training_set_hrs[SNR=250]" \
+                      --test "hawkins_apokasc_test_set_hrs" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_hawkins_hrs_3label"
+python cannon_test.py --train "hawkins_apokasc_training_set_hrs_snrperband[SNR=250]" \
+                      --test "hawkins_apokasc_test_set_hrs_snrperband" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_hawkins_hrs_snrperband_3label"
+python cannon_test.py --train "hawkins_apokasc_training_set_hrs_snrperband_noblue[SNR=250]" \
+                      --test "hawkins_apokasc_test_set_hrs_snrperband_noblue" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_hawkins_hrs_snrperband_noblue_3label"
+
+python cannon_test.py --train "4fs_apokasc_training_set_hrs[SNR=250]" \
+                      --test "4fs_apokasc_test_set_hrs" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_apokasc_hrs_3label"
+python cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband[SNR=250]" \
+                      --test "4fs_apokasc_test_set_hrs_snrperband" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_apokasc_hrs_snrperband_3label"
+python cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband_noblue[SNR=250]" \
+                      --test "4fs_apokasc_test_set_hrs_snrperband_noblue" \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon_apokasc_hrs_snrperband_noblue_3label"
+
+
+# -----------------------------------------------------------------------------------------
+
+python cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4800<Teff<9999]" \
+                      --test "4fs_apokasc_test_set_lrs[4900<Teff<9999]" \
                       --labels "Teff,logg,[Fe/H],[C/H],[N/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H]" \
                       --output-file "../output_data/cannon_quick"
 
