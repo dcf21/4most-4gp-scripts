@@ -42,8 +42,8 @@ parser.add_argument('--output-file', default="./test_cannon.out", dest='output_f
                     help="Data file to write output to.")
 parser.add_argument('--assume-scaled-solar',
                     required=False,
-                    action='assume_scaled_solar',
-                    dest="create",
+                    action='store_true',
+                    dest="assume_scaled_solar",
                     help="Assume scaled solar abundances for any elements which don't have abundances individually "
                          "specified. Useful for working with incomplete data sets.")
 parser.add_argument('--no-assume-scaled-solar',
@@ -153,7 +153,7 @@ if args.censor_line_list != "":
             wavelength = words[2]
 
             # Only select lines from elements we're trying to fit
-            if "[{}/H]".format(element_symbol) not in test_labels:
+            if (element_symbol != "H") and ("[{}/H]".format(element_symbol) not in test_labels):
                 continue
 
             # Is line specified as a range (broad), or a single central wavelength (assume narrow)

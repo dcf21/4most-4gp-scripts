@@ -48,6 +48,8 @@ python cannon_test.py {}
 
 """
 
+os.system("mkdir -p ../../output_data/cannon")
+
 counter = 0
 for job in args.jobs:
     line_buffer = ""
@@ -63,7 +65,7 @@ for job in args.jobs:
             continue
 
         # Put current line onto the end of line buffer
-        line = "{} {}".format(line_buffer, line)
+        line = "{} {}".format(line_buffer, line).strip()
         line_buffer = ""
 
         # Ignore shell commands which don't run Cannon tests

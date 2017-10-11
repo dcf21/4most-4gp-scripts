@@ -221,12 +221,14 @@ python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250]" \
                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST HRS (censored) - 10 labels - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                      --assume-scaled-solar \
                       --output-file "../output_data/cannon/cannon_marcs_ahm2017_hrs_10label"
 python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_lrs" \
                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST LRS (censored) - 10 labels - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                      --assume-scaled-solar \
                       --output-file "../output_data/cannon/cannon_marcs_ahm2017_lrs_10label"
 
 python cannon_test.py --train "4fs_ges_dwarf_sample_hrs[SNR=250]" \
