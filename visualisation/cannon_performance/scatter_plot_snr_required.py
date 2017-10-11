@@ -35,8 +35,8 @@ parser.add_argument('--cannon_output',
                     help="Cannon output file we should analyse.")
 parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
-parser.add_argument('--title', default="Untitled", dest='title',
-                    help="Title to put at the top of plot")
+parser.add_argument('--accuracy-unit', default="apples", dest='accuracy_unit',
+                    help="Unit to put after target accuracy we're aiming to achieve in label")
 args = parser.parse_args()
 
 # Check that we have one label to plot on each axis label, and a title to show on each axis
@@ -136,16 +136,16 @@ set label 1 "{}" at page 0.5, page {}
 
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
-           args.title, width*aspect-0.5)
+           cannon_output['description'], width*aspect-0.5)
 
 pyxplot_input += """
     
 set output "{0}.png"
 clear
 unset origin ; set axis y left ; unset xtics ; unset mxtics
-plot "{0}" title "SNR needed to achieve accuracy of {1} in {2}." with dots colour col_scale($3) ps 5
+plot "{0}" title "SNR needed to achieve accuracy of {1} {2} in {3}." with dots colour col_scale($3) ps 5
 
-""".format(filename, args.target_accuracy, args.label_axis_latex[2])
+""".format(filename, args.target_accuracy, args.accuracy_unit, args.label_axis_latex[2])
 
 pyxplot_input += """
 

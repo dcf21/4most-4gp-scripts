@@ -35,17 +35,10 @@ target_accuracy=0.1
 if [ "$colour_label" == "Teff" ] ; then target_accuracy=100 ; fi
 if [ "$colour_label" == "logg" ] ; then target_accuracy=0.3 ; fi
 
-path_safe_label=`echo ${colour_label} | sed -e 's@\[\(.*\)/H\]@\1H@g'`
+accuracy_unit="dex"
+if [ "$colour_label" == "Teff" ] ; then accuracy_unit="K" ; fi
 
-title="Undefined"
-if [ "$cannon_run" == "apokasc_lrs" ] ; then title="4MOST LRS - Train on APOKASC(1). Test on APOKASC(2)." ; fi
-if [ "$cannon_run" == "apokasc_hrs" ] ; then title="4MOST HRS - Train on APOKASC(1). Test on APOKASC(2)." ; fi
-if [ "$cannon_run" == "ahm2017_perturbed_lrs" ] ; then title="4MOST LRS - Train on GES UVES AHM2017. Test on perturbed version." ; fi
-if [ "$cannon_run" == "ahm2017_perturbed_hrs" ] ; then title="4MOST HRS - Train on GES UVES AHM2017. Test on perturbed version." ; fi
-if [ "$cannon_run" == "ges_dwarfs_perturbed_lrs" ] ; then title="4MOST LRS - Train on GES UVES dwarfs. Test on perturbed version." ; fi
-if [ "$cannon_run" == "ges_dwarfs_perturbed_hrs" ] ; then title="4MOST HRS - Train on GES UVES dwarfs. Test on perturbed version." ; fi
-if [ "$cannon_run" == "marcs_ahm2017_lrs" ] ; then title="4MOST LRS - Train on MARCS grid. Test on perturbed GES UVES AHM2017." ; fi
-if [ "$cannon_run" == "marcs_ahm2017_hrs" ] ; then title="4MOST HRS - Train on MARCS grid. Test on perturbed GES UVES AHM2017." ; fi
+path_safe_label=`echo ${colour_label} | sed -e 's@\[\(.*\)/H\]@\1H@g'`
 
 python scatter_plot_snr_required.py --label "Teff{7000:3400}" --label "logg{5:0}" \
                                     --label-axis-latex "Teff" --label-axis-latex "log(g)" \
@@ -54,7 +47,7 @@ python scatter_plot_snr_required.py --label "Teff{7000:3400}" --label "logg{5:0}
                                     --target-accuracy ${target_accuracy} \
                                     --colour-range-min 80 --colour-range-max 360 \
                                     --cannon_output ../../output_data/cannon_${cannon_run}.json \
-                                    --title "${title}" \
+                                    --accuracy_unit "${accuracy_unit}" \
                                     --output-stub "../../output_plots/required_snrA_${cannon_run}_${path_safe_label}"
 
 python scatter_plot_snr_required.py --label "[Fe/H]{1:-3}" --label "logg{5:0}" \
@@ -64,7 +57,7 @@ python scatter_plot_snr_required.py --label "[Fe/H]{1:-3}" --label "logg{5:0}" \
                                     --target-accuracy ${target_accuracy} \
                                     --colour-range-min 80 --colour-range-max 360 \
                                     --cannon_output ../../output_data/cannon_${cannon_run}.json \
-                                    --title "${title}" \
+                                    --accuracy_unit "${accuracy_unit}" \
                                     --output-stub "../../output_plots/required_snrB_${cannon_run}_${path_safe_label}"
 
 done

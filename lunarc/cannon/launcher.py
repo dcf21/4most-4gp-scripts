@@ -44,31 +44,38 @@ module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.
 export PYTHONPATH=${{HOME}}/local/lib/python2.7/site-packages:${{PYTHONPATH}}
 
 cd ${{HOME}}/iwg7_pipeline/4most-4gp-scripts/test_cannon_degraded_spec
-python cannon_test.py --train "{}" --test "{}" --output-file "../output_data/{}" --labels {} --tolerance {}
+python cannon_test.py {}
 
 """
 
 counter = 0
 for job in args.jobs:
+    line_buffer = ""
     for line in open(job):
+        line = line.strip()
         # Ignore blank lines and lines which begin with a hash
-        if (len(line.strip()) == 0) or (line.strip()[0] == '#'):
+        if (len(line) == 0) or (line[0] == '#'):
             continue
 
+        # Lines which end in backslashes append
+        if line[-1] == "\\":
+            line_buffer = "{} {}".format(line_buffer, line[:-1])
+            continue
+
+        # Put current line onto the end of line buffer
+        line = "{} {}".format(line_buffer, line)
+        line_buffer = ""
+
+        # Ignore shell commands which don't run Cannon tests
+        if not line.startswith("python cannon_test.py"):
+            continue
+
+        command = line[22:]
         counter += 1
-        words = line.split()
-        assert len(words) == 5
-
-        training = words[0]
-        test = words[1]
-        output = words[2]
-        labels = words[3]
-        tolerance = float(words[4])
-
         slurm_tmp_filename = "tmp_{}_{}.sh".format(uid, counter)
 
         with open(slurm_tmp_filename, "w") as f:
-            f.write(slurm_script.format(training, test, output, labels, tolerance))
+            f.write(slurm_script.format(command))
 
         os.system("sbatch {}".format(slurm_tmp_filename))
 
