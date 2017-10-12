@@ -41,17 +41,23 @@ parser.add_argument('--tolerance', default=1e-4, dest='tolerance', type=float,
 parser.add_argument('--output-file', default="./test_cannon.out", dest='output_file',
                     help="Data file to write output to.")
 parser.add_argument('--assume-scaled-solar',
-                    required=False,
                     action='store_true',
                     dest="assume_scaled_solar",
                     help="Assume scaled solar abundances for any elements which don't have abundances individually "
                          "specified. Useful for working with incomplete data sets.")
 parser.add_argument('--no-assume-scaled-solar',
-                    required=False,
                     action='store_false',
                     dest="assume_scaled_solar",
                     help="Do not assume scaled solar abundances; throw an error if training set is has missing labels.")
-parser.set_defaults(assume_scaled_solar=False)
+parser.add_argument('--multithread',
+                    action='store_true',
+                    dest="multithread",
+                    help="Use multiple thread to speed Cannon up.")
+parser.add_argument('--nothread',
+                    action='store_false',
+                    dest="multithred",
+                    help="Do not use multiple threads - use only one CPU core.")
+parser.set_defaults(multithread=True)
 args = parser.parse_args()
 
 logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test_library,
@@ -116,7 +122,7 @@ test_library, test_library_items = [spectra[i] for i in ("library", "items")]
 
 # Load training set
 training_library_ids = [i["specId"] for i in training_library_items]
-training_spectra = training_library.open(ids=training_library_ids, shared_memory=True)
+training_spectra = training_library.open(ids=training_library_ids)
 raster = training_spectra.wavelengths
 
 # Load test set
@@ -127,7 +133,8 @@ if args.assume_scaled_solar:
     for index in range(len(training_spectra)):
         metadata = training_spectra.get_metadata(index)
         for label in test_labels:
-            if label not in metadata:
+            if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
+                # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
                 metadata[label] = metadata["[Fe/H]"]
 
 # If required, generate the censoring masks
@@ -146,7 +153,7 @@ if args.censor_line_list != "":
             line = line.strip()
 
             # Ignore comment lines
-            if (len(line)==0) or (line[0]=="#"):
+            if (len(line) == 0) or (line[0] == "#"):
                 continue
             words = line.split()
             element_symbol = words[0]
@@ -160,7 +167,7 @@ if args.censor_line_list != "":
             if "-" in wavelength:
                 passband = [float(i) for i in wavelength.split("-")]
             else:
-                passband = [float(wavelength)-window, float(wavelength)+window]
+                passband = [float(wavelength) - window, float(wavelength) + window]
 
             # Allow this line
             allowed_lines += 1
@@ -176,7 +183,9 @@ time_training_start = time.time()
 model = CannonInstance(training_set=training_spectra,
                        label_names=test_labels,
                        tolerance=args.tolerance,
-                       censors=censoring_masks)
+                       censors=censoring_masks,
+                       threads=None if args.multithread else 1
+                       )
 time_training_end = time.time()
 
 # Test the model
@@ -234,4 +243,3 @@ with open(args.output_file + ".json", "w") as f:
         "wavelength_raster": tuple(raster),
         "stars": results
     }))
-

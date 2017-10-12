@@ -7,6 +7,9 @@ lunarc.
 
 Note that before running this you may want to remove "diagnostics" from the list of modules imported by
 <AnniesLasso/AnniesLasso/__init__.py>, as this requires matplotlib to be installed.
+
+We do not allow the Cannon to run in multi-threaded mode, is empirically this causes us to exceed the memory limits
+imposed on Aurora.
 """
 
 import argparse
@@ -28,10 +31,10 @@ uid = os.getpid()
 slurm_script = """#!/bin/sh
 # requesting the number of nodes needed
 #SBATCH -N 1
-#SBATCH --tasks-per-node=4
+#SBATCH --tasks-per-node=6
 #
 # job time, change for what your job requires
-#SBATCH -t 06:00:00
+#SBATCH -t 24:00:00
 #
 # job name and output file names
 #SBATCH -J cannon_farm
@@ -44,7 +47,7 @@ module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.
 export PYTHONPATH=${{HOME}}/local/lib/python2.7/site-packages:${{PYTHONPATH}}
 
 cd ${{HOME}}/iwg7_pipeline/4most-4gp-scripts/test_cannon_degraded_spec
-python cannon_test.py {}
+python cannon_test.py --nothreads {}
 
 """
 
