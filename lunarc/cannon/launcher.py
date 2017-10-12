@@ -31,7 +31,7 @@ uid = os.getpid()
 slurm_script = """#!/bin/sh
 # requesting the number of nodes needed
 #SBATCH -N 1
-#SBATCH --tasks-per-node=6
+#SBATCH --tasks-per-node=8
 #
 # job time, change for what your job requires
 #SBATCH -t 24:00:00
