@@ -17,7 +17,7 @@ parser.add_argument('--label', required=True, action="append", dest='labels',
                     help="Labels we should plot on the two axes of the scatter plot.")
 parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
                     help="Titles we should put on the two axes of the scatter plot.")
-parser.add_argument('--cannon_output',
+parser.add_argument('--cannon-output',
                     required=True,
                     default="",
                     dest='cannon',
@@ -45,9 +45,13 @@ for item in args.labels:
 # Create data files listing parameter values
 snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
+# Create pyxplot script to produce this plot
+width = 25
+aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
-set term png dpi 200
-set width 25
+set width {}
+set size ratio {}
+set term dpi 200
 set key top left
 set linewidth 0.4
 
@@ -55,7 +59,9 @@ set xlabel "{}"
 set xrange [{}]
 set ylabel "{}"
 set yrange [{}]
-""".format(args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"])
+""".format(width, aspect,
+           args.label_axis_latex[0], label_list[0]["range"],
+           args.label_axis_latex[1], label_list[1]["range"])
 
 for snr in snr_list:
     pyxplot_input += """

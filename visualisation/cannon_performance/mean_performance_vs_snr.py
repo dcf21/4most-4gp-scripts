@@ -213,6 +213,9 @@ class PlotLabelPrecision:
 
     def make_plots(self):
 
+        width = 25
+        aspect = 1 / 1.618034  # Golden ratio
+
         # LaTeX strings to use to label each stellar label on graph axes
         latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
 
@@ -222,12 +225,14 @@ class PlotLabelPrecision:
             with open("{}.ppl".format(stem), "w") as ppl:
                 ppl.write("""
                 
-                set width 14
+                set width {0}
+                set size ratio {1}
+                set term dpi 200
                 set key top right
                 set nodisplay
-                set label 1 "{}" graph 1.5, graph 8
+                set label 1 "{2}" page 1, page {3}
                 
-                """.format(latex_label[0]))
+                """.format(width, aspect, latex_label[0], width*aspect-0.5))
 
                 ppl.write("set ylabel \"{}\"\n".format(latex_label[0]))
                 ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
@@ -250,21 +255,22 @@ class PlotLabelPrecision:
                 set term pdf ; set output "{0}.pdf" ; set display ; refresh
 
                 """.format(stem))
-                ppl.close()
-                os.system("pyxplot {}.ppl".format(stem))
+            os.system("pyxplot {}.ppl".format(stem))
 
             # Create a new pyxplot script for box and whisker plots
             for data_set_counter, plot_items in enumerate(self.plot_box_whiskers[i]):
                 stem = "{}whiskers_{:d}_{:d}".format(self.output_figure_stem, i, data_set_counter)
                 with open("{}.ppl".format(stem), "w") as ppl:
                     ppl.write("""
-                    
-                    set width 14
+                
+                    set width {0}
+                    set size ratio {1}
+                    set term dpi 200
                     set nokey
                     set nodisplay
-                    set label 1 "{0}; {1}" graph 1.5, graph 8
+                    set label 1 "{2}; {3}" page 1, page {4}
                     
-                    """.format(latex_label[0], self.datasets[data_set_counter]))
+                    """.format(width, aspect, latex_label[0], self.datasets[data_set_counter], width*aspect-0.5))
 
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
@@ -287,39 +293,44 @@ class PlotLabelPrecision:
                     set term pdf ; set output "{0}.pdf" ; set display ; refresh
                     
                     """.format(stem))
-                    ppl.close()
-                    os.system("pyxplot {}.ppl".format(stem))
+                os.system("pyxplot {}.ppl".format(stem))
 
             # Create a new pyxplot script for histogram plots
             for data_set_counter, data_set_items in enumerate(self.plot_histograms[i]):
-                for snr, plot_items in data_set_items.iteritems():
-                    stem = "{}histogram_{:d}_{:d}_{:06.1f}".format(self.output_figure_stem, i, data_set_counter, snr)
-                    with open("{}.ppl".format(stem), "w") as ppl:
-                        ppl.write("""
-                    
-                    set width 14
-                    set nokey
+                stem = "{}histogram_{:d}_{:d}".format(self.output_figure_stem, i, data_set_counter)
+                with open("{}.ppl".format(stem), "w") as ppl:
+                    ppl.write("""
+                
+                    set width {0}
+                    set size ratio {1}
+                    set term dpi 200
+                    set key top right
                     set nodisplay
-                    set binwidth {0}
-                    set label 1 "{1}; {2}; SNR {3:.1f}" graph 1.5, graph 8
+                    set binwidth {2}
+                    set label 1 "{3}; {4}" page 1, page {5}
                     
-                    """.format(latex_label[2] / 25, latex_label[0], self.datasets[data_set_counter], snr))
+                    """.format(width, aspect,
+                               latex_label[2] / 25.,
+                               latex_label[0], self.datasets[data_set_counter], width*aspect-0.5))
 
-                        ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
-                        ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 3, latex_label[2] * 3))
+                    ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 3, latex_label[2] * 3))
+
+                    ppl_items = []
+                    for snr, plot_items in data_set_items.iteritems():
                         for j, plot_item in enumerate(plot_items):
-                            ppl.write("histogram f_{:d}() \"{}\"\n".format(j, plot_item))
-                            ppl.write("plot f_{:d}(x) with boxes fc red\n".format(j))
+                            ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\"\n".format(j, snr, plot_item))
+                            ppl_items.append("f_{0:d}_{1:.0f}(x) with histeps title 'SNR {1:.1f}'".format(j, snr))
 
-                        ppl.write("""
+                    ppl.write("""
+                    plot {0}
                     
-                    set term eps ; set output '{0}.eps' ; set display ; refresh
-                    set term png ; set output '{0}.png' ; set display ; refresh
-                    set term pdf ; set output "{0}.pdf" ; set display ; refresh
+                    set term eps ; set output '{1}.eps' ; set display ; refresh
+                    set term png ; set output '{1}.png' ; set display ; refresh
+                    set term pdf ; set output "{1}.pdf" ; set display ; refresh
                     
-                    """.format(stem))
-                        ppl.close()
-                        os.system("timeout 10s pyxplot {0}.ppl".format(stem))
+                    """.format(", ".join(ppl_items), stem))
+                os.system("timeout 10s pyxplot {0}.ppl".format(stem))
 
 
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
@@ -394,9 +405,9 @@ if __name__ == "__main__":
 
     # Read input parameters
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--cannon-output', required=True, action="append", dest='cannon_output',
+    parser.add_argument('--cannon-output', action="append", dest='cannon_output',
                         help="JSON structure containing the label values estimated by the Cannon.")
-    parser.add_argument('--dataset-label', required=True, action="append", dest='data_set_label',
+    parser.add_argument('--dataset-label', action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
     parser.add_argument('--output-file', default="/tmp/cannon_performance_plot", dest='output_file',
                         help="Data file to write output to.")
@@ -413,6 +424,10 @@ if __name__ == "__main__":
     parser.set_defaults(use_reference_labels=True)
     args = parser.parse_args()
 
+    # If titles are not supplied for Cannon runs, we use the descriptions stored in the JSON files
+    if (args.data_set_label is None) or (len(args.data_set_label) == 0):
+        args.data_set_label = [None for i in args.cannon_output]
+
     # Check that we have a matching number of labels and sets of Cannon output
     assert len(args.cannon_output) == len(args.data_set_label), \
         "Must have a matching number of libraries and data set labels."
@@ -420,8 +435,15 @@ if __name__ == "__main__":
     # Assemble list of input Cannon output data files
     cannon_outputs = []
     for cannon_output, data_set_label in zip(args.cannon_output, args.data_set_label):
+        # Read the JSON file which we dumped after running the Cannon
+        data = json.loads(open(cannon_output).read())
+
+        # If no label has been specified for this Cannon run, use the description field from the JSON output
+        if data_set_label is None:
+            data_set_label = data['description']
+
         # Append to list of Cannon data sets
-        cannon_outputs.append({'cannon_output': json.loads(open(cannon_output).read()),
+        cannon_outputs.append({'cannon_output': data,
                                'title': data_set_label})
 
     generate_set_of_plots(data_sets=cannon_outputs,
