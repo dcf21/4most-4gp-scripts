@@ -7,13 +7,6 @@ mkdir -p ../../output_plots/stellar_parameters
 # -------------------------------------------------------------------------------------------------------------------
 
 python scatter_plot.py --library turbospec_apokasc_test_set --library-colour red --library-title "Test set" \
-                       --library turbospec_apokasc_training_set --library-colour blue --library-title "Training set" \
-                       --label "[Fe/H]{-1:0.6}" --label "[Mg/H]{-0.4:1.2}" \
-                       --label-axis-latex "[Fe/H]" --label-axis-latex "[Mg/Fe]" \
-                       --using "\$1:(\$2-\$1)" \
-                       --output ../../output_plots/stellar_parameters/apogee_magnesium_combined
-
-python scatter_plot.py --library turbospec_apokasc_test_set --library-colour red --library-title "Test set" \
                        --label "[Fe/H]{-1:0.6}" --label "[Mg/H]{-0.4:1.2}" \
                        --label-axis-latex "[Fe/H]" --label-axis-latex "[Mg/Fe]" \
                        --using "\$1:(\$2-\$1)" \
@@ -43,61 +36,21 @@ python scatter_plot.py --library turbospec_apokasc_training_set --library-colour
 
 # -------------------------------------------------------------------------------------------------------------------
 
-python scatter_plot_coloured.py \
-                       --library turbospec_apokasc_test_set --library-title "Test set" \
-                       --label "Teff{5100:4000}" --label "logg{3.8:1.2}" --label "[Fe/H]{:}" \
-                       --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-                       --colour-range-min 0.5 --colour-range-max -0.7 \
-                       --output ../../output_plots/stellar_parameters/apogee_metallicity_hr_test
+for library_path in ../../workspace/turbospec_*
+do
 
-python scatter_plot_coloured.py \
-                       --library turbospec_apokasc_training_set --library-title "Training set" \
-                       --label "Teff{5100:4000}" --label "logg{3.8:1.2}" --label "[Fe/H]{:}" \
-                       --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-                       --colour-range-min 0.5 --colour-range-max -0.7 \
-                       --output ../../output_plots/stellar_parameters/apogee_metallicity_hr_training
+library="$(basename "${library_path}")"
 
-# -------------------------------------------------------------------------------------------------------------------
+python scatter_plot_coloured.py --library ${library} \
+                                --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
+                                --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                                --colour-range-min 0.5 --colour-range-max -0.7 \
+                                --output ../../output_plots/stellar_parameters/hr_coloured_${library}
 
-python scatter_plot_coloured.py \
-                       --library turbospec_ahm2017_sample --library-title "AHM2017 Training set" \
-                       --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
-                       --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-                       --colour-range-min 0.5 --colour-range-max -2 \
-                       --output ../../output_plots/stellar_parameters/ges_metallicity_hr
-python scatter_plot_coloured.py \
-                       --library turbospec_ahm2017_perturbed --library-title "AHM2017 Test set" \
-                       --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
-                       --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-                       --colour-range-min 0.5 --colour-range-max -2 \
-                       --output ../../output_plots/stellar_parameters/ges2_metallicity_hr
+python histogram.py --library ${library} \
+                    --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{1:-3}" \
+                    --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                    --using "\$1" --using "\$2" --using "\$3" \
+                    --output ../../output_plots/stellar_parameters/histogram_${library}
 
-python scatter_plot_coloured.py \
-                       --library turbospec_ges_dwarf_sample --library-title "Dwarfs Training set" \
-                       --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
-                       --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-                       --colour-range-min 0.5 --colour-range-max -2 \
-                       --output ../../output_plots/stellar_parameters/dwarfs_metallicity_hr
-
-python scatter_plot_coloured.py \
-                       --library turbospec_ges_dwarfs_perturbed --library-title "Dwarfs Test set" \
-                       --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
-                       --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-                       --colour-range-min 0.5 --colour-range-max -2 \
-                       --output ../../output_plots/stellar_parameters/dwarfs2_metallicity_hr
-
-python scatter_plot_coloured.py \
-                       --library turbospec_marcs_grid --library-title "Test set" \
-                       --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
-                       --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-                       --colour-range-min 0.5 --colour-range-max -2 \
-                       --output ../../output_plots/stellar_parameters/marcsgrid_metallicity_hr
-
-# -------------------------------------------------------------------------------------------------------------------
-
-python histogram.py --library turbospec_apokasc_test_set --library-colour red --library-title "Test set" \
-                    --library turbospec_apokasc_training_set --library-colour blue --library-title "Training set" \
-                    --label "[Fe/H]{-1:1}" \
-                    --label-axis-latex "[Fe/H]" \
-                    --using "\$1" \
-                    --output ../../output_plots/stellar_parameters/apogee_metallicity_histogram
+done

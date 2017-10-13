@@ -33,8 +33,10 @@ with open(args.output_file, "w") as output:
 
         # Loop over objects in each spectrum library
         constraints = {"continuum_normalised": 1}
-        # If we're running on 4FS output, we might want to cut on SNR as well, but assume we usually run on
-        # turbospectrum output with only one spectrum per star
+
+        # If we're running on 4FS output, we might want to insert a constraint on SNR here as well, but assume we
+        # usually run on Turbospectrum output with only one spectrum per star
+
         for item in library_object.search(**constraints):
             metadata = library_object.get_metadata(ids=item['specId'])[0]
 

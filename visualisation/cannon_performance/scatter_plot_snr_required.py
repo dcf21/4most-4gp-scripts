@@ -136,7 +136,7 @@ set label 1 "{}" at page 0.5, page {}
 
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
-           cannon_output['description'], width*aspect-0.5)
+           cannon_output['description'], width * aspect - 0.5)
 
 pyxplot_input += """
     

@@ -100,7 +100,7 @@ set label 1 "\\parbox{{{0}cm}}{{{6} \\newline {{\\bf {7} }} \\newline SNR/\\AA={
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
            description, args.label_axis_latex[2],
            snr["snr"] * np.sqrt(pixels_per_angstrom),  # Convert SNR/pixel to SNR/A
-           width*aspect-0.3)
+           width * aspect - 0.3)
 
     pyxplot_input += """
     
@@ -149,5 +149,5 @@ p.close()
 # Make multiplot
 make_multiplot(eps_files=eps_list,
                output_filename="{0}_multiplot".format(args.output_stub),
-               aspect=4.8/8
+               aspect=4.8 / 8
                )

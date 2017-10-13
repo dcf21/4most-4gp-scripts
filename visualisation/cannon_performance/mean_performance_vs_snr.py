@@ -48,6 +48,7 @@ class PlotLabelPrecision:
         os.system("mkdir -p {}".format(output_figure_stem))
         os.system("rm -f {}/*".format(output_figure_stem))
 
+        # ( LaTeX title , minimum offset , maximum offset , 4MOST target accuracy )
         self.latex_labels = {
             "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 350, [100]),
             "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 1, [0.3]),
@@ -115,7 +116,7 @@ class PlotLabelPrecision:
         self.datasets.append(legend_label)
 
         # LaTeX strings to use to label each stellar label on graph axes
-        latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
+        latex_labels = [self.latex_labels[ln] for ln in self.label_names]
 
         # Create a sorted list of all the SNR values we've got
         snr_values = [item['SNR'] for item in cannon_output]
@@ -351,7 +352,7 @@ class PlotLabelPrecision:
         for name, items in eps_files.iteritems():
             make_multiplot(eps_files=items,
                            output_filename="{}{}_multiplot".format(self.output_figure_stem, name),
-                           aspect=6./8
+                           aspect=6. / 8
                            )
 
 

@@ -79,7 +79,7 @@ set label 1 "{}" at page 0.5, page {}
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"],
            args.label_axis_latex[1], label_list[1]["range"],
-           description, width*aspect-1.1)
+           description, width * aspect - 1.1)
 
 eps_list = []
 for snr in snr_list:
@@ -103,9 +103,8 @@ p = os.popen("pyxplot", "w")
 p.write(pyxplot_input)
 p.close()
 
-
 # Make multiplot
 make_multiplot(eps_files=eps_list,
                output_filename="{0}_multiplot".format(args.output_stub),
-               aspect=5.1/8
+               aspect=5.1 / 8
                )

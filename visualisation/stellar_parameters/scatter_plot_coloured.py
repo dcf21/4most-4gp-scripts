@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Take some SpectrumLibraries and make a coloured scatter plot of the stellar parameters within it.
+Take some SpectrumLibraries and make a coloured scatter plot of the stellar parameters within them.
 """
 
 import os
@@ -13,14 +13,16 @@ import argparse
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--library', required=True, action="append", dest='libraries',
                     help="Library of spectra we should plot stellar parameters from.")
-parser.add_argument('--library-title', required=True, action="append", dest='library_titles',
+parser.add_argument('--library-title', action="append", dest='library_titles',
                     help="Short title to give to library of spectra in plot legend.")
 parser.add_argument('--label', required=True, action="append", dest='labels',
-                    help="Labels we should put on the axes of the scatter plot (can supply more than two and supply a USING statement to combine them in an algebraic expression).")
+                    help="Labels we should put on the axes of the scatter plot (can supply more than two and supply "
+                         "a USING statement to combine them in an algebraic expression).")
 parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
                     help="Titles we should put on the two axes of the scatter plot.")
 parser.add_argument('--using', default="1:2", dest='using',
-                    help="Pyxplot using statement we should use to get the x and y values for each point in scatter plot.")
+                    help="Pyxplot using statement we should use to get the x and y values for each point in "
+                         "scatter plot.")
 parser.add_argument('--using-colour', default="$3", dest='colour_expression',
                     help="Pyxplot using statement we should use to derive the colour of each point.")
 parser.add_argument('--colour-range-min', required=True, dest='colour_range_min', type=float,
@@ -31,6 +33,11 @@ parser.add_argument('--output', default="/tmp/label_values", dest='output',
                     help="Filename to write output plot to.")
 args = parser.parse_args()
 
+# If no titles are supplied, default to the names of the libraries
+if (args.library_titles is None) or (len(args.library_titles) == 0):
+    args.library_titles = [re.sub("_", "\\_", i) for i in args.libraries]
+
+# Check that we have a title for each spectrum library we're plotting
 assert len(args.library_titles) == len(args.libraries), "Need a title for each library we are plotting"
 
 # Create data files listing the stellar parameters in each library we have been passed
@@ -55,22 +62,30 @@ for index, library in enumerate(args.libraries):
 #
 
 # Create pyxplot script to produce this plot
-width = 14
+width = 20
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
+
 set nodisplay
-set width {}
-set size ratio {}
+set width {0}
+set size ratio {1}
 set nokey
 
 set multiplot
 
-set xlabel "{}"
-set xrange [{}]
-set ylabel "{}"
-set yrange [{}]
+set xlabel "{2}"
+set xrange [{3}]
+set ylabel "{4}"
+set yrange [{5}]
+
+set textvalign top
+set label 1 "\\parbox{{{0}cm}}{{ {6} }}" at page 0.5, page {7}
+
 """.format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"])
+           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
+           " \\newline ".join(args.library_titles),
+           width*aspect-0.3
+           )
 
 pyxplot_input += """
 
@@ -107,9 +122,10 @@ plot y with colourmap
 
 pyxplot_input += """
 
-set term eps ; set output "{0}.eps" ; set display ; refresh
-set term png ; set output "{0}.png" ; set display ; refresh
-set term pdf ; set output "{0}.pdf" ; set display ; refresh
+set term eps ; set output '{0}.eps' ; set display ; refresh
+set term png ; set output '{0}.png' ; set display ; refresh
+set term pdf ; set output '{0}.pdf' ; set display ; refresh
+
 """.format(args.output)
 
 # Run pyxplot
