@@ -44,14 +44,25 @@ def tabulate_labels(output_stub, labels, cannon):
         # Look up the target values for each label
         label_values = []
         for label in labels:
-            label_values.append(item["target_{}".format(label)])
+            key = "target_{}".format(label)
+            if key in item:
+                label_values.append(item[key])
+            elif "target_[Fe/H]":
+                label_values.append(item["target_[Fe/H]"])  # If no target value available, scale with [Fe/H]
+            else:
+                label_values.append("-")  # If even [Fe/H] isn't available, leave blank
+
         library_values[object_name] = label_values
 
         # Look up the Cannon's error estimates for each label
         label_values = []
         for label in labels:
-            label_values.append(item["E_{}".format(label)])
-        if object_name not in cannon_values:
+            key = "E_{}".format(label)
+            if key in item:
+                label_values.append(item[key])
+            else:
+                label_values.append("-")
+        if object_name not in cannon_uncertainties:
             cannon_uncertainties[object_name] = {}
         cannon_uncertainties[object_name][snr] = label_values
 

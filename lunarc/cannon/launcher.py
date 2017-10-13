@@ -47,7 +47,7 @@ module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.
 export PYTHONPATH=${{HOME}}/local/lib/python2.7/site-packages:${{PYTHONPATH}}
 
 cd ${{HOME}}/iwg7_pipeline/4most-4gp-scripts/test_cannon_degraded_spec
-python cannon_test.py --nothreads {}
+python cannon_test.py --nothread {}
 
 """
 

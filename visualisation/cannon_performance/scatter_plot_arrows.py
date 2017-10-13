@@ -9,7 +9,11 @@ those estimated by the Cannon.
 import os
 import argparse
 import re
+import json
+import numpy as np
 from label_tabulator import tabulate_labels
+
+from lib_multiplotter import make_multiplot
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -45,10 +49,20 @@ for item in args.labels:
 # Create data files listing parameter values
 snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
+# Fetch title for this Cannon run
+cannon_output = json.loads(open(args.cannon).read())
+description = cannon_output['description']
+
+# Convert SNR/pixel to SNR/A at 6000A
+raster = np.array(cannon_output['wavelength_raster'])
+raster_diff = np.diff(raster[raster > 6000])
+pixels_per_angstrom = 1.0 / raster_diff[0]
+
 # Create pyxplot script to produce this plot
 width = 25
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
+
 set width {}
 set size ratio {}
 set term dpi 200
@@ -59,21 +73,39 @@ set xlabel "{}"
 set xrange [{}]
 set ylabel "{}"
 set yrange [{}]
+
+set label 1 "{}" at page 0.5, page {}
+
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"],
-           args.label_axis_latex[1], label_list[1]["range"])
+           args.label_axis_latex[1], label_list[1]["range"],
+           description, width*aspect-1.1)
 
+eps_list = []
 for snr in snr_list:
     pyxplot_input += """
+    
 set nodisplay
 set output "{0}.png"
-plot "{0}" title "Cannon output -$>$ Synthesised values. SNR {1}." with arrows c red using 3:4:1:2
-set term eps ; set output "{0}.eps" ; set display ; refresh
-set term png ; set output "{0}.png" ; set display ; refresh
-set term pdf ; set output "{0}.pdf" ; set display ; refresh
-""".format(snr["filename"], snr["snr"])
+plot "{0}" title "Cannon output -$>$ Synthesised values at SNR/\\AA={1:.1f}." with arrows c red using 3:4:1:2
+set term eps ; set output '{0}.eps' ; set display ; refresh
+set term png ; set output '{0}.png' ; set display ; refresh
+set term pdf ; set output '{0}.pdf' ; set display ; refresh
+
+""".format(snr["filename"],
+           snr["snr"] * np.sqrt(pixels_per_angstrom)  # Convert SNR/pixel to SNR/A
+           )
+
+    eps_list.append("{0}.eps".format(snr["filename"]))
 
 # Run pyxplot
 p = os.popen("pyxplot", "w")
 p.write(pyxplot_input)
 p.close()
+
+
+# Make multiplot
+make_multiplot(eps_files=eps_list,
+               output_filename="{0}_multiplot".format(args.output_stub),
+               aspect=5.1/8
+               )

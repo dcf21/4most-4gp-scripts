@@ -12,6 +12,8 @@ import argparse
 import numpy as np
 import json
 
+from lib_multiplotter import make_multiplot
+
 
 class PlotLabelPrecision:
     """
@@ -64,6 +66,7 @@ class PlotLabelPrecision:
             "[Ni/H]": (r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
             "[Ba/H]": (r"$[{\rm Ba}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
             "[Sr/H]": (r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Cr/H]": (r"$[{\rm Cr}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
         }
 
         self.datasets = []
@@ -213,14 +216,20 @@ class PlotLabelPrecision:
 
     def make_plots(self):
 
-        width = 25
+        width = 22
         aspect = 1 / 1.618034  # Golden ratio
 
         # LaTeX strings to use to label each stellar label on graph axes
-        latex_labels = [self.latex_labels.get(ln, ln) for ln in self.label_names]
+        latex_labels = [self.latex_labels[ln] for ln in self.label_names]
+
+        # Create a new pyxplot script for precision plots
+        eps_files = {
+            "precision": [],
+            "whiskers": [],
+            "histograms": []
+        }
 
         for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
-            # Create a new pyxplot script for precision plots
             stem = "{}precision_{:d}".format(self.output_figure_stem, i)
             with open("{}.ppl".format(stem), "w") as ppl:
                 ppl.write("""
@@ -232,7 +241,7 @@ class PlotLabelPrecision:
                 set nodisplay
                 set label 1 "{2}" page 1, page {3}
                 
-                """.format(width, aspect, latex_label[0], width*aspect-0.5))
+                """.format(width, aspect, latex_label[0], width * aspect - 0.5))
 
                 ppl.write("set ylabel \"{}\"\n".format(latex_label[0]))
                 ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
@@ -252,10 +261,11 @@ class PlotLabelPrecision:
                 
                 set term eps ; set output '{0}.eps' ; set display ; refresh
                 set term png ; set output '{0}.png' ; set display ; refresh
-                set term pdf ; set output "{0}.pdf" ; set display ; refresh
+                set term pdf ; set output '{0}.pdf' ; set display ; refresh
 
                 """.format(stem))
             os.system("pyxplot {}.ppl".format(stem))
+            eps_files["precision"].append("{0}.eps".format(stem))
 
             # Create a new pyxplot script for box and whisker plots
             for data_set_counter, plot_items in enumerate(self.plot_box_whiskers[i]):
@@ -270,7 +280,7 @@ class PlotLabelPrecision:
                     set nodisplay
                     set label 1 "{2}; {3}" page 1, page {4}
                     
-                    """.format(width, aspect, latex_label[0], self.datasets[data_set_counter], width*aspect-0.5))
+                    """.format(width, aspect, latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
 
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
@@ -290,10 +300,11 @@ class PlotLabelPrecision:
                     
                     set term eps ; set output '{0}.eps' ; set display ; refresh
                     set term png ; set output '{0}.png' ; set display ; refresh
-                    set term pdf ; set output "{0}.pdf" ; set display ; refresh
+                    set term pdf ; set output '{0}.pdf' ; set display ; refresh
                     
                     """.format(stem))
                 os.system("pyxplot {}.ppl".format(stem))
+                eps_files["whiskers"].append("{0}.eps".format(stem))
 
             # Create a new pyxplot script for histogram plots
             for data_set_counter, data_set_items in enumerate(self.plot_histograms[i]):
@@ -309,28 +320,39 @@ class PlotLabelPrecision:
                     set binwidth {2}
                     set label 1 "{3}; {4}" page 1, page {5}
                     
+                    col_scale(z) = hsb(0.75 * z, 1, 1)
+                    
                     """.format(width, aspect,
                                latex_label[2] / 25.,
-                               latex_label[0], self.datasets[data_set_counter], width*aspect-0.5))
+                               latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 3, latex_label[2] * 3))
 
                     ppl_items = []
-                    for snr, plot_items in data_set_items.iteritems():
+                    k_max = float(len(data_set_items) - 1)
+                    for k, (snr, plot_items) in enumerate(sorted(data_set_items.iteritems())):
                         for j, plot_item in enumerate(plot_items):
                             ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\"\n".format(j, snr, plot_item))
-                            ppl_items.append("f_{0:d}_{1:.0f}(x) with histeps title 'SNR {1:.1f}'".format(j, snr))
+                            ppl_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({2}) "
+                                             "title 'SNR {1:.1f}'".format(j, snr, k / k_max))
 
                     ppl.write("""
                     plot {0}
                     
                     set term eps ; set output '{1}.eps' ; set display ; refresh
                     set term png ; set output '{1}.png' ; set display ; refresh
-                    set term pdf ; set output "{1}.pdf" ; set display ; refresh
+                    set term pdf ; set output '{1}.pdf' ; set display ; refresh
                     
                     """.format(", ".join(ppl_items), stem))
                 os.system("timeout 10s pyxplot {0}.ppl".format(stem))
+                eps_files["histograms"].append("{0}.eps".format(stem))
+
+        for name, items in eps_files.iteritems():
+            make_multiplot(eps_files=items,
+                           output_filename="{}{}_multiplot".format(self.output_figure_stem, name),
+                           aspect=6./8
+                           )
 
 
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
@@ -373,7 +395,13 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
             for label in label_names:
                 if compare_against_reference_labels:
                     # Use values that were used to synthesise this spectrum
-                    reference_values[label] = reference_run["target_{}".format(label)]
+                    key = "target_{}".format(label)
+                    if key in reference_run:
+                        reference_values[label] = reference_run["target_{}".format(label)]
+                    elif "[Fe/H" in reference_run:
+                        reference_values[label] = reference_run["[Fe/H]"]  # Assume scales with [Fe/H]
+                    else:
+                        reference_values[label] = np.nan
                 else:
                     # Use the values produced by the Cannon at the highest SNR as the target values for each star
                     reference_values[label] = reference_run[label]

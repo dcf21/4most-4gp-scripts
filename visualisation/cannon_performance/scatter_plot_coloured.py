@@ -9,7 +9,11 @@ and the colour of the points representing the error in one of the derived labels
 import os
 import argparse
 import re
+import json
+import numpy as np
 from label_tabulator import tabulate_labels
+
+from lib_multiplotter import make_multiplot
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -51,8 +55,17 @@ for item in args.labels + [args.colour_label]:
 # Create data files listing parameter values
 snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
+# Fetch title for this Cannon run
+cannon_output = json.loads(open(args.cannon).read())
+description = cannon_output['description']
+
+# Convert SNR/pixel to SNR/A at 6000A
+raster = np.array(cannon_output['wavelength_raster'])
+raster_diff = np.diff(raster[raster > 6000])
+pixels_per_angstrom = 1.0 / raster_diff[0]
+
 # Create pyxplot script to produce this plot
-width = 25
+width = 20
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
@@ -62,25 +75,32 @@ col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
 
 """.format(args.colour_range_min, args.colour_range_max)
 
+eps_list = []
 for snr in snr_list:
     pyxplot_input += """
     
 set nodisplay
 set origin 0,0
-set width {}
-set size ratio {}
+set width {0}
+set size ratio {1}
 set term dpi 200
 set nokey
 
 set multiplot
 
-set xlabel "{}"
-set xrange [{}]
-set ylabel "{}"
-set yrange [{}]
+set xlabel "Input {2}"
+set xrange [{3}]
+set ylabel "Input {4}"
+set yrange [{5}]
+
+set textvalign top
+set label 1 "\\parbox{{{0}cm}}{{{6} \\newline {{\\bf {7} }} \\newline SNR/\\AA={8:.1f}}}" at page 0.5, page {9}
 
 """.format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"])
+           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
+           description, args.label_axis_latex[2],
+           snr["snr"] * np.sqrt(pixels_per_angstrom),  # Convert SNR/pixel to SNR/A
+           width*aspect-0.3)
 
     pyxplot_input += """
     
@@ -93,11 +113,12 @@ plot "{0}" title "Offset in {1} at SNR {2}." with dots colour col_scale($6-$3) p
 
     pyxplot_input += """
 
+unset label
 set noxlabel
 set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y right
-set ylabel "{0}"
+set ylabel "Offset in {0}"
 set yrange [{1}:{2}]
 set c1range [{1}:{2}] norenormalise
 set width {3}
@@ -112,13 +133,21 @@ plot y with colourmap
 
     pyxplot_input += """
 
-set term eps ; set output "{0}.eps" ; set display ; refresh
-set term png ; set output "{0}.png" ; set display ; refresh
-set term pdf ; set output "{0}.pdf" ; set display ; refresh
+set term eps ; set output '{0}.eps' ; set display ; refresh
+set term png ; set output '{0}.png' ; set display ; refresh
+set term pdf ; set output '{0}.pdf' ; set display ; refresh
 
 """.format(snr["filename"])
+
+    eps_list.append("{0}.eps".format(snr["filename"]))
 
 # Run pyxplot
 p = os.popen("pyxplot", "w")
 p.write(pyxplot_input)
 p.close()
+
+# Make multiplot
+make_multiplot(eps_files=eps_list,
+               output_filename="{0}_multiplot".format(args.output_stub),
+               aspect=4.8/8
+               )

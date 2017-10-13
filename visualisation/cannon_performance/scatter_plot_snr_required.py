@@ -127,9 +127,9 @@ set nokey
 
 set multiplot
 
-set xlabel "{}"
+set xlabel "Input {}"
 set xrange [{}]
-set ylabel "{}"
+set ylabel "Input {}"
 set yrange [{}]
 
 set label 1 "{}" at page 0.5, page {}
@@ -143,7 +143,7 @@ pyxplot_input += """
 set output "{0}.png"
 clear
 unset origin ; set axis y left ; unset xtics ; unset mxtics
-plot "{0}" title "SNR needed to achieve accuracy of {1} {2} in {3}." with dots colour col_scale($3) ps 5
+plot "{0}" title "SNR needed to achieve accuracy of {1} {2} in {3}" with dots colour col_scale($3) ps 5
 
 """.format(filename, args.target_accuracy, args.accuracy_unit, args.label_axis_latex[2])
 
@@ -154,24 +154,25 @@ set noxlabel
 set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y right
-set ylabel "SNR/\AA (at 6000\AA) needed for {0}"
-set yrange [{1}:{2}]
-set c1range [{1}:{2}] norenormalise
-set width {3}
+set ylabel "SNR/\AA (at 6000\AA) needed to achieve accuracy of {1} {2} in {0}"
+set yrange [{3}:{4}]
+set c1range [{3}:{4}] norenormalise
+set width {5}
 set size ratio 1 / 0.05
 set colormap col_scale(c1)
 set nocolkey
 set sample grid 2x200
-set origin {4}, 0
+set origin {6}, 0
 plot y with colourmap
 
-""".format(args.label_axis_latex[2], args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1)
+""".format(args.label_axis_latex[2], args.target_accuracy, args.accuracy_unit,
+           args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1)
 
 pyxplot_input += """
 
-set term eps ; set output "{0}.eps" ; set display ; refresh
-set term png ; set output "{0}.png" ; set display ; refresh
-set term pdf ; set output "{0}.pdf" ; set display ; refresh
+set term eps ; set output '{0}.eps' ; set display ; refresh
+set term png ; set output '{0}.png' ; set display ; refresh
+set term pdf ; set output '{0}.pdf' ; set display ; refresh
 
 """.format(filename)
 
