@@ -23,7 +23,7 @@ parser.add_argument('--colour-range-min', required=True, dest='colour_range_min'
                     help="The range of parameter values to use in colouring points.")
 parser.add_argument('--colour-range-max', required=True, dest='colour_range_max', type=float,
                     help="The range of parameter values to use in colouring points.")
-parser.add_argument('--cannon_output',
+parser.add_argument('--cannon-output',
                     required=True,
                     default="",
                     dest='cannon',
@@ -52,7 +52,7 @@ for item in args.labels + [args.colour_label]:
 snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
 # Create pyxplot script to produce this plot
-width = 14
+width = 25
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
@@ -69,6 +69,7 @@ set nodisplay
 set origin 0,0
 set width {}
 set size ratio {}
+set term dpi 200
 set nokey
 
 set multiplot

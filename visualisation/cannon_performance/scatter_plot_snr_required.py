@@ -28,7 +28,7 @@ parser.add_argument('--colour-range-min', required=True, dest='colour_range_min'
                     help="The range of SNR values to use in colouring points.")
 parser.add_argument('--colour-range-max', required=True, dest='colour_range_max', type=float,
                     help="The range of SNR values to use in colouring points.")
-parser.add_argument('--cannon_output',
+parser.add_argument('--cannon-output',
                     required=True,
                     default="",
                     dest='cannon',

@@ -13,8 +13,10 @@ import json
 def tabulate_labels(output_stub, labels, cannon):
     # library_values[Starname] = [list of label values]
     # cannon_values[Starname][SNR] = [list of label values]
+    # cannon_errors[Starname][SNR] = [list of label uncertainties, as estimated by the Cannon]
     library_values = {}
     cannon_values = {}
+    cannon_uncertainties = {}
 
     # Start compiling a list of all the SNR values in the Cannon output
     snr_list = []
@@ -45,6 +47,14 @@ def tabulate_labels(output_stub, labels, cannon):
             label_values.append(item["target_{}".format(label)])
         library_values[object_name] = label_values
 
+        # Look up the Cannon's error estimates for each label
+        label_values = []
+        for label in labels:
+            label_values.append(item["E_{}".format(label)])
+        if object_name not in cannon_values:
+            cannon_uncertainties[object_name] = {}
+        cannon_uncertainties[object_name][snr] = label_values
+
     # Start creating output data files
     snr_list_with_filenames = []
     snr_list.sort()
@@ -67,6 +77,14 @@ def tabulate_labels(output_stub, labels, cannon):
                     words.extend([str(i) for i in cannon_values[object_name][snr]])
                 else:
                     words.extend(["-" for i in labels])
+
+                # Add uncertainties which the Cannon reported at this SNR
+                if (object_name in cannon_values) and (snr in cannon_values[object_name]):
+                    words.extend([str(i) for i in cannon_uncertainties[object_name][snr]])
+                else:
+                    words.extend(["-" for i in labels])
+
+                # Write output line
                 line = " ".join(words)
                 output.write("{}\n".format(line))
     return snr_list_with_filenames
