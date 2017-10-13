@@ -65,7 +65,10 @@ python scatter_plot_snr_required.py --label "[Fe/H]{1:-3}" --label "logg{5:0}" \
                                     --output-stub "../../output_plots/cannon_performance/required_snrB_${cannon_run}_${path_safe_label}"
 
 python mean_performance_vs_snr.py --cannon-output ${cannon_output} \
-                                  --output-file ../../output_plots/cannon_performance/${cannon_run}
+                                  --output-file "../../output_plots/cannon_performance/${cannon_run}"
+
+python scatter_plot_cannon_uncertainty.py --cannon-output ${cannon_output} \
+                                          --output-file "../../output_plots/cannon_performance/uncertainties_${cannon_run}"
 
 done
 done
