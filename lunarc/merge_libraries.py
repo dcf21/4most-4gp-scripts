@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# python merge_libraries.py --input-library demo_stars
+# python merge_libraries.py --input-library turbospec_ahm2017_perturbed
+# python merge_libraries.py --input-library marcs_stars
+# python merge_libraries.py --input-library turbospec_marcs_grid
+# python merge_libraries.py --input-library turbospec_ges_dwarfs_perturbed
+
 import argparse
 import os
 from os import path as os_path

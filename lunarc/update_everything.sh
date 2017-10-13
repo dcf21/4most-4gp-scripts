@@ -6,7 +6,7 @@
 module load GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.20.1  SQLite/3.9.2
 export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 
-cd /lunarc/nobackup/users/dominic/iwg7_pipeline/
+cd /home/dominic/iwg7_pipeline
 
 cd AnniesLasso
 python setup.py install --prefix=$HOME/local
