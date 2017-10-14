@@ -19,7 +19,21 @@ python mean_performance_vs_snr.py \
   --cannon-output ../../output_data/cannon/cannon_hawkins_hrs_10label.json --dataset-label "Hawkins HRS" \
   --cannon-output ../../output_data/cannon/cannon_apokasc_lrs_10label.json --dataset-label "Ford LRS" \
   --cannon-output ../../output_data/cannon/cannon_apokasc_hrs_10label.json --dataset-label "Ford HRS" \
-  --output-file ../../output_plots/cannon_performance/apokasc_mean_performance
+  --output-file ../../output_plots/cannon_performance/apokasc_hawkins_comparison
+
+python mean_performance_vs_snr.py \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json --dataset-label "LRS -- SNR/A defined in centre of each band" \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json --dataset-label "HRS -- SNR/A defined in centre of each band" \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_lrs_10label.json --dataset-label "LRS -- SNR/A defined at 6000\AA" \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_hrs_10label.json --dataset-label "HRS -- SNR/A defined at 6000\AA" \
+  --output-file ../../output_plots/cannon_performance/apokasc_snrperband_comparison
+
+python mean_performance_vs_snr.py \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_10label.json --dataset-label "LRS -- SNR/A defined in centre of each band (no blue)" \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_10label.json --dataset-label "HRS -- SNR/A defined in centre of each band (no blue)" \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json --dataset-label "LRS -- SNR/A defined in centre of each band" \
+  --cannon-output ../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json --dataset-label "HRS -- SNR/A defined in centre of each band" \
+  --output-file ../../output_plots/cannon_performance/apokasc_snrperband_noblue_comparison
 
 python scatter_plot_coloured.py --label "Teff{5100:4000}" --label "logg{3.8:1.2}" \
                                 --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "Teff" \
@@ -68,7 +82,7 @@ python mean_performance_vs_snr.py --cannon-output ${cannon_output} \
                                   --output-file "../../output_plots/cannon_performance/${cannon_run}"
 
 python scatter_plot_cannon_uncertainty.py --cannon-output ${cannon_output} \
-                                          --output-file "../../output_plots/cannon_performance/uncertainties_${cannon_run}"
+                                          --output-stub "../../output_plots/cannon_performance/uncertainties_${cannon_run}"
 
 done
 done

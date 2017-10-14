@@ -87,7 +87,8 @@ class PlotLabelPrecision:
                      legend_label=None,
                      colour="red",
                      pixels_per_angstrom=1.0,
-                     metric=np.std):
+                     metric=lambda x: np.sqrt(np.mean(np.square(x)))
+                     ):
         """
         Add a data set to a set of precision plots.
 
@@ -204,16 +205,18 @@ class PlotLabelPrecision:
             with open("{}{:d}_{:d}_cracktastic.dat".format(self.output_figure_stem, i, self.data_set_counter),
                       "w") as f:
                 for j, datum in enumerate(y):
-                    w = 2
+                    w = 1.2
                     f.write("{} {}\n".format(datum[0] - w, datum[3]))
                     f.write("{} {}\n".format(datum[0] - w, datum[5]))
                     f.write("{} {}\n".format(datum[0] + w, datum[5]))
                     f.write("{} {}\n\n\n".format(datum[0] + w, datum[3]))
 
-                    self.plot_box_whiskers[i][self.data_set_counter].insert(0,
-                                                                            "\"{0}{1:d}_{2:d}_cracktastic.dat\" using 1:2  with filledregion fc red col black lw 0.5 index {3}".format(
-                                                                                self.output_figure_stem, i,
-                                                                                self.data_set_counter, j))
+                    self.plot_box_whiskers[i][self.data_set_counter]. \
+                        insert(0,
+                               "\"{0}{1:d}_{2:d}_cracktastic.dat\" using 1:2 "
+                               "with filledregion fc red col black lw 0.5 index {3}".format(
+                                   self.output_figure_stem, i,
+                                   self.data_set_counter, j))
 
     def make_plots(self):
 
@@ -244,14 +247,11 @@ class PlotLabelPrecision:
                 
                 """.format(width, aspect, latex_label[0], width * aspect - 0.5))
 
-                ppl.write("set ylabel \"{}\"\n".format(latex_label[0]))
+                ppl.write("set ylabel \"RMS offset in {}\"\n".format(latex_label[0]))
                 ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
 
                 # Set axis limits
                 ppl.write("set yrange [{}:{}]\n".format(latex_label[1], latex_label[2]))
-
-                # Set axis ticks
-                ppl.write("set xtics (0, 10, 20, 30, 40, 50, 100, 200)\n")
 
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
@@ -289,9 +289,6 @@ class PlotLabelPrecision:
                     # Set axis limits
                     ppl.write("set yrange [{}:{}]\n".format(-2 * latex_label[2], 2 * latex_label[2]))
 
-                    # Set axis ticks
-                    ppl.write("set xtics (0, 10, 20, 30, 40, 50, 100, 200)\n")
-
                     if self.common_x_limits is not None:
                         ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
 
@@ -316,7 +313,7 @@ class PlotLabelPrecision:
                     set width {0}
                     set size ratio {1}
                     set term dpi 200
-                    set key top right
+                    set key ycentre right
                     set nodisplay
                     set binwidth {2}
                     set label 1 "{3}; {4}" page 1, page {5}
@@ -328,6 +325,7 @@ class PlotLabelPrecision:
                                latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                    ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(latex_label[0]))
                     ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 3, latex_label[2] * 3))
 
                     ppl_items = []
