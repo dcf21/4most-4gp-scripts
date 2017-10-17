@@ -136,15 +136,14 @@ with open(logfile, "w") as result_log:
             continue
 
         star_name = "rect_grid"
-
-        metadata = {
-            "Starname": str(star_name)
-        }
+        metadata = {}
 
         for index, label in enumerate(labels_to_vary):
-            x = float(grid_point[index])
+            x = float(grid_point[index]) + 1e-4
             metadata[label['name']] = x
             star_name += "_{:.1f}".format(x)
+
+        metadata["Starname"] = str(star_name)
 
         # Configure Turbospectrum with the stellar parameters of the next star
         synthesizer.configure(lambda_min=lambda_min,
