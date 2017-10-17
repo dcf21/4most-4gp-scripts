@@ -42,12 +42,19 @@ python scatter_plot_coloured.py --label "Teff{5100:4000}" --label "logg{3.8:1.2}
                                 --cannon-output ../../output_data/cannon/cannon_apokasc_lrs_10label.json \
                                 --output-stub ../../output_plots/cannon_performance/apokasc_Teff_performance_hr
 
-for colour_label in "Teff" "logg" "[Fe/H]"
-do
-for cannon_output in ../../output_data/cannon/cannon_*.json
+for cannon_output in ../../output_data/cannon/*.json
 do
 
-cannon_run=`echo ${cannon_output} | sed 's@../../output_data/cannon/cannon_\(.*\).json@\1@g'`
+cannon_run=`echo ${cannon_output} | sed 's@../../output_data/cannon/\(.*\).json@\1@g'`
+
+python mean_performance_vs_snr.py --cannon-output ${cannon_output} \
+                                  --output-file "../../output_plots/cannon_performance/${cannon_run}"
+
+python scatter_plot_cannon_uncertainty.py --cannon-output ${cannon_output} \
+                                          --output-stub "../../output_plots/cannon_performance/uncertainties_${cannon_run}"
+
+for colour_label in "Teff" "logg" "[Fe/H]"
+do
 
 target_accuracy=0.1
 if [ "$colour_label" == "Teff" ] ; then target_accuracy=100 ; fi
@@ -77,12 +84,6 @@ python scatter_plot_snr_required.py --label "[Fe/H]{1:-3}" --label "logg{5:0}" \
                                     --cannon-output ${cannon_output} \
                                     --accuracy-unit "${accuracy_unit}" \
                                     --output-stub "../../output_plots/cannon_performance/required_snrB_${cannon_run}_${path_safe_label}"
-
-python mean_performance_vs_snr.py --cannon-output ${cannon_output} \
-                                  --output-file "../../output_plots/cannon_performance/${cannon_run}"
-
-python scatter_plot_cannon_uncertainty.py --cannon-output ${cannon_output} \
-                                          --output-stub "../../output_plots/cannon_performance/uncertainties_${cannon_run}"
 
 done
 done
