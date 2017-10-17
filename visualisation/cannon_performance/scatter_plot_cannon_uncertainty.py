@@ -68,7 +68,7 @@ set textvalign top
 set label 1 "\\parbox{{{0}cm}}{{{4} \\newline {{\\bf {2} }} }}" at page 0.5, page {5}
 
 """.format(width, aspect, label,
-           500 if label=="Teff" else 2,
+           1000 if label=="Teff" else 2,
            description,
            width * aspect - 0.3
            )

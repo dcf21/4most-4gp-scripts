@@ -50,7 +50,7 @@ class PlotLabelPrecision:
 
         # ( LaTeX title , minimum offset , maximum offset , 4MOST target accuracy )
         self.latex_labels = {
-            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 350, [100]),
+            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 500, [100]),
             "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 1, [0.3]),
             "[Fe/H]": (r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
             "[C/H]": (r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
@@ -321,12 +321,12 @@ class PlotLabelPrecision:
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
                     """.format(width, aspect,
-                               latex_label[2] / 25.,
+                               latex_label[2] / 40.,
                                latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(latex_label[0]))
-                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 3, latex_label[2] * 3))
+                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 2, latex_label[2] * 2))
 
                     ppl_items = []
                     k_max = float(len(data_set_items) - 1)
