@@ -85,9 +85,9 @@ args = parser.parse_args()
 
 # Define limits and step size of rectangular grid
 labels_to_vary = [
-    {"name": "Teff", "min": 5600, "max": 6400, "step": 100},
-    {"name": "logg", "min": 3.3, "max": 4.8, "step": 0.1},
-    {"name": "[Fe/H]", "min": -1., "max": 0.2, "step": 0.1}
+    {"name": "Teff", "min": 5600, "max": 6401, "step": 100},
+    {"name": "logg", "min": 3.3, "max": 4.81, "step": 0.1},
+    {"name": "[Fe/H]", "min": -1., "max": 0.21, "step": 0.1}
 ]
 
 # Create a list of all of the points in this grid
