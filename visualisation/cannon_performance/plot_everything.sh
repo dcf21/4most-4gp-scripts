@@ -90,7 +90,16 @@ python scatter_plot_coloured.py --label "Teff{7000:3400}" --label "logg{5:0}" \
                                 --colour-range-min " -$(python -c "print ${target_accuracy}*4")" \
                                 --colour-range-max " $(python -c "print ${target_accuracy}*4")" \
                                 --cannon-output "${cannon_output}" \
-                                --output-stub "../../output_plots/cannon_performance/label_offsets/${cannon_run}_${path_safe_label}"
+                                --output-stub "../../output_plots/cannon_performance/label_offsets/A_${cannon_run}_${path_safe_label}"
+
+python scatter_plot_coloured.py --label "[Fe/H]{1:-3}" --label "logg{5:0}" \
+                                --label-axis-latex "[Fe/H]" --label-axis-latex "log(g)" \
+                                --label-axis-latex "${colour_label}" \
+                                --colour-by-label "${colour_label}{:}" \
+                                --colour-range-min " -$(python -c "print ${target_accuracy}*4")" \
+                                --colour-range-max " $(python -c "print ${target_accuracy}*4")" \
+                                --cannon-output "${cannon_output}" \
+                                --output-stub "../../output_plots/cannon_performance/label_offsets/B_${cannon_run}_${path_safe_label}"
 
 done
 done
