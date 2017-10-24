@@ -104,6 +104,7 @@ pyxplot_input += "plot " + ", ".join(plot_items)
 pyxplot_input += """
 
 set noxlabel
+unset label
 set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y right
@@ -125,6 +126,45 @@ pyxplot_input += """
 set term eps ; set output '{0}.eps' ; set display ; refresh
 set term png ; set output '{0}.png' ; set display ; refresh
 set term pdf ; set output '{0}.pdf' ; set display ; refresh
+
+""".format(args.output)
+
+# Create mono version
+
+pyxplot_input = """
+
+set nodisplay
+clear
+set width {0}
+set size ratio {1}
+set nokey
+set multiplot
+
+set xlabel "{2}"
+set xrange [{3}]
+set ylabel "{4}"
+set yrange [{5}]
+
+set textvalign top
+set label 1 "\\parbox{{{0}cm}}{{ {6} }}" at page 0.5, page {7}
+
+""".format(width, aspect,
+           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
+           " \\newline ".join(args.library_titles),
+           width*aspect-0.3
+           )
+
+plot_items = []
+for index in range(len(args.libraries)):
+    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour black ps 5 """.
+                      format(index, args.library_titles[index], args.using, args.colour_expression))
+pyxplot_input += "plot " + ", ".join(plot_items)
+
+pyxplot_input += """
+
+set term eps ; set output '{0}_mono.eps' ; set display ; refresh
+set term png ; set output '{0}_mono.png' ; set display ; refresh
+set term pdf ; set output '{0}_mono.pdf' ; set display ; refresh
 
 """.format(args.output)
 
