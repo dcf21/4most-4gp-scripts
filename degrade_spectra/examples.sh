@@ -1,21 +1,20 @@
 #!/bin/bash
 
 # Activate python virtual environment
-source ../virtualenv/bin/activate
+source ../../virtualenv/bin/activate
 
 python degrade_library_with_4fs.py --input-library demo_stars \
                                    --output-library-lrs 4fs_demo_stars_lrs \
                                    --output-library-hrs 4fs_demo_stars_hrs
 
-python degrade_library_with_4fs.py --input-library turbospec_marcs_grid \
-                                   --output-library-lrs 4fs_marcs_grid_lrs \
-                                   --output-library-hrs 4fs_marcs_grid_hrs
+for all in ../workspace/turbospec_*
+do
 
-python degrade_library_with_4fs.py --input-library turbospec_ahm2017_perturbed \
-                                   --output-library-lrs 4fs_ahm2017_perturbed_lrs \
-                                   --output-library-hrs 4fs_ahm2017_perturbed_hrs
+run_name=$(echo ${all} | sed 's@../workspace/turbospec_\(.*\)@\1@g')
 
-python degrade_library_with_4fs.py --input-library turbospec_ges_dwarfs_perturbed \
-                                   --output-library-lrs 4fs_ges_dwarfs_perturbed_lrs \
-                                   --output-library-hrs 4fs_ges_dwarfs_perturbed_hrs
+python degrade_library_with_4fs.py --input-library turbospec_${run_name} \
+                                   --output-library-lrs 4fs_${run_name}_lrs \
+                                   --output-library-hrs 4fs_${run_name}_hrs
+
+done
 
