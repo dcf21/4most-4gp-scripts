@@ -79,14 +79,42 @@ python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_lrs_3label"
 
+python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=5000]" \
+                      --test "4fs_ahm2017_perturbed_hrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST HRS (censored) - 3 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_highsnr_hrs_3label"
+python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=5000]" \
+                      --test "4fs_ahm2017_perturbed_lrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST LRS (censored) - 3 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_highsnr_lrs_3label"
+
 python cannon_test.py --train "4fs_ges_dwarf_sample_hrs[SNR=250]" \
                       --test "4fs_ges_dwarfs_perturbed_hrs" \
-                      --description "4MOST HRS - 3 labels - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST HRS - 3 labels (censored) - Train on GES UVES dwarfs. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_hrs_3label"
 python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250]" \
                       --test "4fs_ges_dwarfs_perturbed_lrs" \
-                      --description "4MOST LRS - 3 labels - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST LRS - 3 labels (censored) - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_lrs_3label"
+
+python cannon_test.py --train "4fs_ges_dwarf_sample_hrs[SNR=250,-1<[Fe/H]<1]" \
+                      --test "4fs_ges_dwarfs_perturbed_hrs[-1<[Fe/H]<1]" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST HRS - 3 labels (censored; metallicity cut) - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_hrs_3label"
+python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250,-1<[Fe/H]<1]" \
+                      --test "4fs_ges_dwarfs_perturbed_lrs[-1<[Fe/H]<1]" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST LRS - 3 labels (censored; metallicity cut) - Train on GES UVES dwarfs. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_lrs_3label"
 
@@ -111,6 +139,45 @@ python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --description "4MOST LRS - 3 labels - Train on GES UVES AHM2017. Test on MARCS grid." \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_ahm2017_marcs_lrs_3label"
+
+python cannon_test.py --train "4fs_rect_grid_hrs[SNR=250]" \
+                      --test "4fs_ges_dwarfs_perturbed_hrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST HRS - 3 labels (censored) - Train on rectangular grid. Test on GES UVES dwarfs." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_rect_dwarfs_hrs_3label"
+python cannon_test.py --train "4fs_rect_grid_lrs[SNR=250]" \
+                      --test "4fs_ges_dwarfs_perturbed_lrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST LRS - 3 labels (censored) - Train on rectangular grid. Test on GES UVES dwarfs." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_rect_dwarfs_lrs_3label"
+
+python cannon_test.py --train "4fs_rect_grid_hrs[SNR=250]" \
+                      --test "4fs_rect_grid_hrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST HRS - 3 labels (censored) - Train on rectangular grid. Test on the training set." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_rect_rect_hrs_3label"
+python cannon_test.py --train "4fs_rect_grid_lrs[SNR=250]" \
+                      --test "4fs_rect_grid_lrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST LRS - 3 labels (censored) - Train on rectangular grid. Test on the training set." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_rect_rect_lrs_3label"
+
+python cannon_test.py --train "4fs_ges_dwarfs_perturbed_hrs[SNR=250]" \
+                      --test "4fs_rect_grid_hrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST HRS - 3 labels (censored) - Train on GES UVES dwarfs. Test on rectangular grid." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_dwarfs_rect_hrs_3label"
+python cannon_test.py --train "4fs_ges_dwarfs_perturbed_lrs[SNR=250]" \
+                      --test "4fs_rect_grid_lrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST LRS - 3 labels (censored) - Train on GES UVES dwarfs. Test on rectangular grid." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_dwarfs_rect_lrs_3label"
 
 
 # -----------------------------------------------------------------------------------------
@@ -186,6 +253,19 @@ python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --assume-scaled-solar \
                       --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_10label"
 
+python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=5000]" \
+                      --test "4fs_ahm2017_perturbed_hrs" \
+                      --description "4MOST HRS - 10 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_hrs_highsnr_10label"
+python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=5000]" \
+                      --test "4fs_ahm2017_perturbed_lrs" \
+                      --description "4MOST LRS - 10 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_highsnr_10label"
+
 python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_hrs" \
                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
@@ -213,6 +293,20 @@ python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250]" \
                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
                       --assume-scaled-solar \
                       --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_lrs_10label"
+
+python cannon_test.py --train "4fs_ges_dwarf_sample_hrs[SNR=250,-1<[Fe/H]<1]" \
+                      --test "4fs_ges_dwarfs_perturbed_hrs[-1<[Fe/H]<1]" \
+                      --description "4MOST HRS - 10 labels (metallicity cut) - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_hrs_10label"
+python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250,-1<[Fe/H]<1]" \
+                      --test "4fs_ges_dwarfs_perturbed_lrs[-1<[Fe/H]<1]" \
+                      --description "4MOST LRS - 10 labels (metallicity cut) - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_lrs_10label"
+
 
 # All stellar labels set of GES stars
 # logg, [Nd/H], [O/H], [Mg/H], [V/H], [Ba/H], [Al/H], [Ca/H], [Mn/H], [S/H], [Sc/H], [Ce/H], [Ti/H], [Na/H], [Si/H], [La/H], [Ni/H], [C/H], [Zn/H], [Fe/H], [Co/H], [Cr/H], Teff

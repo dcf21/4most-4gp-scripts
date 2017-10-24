@@ -75,7 +75,7 @@ workspace = os_path.join(our_path, "..", "workspace")
 
 # Helper for opening input SpectrumLibrary(s)
 def open_input_libraries(library_spec):
-    test = re.match("(.*)\[(.*)\]", library_spec)
+    test = re.match("(.*)\[(.*)\]$", library_spec)
     constraints = {}
     if test is None:
         library_name = library_spec
@@ -188,6 +188,10 @@ model = CannonInstance(training_set=training_spectra,
                        )
 time_training_end = time.time()
 
+# Save the model
+model.save_model(filename=args.output_file + ".cannon",
+                 overwrite=True)
+
 # Test the model
 N = len(test_library_ids)
 time_taken = np.zeros(N)
@@ -241,5 +245,6 @@ with open(args.output_file + ".json", "w") as f:
         "training_time": time_training_end - time_training_start,
         "labels": test_labels,
         "wavelength_raster": tuple(raster),
+        "censoring_mask": dict([(label, tuple(mask)) for label, mask in censoring_masks.iteritems()]),
         "stars": results
     }))
