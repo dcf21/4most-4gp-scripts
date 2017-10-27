@@ -75,7 +75,7 @@ workspace = os_path.join(our_path, "..", "workspace")
 
 # Helper for opening input SpectrumLibrary(s)
 def open_input_libraries(library_spec):
-    test = re.match("(.*)\[(.*)\]$", library_spec)
+    test = re.match("([^\[]*)\[(.*)\]$", library_spec)
     constraints = {}
     if test is None:
         library_name = library_spec
@@ -236,6 +236,11 @@ logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spe
 
 # Write results to JSON file
 with open(args.output_file + ".json", "w") as f:
+    censoring_output = None
+    if censoring_masks is not None:
+        censoring_output = dict([(label, tuple([int(i) for i in mask]))
+                                 for label, mask in censoring_masks.iteritems()])
+
     f.write(json.dumps({
         "description": args.description,
         "assume_scaled_solar": args.assume_scaled_solar,
@@ -245,6 +250,6 @@ with open(args.output_file + ".json", "w") as f:
         "training_time": time_training_end - time_training_start,
         "labels": test_labels,
         "wavelength_raster": tuple(raster),
-        "censoring_mask": dict([(label, tuple(mask)) for label, mask in censoring_masks.iteritems()]),
+        "censoring_mask": censoring_output,
         "stars": results
     }))

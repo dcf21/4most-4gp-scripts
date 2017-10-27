@@ -5,9 +5,16 @@ source ../../virtualenv/bin/activate
 
 mkdir -p ../output_data/cannon
 
-python cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4800<Teff<9999]" \
-                      --test "4fs_apokasc_test_set_lrs[4900<Teff<9999]" \
+python cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4850<Teff<9999,-1<[Fe/H]<1]" \
+                      --test "4fs_apokasc_test_set_lrs[4950<Teff<9999,-1<[Fe/H]<1]" \
                       --description "4MOST LRS - 3 labels - Quick APOKASC test." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_quick_3label"
+
+python cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4850<Teff<9999]" \
+                      --test "4fs_apokasc_test_set_lrs[4950<Teff<9999]" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --description "4MOST LRS - 3 labels (censored) - Quick APOKASC test." \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_quick_3label"
 
