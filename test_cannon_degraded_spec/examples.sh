@@ -16,7 +16,7 @@ python cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4850<Teff<99
                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST LRS - 3 labels (censored) - Quick APOKASC test." \
                       --labels "Teff,logg,[Fe/H]" \
-                      --output-file "../output_data/cannon/cannon_quick_3label"
+                      --output-file "../output_data/cannon/cannon_quick_censored_3label"
 
 python cannon_test.py --train "hawkins_apokasc_training_set_lrs[SNR=250]" \
                       --test "hawkins_apokasc_test_set_lrs" \
