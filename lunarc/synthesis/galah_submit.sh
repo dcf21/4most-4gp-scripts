@@ -4,12 +4,12 @@
 #SBATCH --exclusive
 #
 # job time, change for what your job farm requires
-#SBATCH -t 24:00:00
+#SBATCH -t 96:00:00
 #
 # job name and output file names
-#SBATCH -J rectgrid_farm
-#SBATCH -o stdout_rectgrid_farm_%j.out
-#SBATCH -e stderr_rectgrid_farm_%j.out
+#SBATCH -J galah_farm
+#SBATCH -o stdout_galah_farm_%j.out
+#SBATCH -e stderr_galah_farm_%j.out
 cat $0
 
 module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.20.1  SQLite/3.9.2
