@@ -68,7 +68,7 @@ set textvalign top
 set label 1 "\\parbox{{{0}cm}}{{{4} \\newline {{\\bf {2} }} }}" at page 0.5, page {5}
 
 """.format(width, aspect, label,
-           1000 if label=="Teff" else 2,
+           1000 if label == "Teff" else 2,
            description,
            width * aspect - 0.3
            )
@@ -77,15 +77,19 @@ set label 1 "\\parbox{{{0}cm}}{{{4} \\newline {{\\bf {2} }} }}" at page 0.5, pag
     for index2, snr in enumerate(snr_list):
         stub = "{0}_{1:03d}_{2:03d}".format(snr["filename"], index, index2)
 
+        colour_scale_norm = float(len(snr_list) - 1)
+        if colour_scale_norm < 1:
+            colour_scale_norm = 1.
+
         plot_items.append("""
         "{0}" using {1}:(${2}-${3}) title "SNR {4:.1f}" with dots colour col_scale({5}) ps 5
         """.format(
             snr["filename"],
-            2*label_count + index + 1,
+            2 * label_count + index + 1,
             index + 1,
             label_count + index + 1,
             snr["snr"] * np.sqrt(pixels_per_angstrom),
-            index2 / float(len(snr_list)-1)
+            index2 / colour_scale_norm
         )
         )
 

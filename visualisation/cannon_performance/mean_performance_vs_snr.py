@@ -330,6 +330,9 @@ class PlotLabelPrecision:
 
                     ppl_items = []
                     k_max = float(len(data_set_items) - 1)
+                    if k_max < 1:
+                        k_max = 1.
+
                     for k, (snr, plot_items) in enumerate(sorted(data_set_items.iteritems())):
                         for j, plot_item in enumerate(plot_items):
                             ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\"\n".format(j, snr, plot_item))

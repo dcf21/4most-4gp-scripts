@@ -131,7 +131,7 @@ set term pdf ; set output '{0}.pdf' ; set display ; refresh
 
 # Create mono version
 
-pyxplot_input = """
+pyxplot_input += """
 
 set nodisplay
 clear
