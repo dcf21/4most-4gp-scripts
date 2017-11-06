@@ -24,6 +24,8 @@ parser.add_argument('--wavelength', required=True, dest='wavelength', type=float
                     help="The wavelength for which we should plot the Cannon's internal model.")
 parser.add_argument('--library', required=True, dest='library',
                     help="Spectrum library we should plot over Cannon's internal model.")
+parser.add_argument('--train-library', required=True, dest='train_library',
+                    help="Spectrum library that we originally used to train the Cannon. Must match EXACTLY!")
 parser.add_argument('--label', required=True, dest='labels',
                     help="Label we should vary.")
 parser.add_argument('--label-axis-latex', required=True, dest='label_axis_latex',
@@ -38,26 +40,82 @@ parser.add_argument('--output-stub', default="/tmp/cannon_model_", dest='output_
                     help="Data file to write output to.")
 args = parser.parse_args()
 
+
+# Helper for opening input SpectrumLibrary(s)
+def open_input_libraries(library_spec):
+    test = re.match("([^\[]*)\[(.*)\]$", library_spec)
+    constraints = {}
+    if test is None:
+        library_name = library_spec
+    else:
+        library_name = test.group(1)
+        for constraint in test.group(2).split(","):
+            words_1 = constraint.split("=")
+            words_2 = constraint.split("<")
+            if len(words_1) == 2:
+                constraint_name = words_1[0]
+                try:
+                    constraint_value = float(words_1[1])
+                except ValueError:
+                    constraint_value = words_1[1]
+                constraints[constraint_name] = constraint_value
+            elif len(words_2) == 3:
+                constraint_name = words_2[1]
+                try:
+                    constraint_value_a = float(words_2[0])
+                    constraint_value_b = float(words_2[2])
+                except ValueError:
+                    constraint_value_a = words_2[0]
+                    constraint_value_b = words_2[2]
+                constraints[constraint_name] = (constraint_value_a, constraint_value_b)
+            else:
+                assert False, "Could not parse constraint <{}>".format(constraint)
+    constraints["continuum_normalised"] = 1  # All input spectra must be continuum normalised
+    library_path = os_path.join(workspace, library_name)
+    input_library = SpectrumLibrarySqlite(path=library_path, create=False)
+    library_items = input_library.search(**constraints)
+    return {
+        "library": input_library,
+        "items": library_items
+    }
+
+
 # Fixed labels are supplied in the form <name=value>
 label_constraints = {}
+label_fixed_values = {}
 for item in args.fixed_label:
     test = re.match("(.*)=(.*)", item)
     assert test is not None, "Fixed labels should be specified in the form <name=value>."
     value = test.group(2)
+    constraint_range = test.group(2)
+    # Convert parameter values to floats wherever possible
     try:
+        # Express constraint as a narrow range, to allow wiggle-room for numerical inaccuracy
         value = float(value)
+        constraint_range = (value-1e-3, value+1e-3)
     except ValueError:
         pass
-    label_constraints[test.group(1)] = value
+    label_fixed_values[test.group(1)] = value
+    label_constraints[test.group(1)] = constraint_range
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = os_path.join(our_path, "..", "..", "workspace")
 
-# Open Spectrum library
+# Open spectrum library we're going to plot
 library_path = os_path.join(workspace, args.library)
 input_library = SpectrumLibrarySqlite(path=library_path, create=False)
-library_items = input_library.search(**label_constraints)
+library_items = input_library.search(continuum_normalised=1, **label_constraints)
+library_ids = [i["specId"] for i in library_items]
+library_spectra = input_library.open(ids=library_ids)
+
+# Open spectrum library we originally trained the Cannon on
+training_spectra_info = open_input_libraries(args.train_library)
+training_library, training_library_items = [training_spectra_info[i] for i in ("library", "items")]
+
+# Load training set
+training_library_ids = [i["specId"] for i in training_library_items]
+training_spectra = training_library.open(ids=training_library_ids)
 
 # Fetch title for this Cannon run
 cannon_output = json.loads(open(args.cannon+".json").read())
@@ -74,7 +132,7 @@ if censoring_masks is not None:
     for key, value in censoring_masks.iteritems():
         censoring_masks[key] = np.asarray(value)
 
-model = CannonInstance(training_set=library_items,
+model = CannonInstance(training_set=training_spectra,
                        load_from_file=args.cannon+".cannon",
                        label_names=cannon_output["labels"],
                        censors=censoring_masks,
@@ -83,12 +141,12 @@ model = CannonInstance(training_set=library_items,
 
 # Loop over stars in SpectrumLibrary extracting flux at requested wavelength
 stars = []
-raster_index = (np.abs(library_items.wavelengths-args.wavelength)).argmin()
+raster_index = (np.abs(library_spectra.wavelengths-args.wavelength)).argmin()
 value_min = np.inf
 value_max = -np.inf
-for spectrum_number in range(len(library_items)):
-    metadata = library_items.get_metadata(spectrum_number)
-    spectrum = library_items.extract_item(spectrum_number)
+for spectrum_number in range(len(library_spectra)):
+    metadata = library_spectra.get_metadata(spectrum_number)
+    spectrum = library_spectra.extract_item(spectrum_number)
     value = metadata[args.label]
 
     if value<value_min:
@@ -110,7 +168,7 @@ cannon = model._model
 raster_index = (np.abs(cannon.dispersion-args.wavelength)).argmin()
 cannon_predictions = []
 for i in range(n_steps):
-    label_values = label_constraints.copy()
+    label_values = label_fixed_values.copy()
     value = value_min + i*(value_max-value_min)
     label_values[args.label] = value
     cannon_predicted_spectrum = cannon.predict(label_values)
