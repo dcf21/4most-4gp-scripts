@@ -16,8 +16,6 @@ import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
 
-from lib_multiplotter import make_multiplot
-
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--wavelength', required=True, dest='wavelength', type=float,
@@ -92,7 +90,7 @@ for item in args.fixed_label:
     try:
         # Express constraint as a narrow range, to allow wiggle-room for numerical inaccuracy
         value = float(value)
-        constraint_range = (value-1e-3, value+1e-3)
+        constraint_range = (value - 1e-3, value + 1e-3)
     except ValueError:
         pass
     label_fixed_values[test.group(1)] = value
@@ -118,7 +116,7 @@ training_library_ids = [i["specId"] for i in training_library_items]
 training_spectra = training_library.open(ids=training_library_ids)
 
 # Fetch title for this Cannon run
-cannon_output = json.loads(open(args.cannon+".json").read())
+cannon_output = json.loads(open(args.cannon + ".json").read())
 description = cannon_output['description']
 
 # Convert SNR/pixel to SNR/A at 6000A
@@ -133,7 +131,7 @@ if censoring_masks is not None:
         censoring_masks[key] = np.asarray(value)
 
 model = CannonInstance(training_set=training_spectra,
-                       load_from_file=args.cannon+".cannon",
+                       load_from_file=args.cannon + ".cannon",
                        label_names=cannon_output["labels"],
                        censors=censoring_masks,
                        threads=None
@@ -141,7 +139,7 @@ model = CannonInstance(training_set=training_spectra,
 
 # Loop over stars in SpectrumLibrary extracting flux at requested wavelength
 stars = []
-raster_index = (np.abs(library_spectra.wavelengths-args.wavelength)).argmin()
+raster_index = (np.abs(library_spectra.wavelengths - args.wavelength)).argmin()
 value_min = np.inf
 value_max = -np.inf
 for spectrum_number in range(len(library_spectra)):
@@ -149,9 +147,9 @@ for spectrum_number in range(len(library_spectra)):
     spectrum = library_spectra.extract_item(spectrum_number)
     value = metadata[args.label]
 
-    if value<value_min:
+    if value < value_min:
         value_min = value
-    if value>value_max:
+    if value > value_max:
         value_max = value
 
     # Extract name and value of parameter we're varying
@@ -165,11 +163,11 @@ for spectrum_number in range(len(library_spectra)):
 # Query Cannon's internal model of this pixel
 n_steps = 100
 cannon = model._model
-raster_index = (np.abs(cannon.dispersion-args.wavelength)).argmin()
+raster_index = (np.abs(cannon.dispersion - args.wavelength)).argmin()
 cannon_predictions = []
 for i in range(n_steps):
     label_values = label_fixed_values.copy()
-    value = value_min + i*(value_max-value_min)
+    value = value_min + i * (value_max - value_min)
     label_values[args.label] = value
     cannon_predicted_spectrum = cannon.predict(label_values)
     cannon_predictions.append({
