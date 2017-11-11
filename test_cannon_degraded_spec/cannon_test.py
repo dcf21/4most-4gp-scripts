@@ -55,9 +55,18 @@ parser.add_argument('--multithread',
                     help="Use multiple thread to speed Cannon up.")
 parser.add_argument('--nothread',
                     action='store_false',
-                    dest="multithred",
+                    dest="multithread",
                     help="Do not use multiple threads - use only one CPU core.")
 parser.set_defaults(multithread=True)
+parser.add_argument('--interpolate',
+                    action='store_true',
+                    dest="interpolate",
+                    help="Interpolate the test spectra on the training spectra's wavelength raster. DANGEROUS!")
+parser.add_argument('--nointerpolate',
+                    action='store_false',
+                    dest="interpolate",
+                    help="Do not interpolate the test spectra onto a different raster.")
+parser.set_defaults(interpolate=False)
 args = parser.parse_args()
 
 logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test_library,
@@ -201,8 +210,20 @@ for index in range(N):
     spectrum = test_spectrum_array.extract_item(0)
     logger.info("Testing {}/{}: {}".format(index + 1, N, spectrum.metadata['Starname']))
 
+    # Calculate the time taken to process this spectrum
     time_start = time.time()
+
+    # If requested, interpolate the test set onto the same raster as the training set. DANGEROUS!
+    if args.interpolate:
+        from fourgp_degrade.interpolate import SpectrumInterpolator
+        first_training_spectrum = training_spectra.extract_item(0)
+        interpolator = SpectrumInterpolator(spectrum)
+        spectrum = interpolator.match_to_other_spectrum(first_training_spectrum)
+
+    # Pass spectrum to the Cannon
     labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
+
+    # Measure the time taken
     time_end = time.time()
     time_taken[index] = time_end - time_start
 
