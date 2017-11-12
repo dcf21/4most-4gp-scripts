@@ -218,7 +218,9 @@ for index in range(N):
         from fourgp_degrade.interpolate import SpectrumInterpolator
         first_training_spectrum = training_spectra.extract_item(0)
         interpolator = SpectrumInterpolator(spectrum)
-        spectrum = interpolator.match_to_other_spectrum(first_training_spectrum)
+        spectrum_new = interpolator.match_to_other_spectrum(first_training_spectrum)
+        spectrum_new.metadata = spectrum.metadata
+        spectrum = spectrum_new
 
     # Pass spectrum to the Cannon
     labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
