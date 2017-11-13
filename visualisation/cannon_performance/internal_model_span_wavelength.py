@@ -13,6 +13,8 @@ import re
 import json
 import numpy as np
 
+from operator import itemgetter
+
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
 
@@ -28,10 +30,10 @@ parser.add_argument('--library', required=True, dest='library',
                     help="Spectrum library we should plot over Cannon's internal model.")
 parser.add_argument('--train-library', required=True, dest='train_library',
                     help="Spectrum library that we originally used to train the Cannon. Must match EXACTLY!")
-parser.add_argument('--label', required=True, dest='labels',
-                    help="Label we should vary.")
+parser.add_argument('--label', required=True, dest='label',
+                    help="The label we should vary.")
 parser.add_argument('--label-axis-latex', required=True, dest='label_axis_latex',
-                    help="Title for this variable that we should put on the horizontal axis of the plot.")
+                    help="Title for this label as we should render it onto the plot.")
 parser.add_argument('--fixed-label', required=True, action="append", dest='fixed_label',
                     help="A fixed value for each of the labels we're not varying.")
 parser.add_argument('--cannon-output',
@@ -44,7 +46,7 @@ args = parser.parse_args()
 
 
 # Helper for opening input SpectrumLibrary(s)
-def open_input_libraries(library_spec):
+def open_input_libraries(library_spec, extra_constraints):
     test = re.match("([^\[]*)\[(.*)\]$", library_spec)
     constraints = {}
     if test is None:
@@ -72,6 +74,7 @@ def open_input_libraries(library_spec):
                 constraints[constraint_name] = (constraint_value_a, constraint_value_b)
             else:
                 assert False, "Could not parse constraint <{}>".format(constraint)
+    constraints.update(extra_constraints)
     constraints["continuum_normalised"] = 1  # All input spectra must be continuum normalised
     library_path = os_path.join(workspace, library_name)
     input_library = SpectrumLibrarySqlite(path=library_path, create=False)
@@ -105,14 +108,13 @@ our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "..", "..", "workspace")
 
 # Open spectrum library we're going to plot
-library_path = os_path.join(workspace, args.library)
-input_library = SpectrumLibrarySqlite(path=library_path, create=False)
-library_items = input_library.search(continuum_normalised=1, **label_constraints)
+input_library_info = open_input_libraries(args.library, label_constraints)
+input_library, library_items = [input_library_info[i] for i in ("library", "items")]
 library_ids = [i["specId"] for i in library_items]
 library_spectra = input_library.open(ids=library_ids)
 
 # Open spectrum library we originally trained the Cannon on
-training_spectra_info = open_input_libraries(args.train_library)
+training_spectra_info = open_input_libraries(args.train_library, {})
 training_library, training_library_items = [training_spectra_info[i] for i in ("library", "items")]
 
 # Load training set
@@ -165,9 +167,10 @@ for spectrum_number in range(len(library_spectra)):
         "flux_error": spectrum.value_errors[raster_mask_1],
         "value": value
     })
+stars.sort(key=itemgetter("value"))
 
 # Query Cannon's internal model of this pixel
-n_steps = 100
+n_steps = 8
 cannon = model._model
 raster_mask_2 = (cannon.dispersion > args.wavelength_min) * \
                 (cannon.dispersion < args.wavelength_max)
@@ -175,20 +178,21 @@ raster_indices_2 = np.where(raster_mask_2)[0]
 cannon_predictions = []
 for i in range(n_steps):
     label_values = label_fixed_values.copy()
-    value = value_min + i * (value_max - value_min)
+    value = value_min + i * (value_max - value_min) / (n_steps-1.)
     label_values[args.label] = value
-    cannon_predicted_spectrum = cannon.predict(label_values)
+    label_vector = np.asarray([label_values[key] for key in cannon_output["labels"]])
+    cannon_predicted_spectrum = cannon.predict(label_vector)[0]
     cannon_predictions.append({
         "value": value,
         "flux": cannon_predicted_spectrum[raster_mask_2],
-        "flux_errors": cannon.s2[raster_mask_2]
+        "flux_error": cannon.s2[raster_mask_2]
     })
 
 # Write data file for PyXPlot to plot
-with open("{}.dat".format(args.output_stub)) as f:
+with open("{}.dat".format(args.output_stub), "w") as f:
     for datum in stars:
         for i in range(len(raster_indices_1)):
-            f.write("{} {} {}\n".format(library_spectra.wavelengths[raster_indices_1[i]],
+            f.write("{} {} {} {}\n".format(library_spectra.wavelengths[raster_indices_1[i]],
                                         datum["value"],
                                         datum["flux"][i],
                                         datum["flux_error"][i]))
@@ -196,7 +200,7 @@ with open("{}.dat".format(args.output_stub)) as f:
 
     for datum in cannon_predictions:
         for i in range(len(raster_indices_2)):
-            f.write("{} {} {}\n".format(cannon.dispersion[raster_indices_2[i]],
+            f.write("{} {} {} {}\n".format(cannon.dispersion[raster_indices_2[i]],
                                         datum["value"],
                                         datum["flux"][i],
                                         datum["flux_error"][i]))
@@ -211,13 +215,13 @@ pyxplot_input = """
 set width {0}
 set size ratio {1}
 set term dpi 200
-set key top left
+set key below
 set linewidth 0.4
 
 set xlabel "Wavelength / \AA"
 set xrange [{2}:{3}]
 set ylabel "Continuum-normalised flux"
-set yrange [0:1.2]
+set yrange [0.8:1.02]
 
 set label 1 "{4}" at page 0.5, page {5}
 
@@ -228,11 +232,15 @@ plot """.format(width, aspect,
                 args.wavelength_min, args.wavelength_max,
                 description, width * aspect - 1.1)
 
+plot_items = []
 for i, j in enumerate(stars):
-    pyxplot_input += """ "{0}.dat" index {1} title "Synthesised {2}={3:.2f}" with lines, """. \
-        format(args.output_stub, i, args.latex_label, j["value"])
+    plot_items.append(""" "{0}.dat" using 1:3 index {1} title "Synthesised {2}={3:.2f}" with lines """. \
+        format(args.output_stub, i, args.label_axis_latex, j["value"]))
+
+pyxplot_input += ", ".join(plot_items)
 
 pyxplot_input += """
+
 set term eps ; set output '{0}_1.eps' ; set display ; refresh
 set term png ; set output '{0}_1.png' ; set display ; refresh
 set term pdf ; set output '{0}_1.pdf' ; set display ; refresh
@@ -241,11 +249,15 @@ plot """.format(args.output_stub)
 
 eps_list.append("{0}_1.eps".format(args.output_stub))
 
+plot_items = []
 for i, j in enumerate(cannon_predictions):
-    pyxplot_input += """ "{0}.dat" index {1} title "Cannon model {2}={3:.2f}" with lines, """. \
-        format(args.output_stub, i+len(stars), args.latex_label, j["value"])
+    plot_items.append(""" "{0}.dat" using 1:3 index {1} title "Cannon model {2}={3:.2f}" with lines """. \
+        format(args.output_stub, i+len(stars), args.label_axis_latex, j["value"]))
+
+pyxplot_input += ", ".join(plot_items)
 
 pyxplot_input += """
+
 set term eps ; set output '{0}_2.eps' ; set display ; refresh
 set term png ; set output '{0}_2.png' ; set display ; refresh
 set term pdf ; set output '{0}_2.pdf' ; set display ; refresh
