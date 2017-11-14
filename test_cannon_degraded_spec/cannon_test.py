@@ -265,6 +265,9 @@ with open(args.output_file + ".json", "w") as f:
                                  for label, mask in censoring_masks.iteritems()])
 
     f.write(json.dumps({
+        "train_library": args.train_library,
+        "test_library": args.test_library,
+        "tolerance": args.tolerance,
         "description": args.description,
         "assume_scaled_solar": args.assume_scaled_solar,
         "line_list": args.censor_line_list,

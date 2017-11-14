@@ -24,8 +24,6 @@ parser.add_argument('--wavelength', required=True, dest='wavelength', type=float
                     help="The wavelength for which we should plot the Cannon's internal model.")
 parser.add_argument('--library', required=True, dest='library',
                     help="Spectrum library we should plot over Cannon's internal model.")
-parser.add_argument('--train-library', required=True, dest='train_library',
-                    help="Spectrum library that we originally used to train the Cannon. Must match EXACTLY!")
 parser.add_argument('--label', required=True, dest='label',
                     help="The label we should vary.")
 parser.add_argument('--label-axis-latex', required=True, dest='label_axis_latex',
@@ -120,17 +118,17 @@ for i in range(len(library_spectra)):
         library_spectra_by_snr[snr] = []
     library_spectra_by_snr[snr].append(i)
 
+# Fetch title for this Cannon run
+cannon_output = json.loads(open(args.cannon + ".json").read())
+description = cannon_output['description']
+
 # Open spectrum library we originally trained the Cannon on
-training_spectra_info = open_input_libraries(args.train_library, {})
+training_spectra_info = open_input_libraries(cannon_output["train_library"], {})
 training_library, training_library_items = [training_spectra_info[i] for i in ("library", "items")]
 
 # Load training set
 training_library_ids = [i["specId"] for i in training_library_items]
 training_spectra = training_library.open(ids=training_library_ids)
-
-# Fetch title for this Cannon run
-cannon_output = json.loads(open(args.cannon + ".json").read())
-description = cannon_output['description']
 
 # Convert SNR/pixel to SNR/A at 6000A
 raster = np.array(cannon_output['wavelength_raster'])

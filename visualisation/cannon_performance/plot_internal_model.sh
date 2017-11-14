@@ -12,7 +12,6 @@ python internal_model_one_wavelength.py \
     --fixed-label "Teff=6000" \
     --fixed-label "logg=4.2" \
     --library "4fs_rect_grid_lrs" \
-    --train-library "4fs_rect_grid_lrs[SNR=250]" \
     --cannon-output "../../output_data/cannon/cannon_rect_rect_lrs_3label"
 
 python internal_model_span_wavelength.py \
@@ -24,6 +23,5 @@ python internal_model_span_wavelength.py \
     --fixed-label "Teff=6000" \
     --fixed-label "logg=4.2" \
     --library "4fs_rect_grid_lrs[SNR=5000]" \
-    --train-library "4fs_rect_grid_lrs[SNR=250]" \
     --cannon-output "../../output_data/cannon/cannon_rect_rect_lrs_3label"
 
