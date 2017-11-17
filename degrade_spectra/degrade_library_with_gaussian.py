@@ -94,8 +94,8 @@ input_library = SpectrumLibrarySqlite(path=library_path, create=False)
 # Create new SpectrumLibrary
 output_libraries = {}
 
-for mode in ({"name": "LRS", "library": args.output_library_lrs},
-             {"name": "HRS", "library": args.output_library_hrs}):
+for mode in ({"name": "lrs", "library": args.output_library_lrs},
+             {"name": "hrs", "library": args.output_library_hrs}):
     library_name = re.sub("/", "_", mode['library'])
     library_path = os_path.join(workspace, library_name)
     output_libraries[mode['name']] = SpectrumLibrarySqlite(path=library_path, create=args.create)
@@ -124,8 +124,8 @@ else:
 snr_list = [float(item.strip()) for item in args.snr_list.split(",")]
 
 # Read wavelength rasters for LRS and HRS
-raster_hrs = np.loadtxt(os_path.join(our_path, "raster_hrs.txt").transpose()[0])
-raster_lrs = np.loadtxt(os_path.join(our_path, "raster_lrs.txt").transpose()[0])
+raster_hrs = np.loadtxt(os_path.join(our_path, "raster_hrs.txt")).transpose()[0]
+raster_lrs = np.loadtxt(os_path.join(our_path, "raster_lrs.txt")).transpose()[0]
 
 # Instantiate Gaussian noise model
 modes = {
@@ -180,12 +180,12 @@ with open(args.log_to, "w") as result_log:
 
         # Import degraded spectra into output spectrum library
         for mode in degraded_spectra:
-            for index in degraded_spectra[mode]:
+            for index in range(len(degraded_spectra[mode])):
                 for snr in degraded_spectra[mode][index]:
-                    for spectrum_type in degraded_spectra[mode][index][snr]:
-                        output_libraries[mode].insert(spectra=degraded_spectra[mode][index][snr][spectrum_type],
+                    for spectrum_version in degraded_spectra[mode][index][snr]:
+                        output_libraries[mode].insert(spectra=spectrum_version,
                                                       filenames=input_spectrum_id['filename'])
 
 # Clean up noise models
-for mode in modes:
+for mode in modes.itervalues():
     mode.close()
