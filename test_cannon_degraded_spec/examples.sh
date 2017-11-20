@@ -212,6 +212,22 @@ python cannon_test.py --train "4fs_ges_dwarfs_perturbed_lrs[SNR=250]" \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_dwarfs_rect_lrs_3label"
 
+# -----------------------------------------------------------------------------------------
+
+python cannon_test.py --train "hawkins_apokasc_training_set_lrs[SNR=250]" \
+                      --test "4fs_apokasc_test_set_lrs" \
+                      --interpolate \
+                      --description "4MOST LRS - 3 labels - Train on Hawkins(1). Test on APOKASC(2)." \
+                      --labels "Teff,logg,[Fe/H]" \
+                      --output-file "../output_data/cannon/cannon_hawkins_crosscheck_lrs_3label"
+
+python cannon_test.py --train "hawkins_apokasc_training_set_lrs[SNR=250]" \
+                      --test "4fs_apokasc_test_set_lrs" \
+                      --interpolate \
+                      --description "4MOST LRS - 10 labels - Train on Hawkins(1). Test on APOKASC(2)." \
+                      --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_hawkins_crosscheck_lrs_10label"
 
 # -----------------------------------------------------------------------------------------
 
