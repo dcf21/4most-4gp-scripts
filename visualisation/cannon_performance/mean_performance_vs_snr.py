@@ -321,12 +321,12 @@ class PlotLabelPrecision:
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
                     """.format(width, aspect,
-                               latex_label[2] / 40.,
+                               latex_label[2] / 60.,
                                latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(latex_label[0]))
-                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 2, latex_label[2] * 2))
+                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 1.2, latex_label[2] * 1.2))
 
                     ppl_items = []
                     k_max = float(len(data_set_items) - 1)
@@ -400,7 +400,7 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
                     key = "target_{}".format(label)
                     if key in reference_run:
                         reference_values[label] = reference_run["target_{}".format(label)]
-                    elif "[Fe/H" in reference_run:
+                    elif "[Fe/H]" in reference_run:
                         reference_values[label] = reference_run["[Fe/H]"]  # Assume scales with [Fe/H]
                     else:
                         reference_values[label] = np.nan
