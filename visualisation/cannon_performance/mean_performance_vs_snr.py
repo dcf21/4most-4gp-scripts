@@ -181,8 +181,9 @@ class PlotLabelPrecision:
                     np.transpose(diffs))
 
                 self.plot_histograms[i][self.data_set_counter][snr_per_a] = [
-                    "{}{:d}_{:d}_{:06.1f}.dat".format(
-                        self.output_figure_stem, i, self.data_set_counter, snr_per_a)
+                    ("{}{:d}_{:d}_{:06.1f}.dat".format(self.output_figure_stem, i, self.data_set_counter, snr_per_a),
+                     scale
+                     )
                 ]
 
             # Output table of statistical measures of label-mismatch-distribution as a function of SNR (first column)
@@ -334,10 +335,11 @@ class PlotLabelPrecision:
                         k_max = 1.
 
                     for k, (snr, plot_items) in enumerate(sorted(data_set_items.iteritems())):
-                        for j, plot_item in enumerate(plot_items):
+                        for j, (plot_item, snr_scaling) in enumerate(plot_items):
                             ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\"\n".format(j, snr, plot_item))
-                            ppl_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({2}) "
-                                             "title 'SNR {1:.1f}'".format(j, snr, k / k_max))
+                            ppl_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) "
+                                             "title 'SNR/A {1:.1f}; SNR/pixel {2:.1f}'".
+                                             format(j, snr, snr/snr_scaling, k / k_max))
 
                     ppl.write("""
                     plot {0}

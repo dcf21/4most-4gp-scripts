@@ -94,11 +94,13 @@ set ylabel "Input {4}"
 set yrange [{5}]
 
 set textvalign top
-set label 1 "\\parbox{{{0}cm}}{{{6} \\newline {{\\bf {7} }} \\newline SNR/\\AA={8:.1f}}}" at page 0.5, page {9}
+set label 1 "\\parbox{{{0}cm}}{{{6} \\newline {{\\bf {7} }} \\newline SNR/\\AA={9:.1f} \\newline SNR/pixel={8:.1f}}}" \
+            at page 0.5, page {10}
 
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
            description, args.label_axis_latex[2],
+           snr["snr"],
            snr["snr"] * np.sqrt(pixels_per_angstrom),  # Convert SNR/pixel to SNR/A
            width * aspect - 0.3)
 

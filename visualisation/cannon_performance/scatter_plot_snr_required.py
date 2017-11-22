@@ -153,9 +153,11 @@ unset label
 set noxlabel
 set xrange [0:1]
 set noxtics ; set nomxtics
-set axis y right
+set axis y y2 right
 set ylabel "SNR/\AA (at 6000\AA) needed to achieve accuracy of {1} {2} in {0}"
 set yrange [{3}:{4}]
+set y2label "SNR/pixel (at 6000\AA)"
+set y2range [{3}/{7}:{4}/{7}]
 set c1range [{3}:{4}] norenormalise
 set width {5}
 set size ratio 1 / 0.05
@@ -166,7 +168,8 @@ set origin {6}, 0
 plot y with colourmap
 
 """.format(args.label_axis_latex[2], args.target_accuracy, args.accuracy_unit,
-           args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1)
+           args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1,
+           sqrt(pixels_per_angstrom))
 
 pyxplot_input += """
 
