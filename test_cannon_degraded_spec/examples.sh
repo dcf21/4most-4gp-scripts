@@ -356,6 +356,34 @@ python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250,-1<[Fe/H]<1]" \
                       --assume-scaled-solar \
                       --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_fehcut_lrs_10label"
 
+# -----------------------------------------------------------------------------------------
+
+python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250]" \
+                      --test "4fs_ahm2017_perturbed_hrs" \
+                      --description "4MOST HRS - 13 labels - Train on GES UVES AHM2017. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H],[Eu/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_hrs_13label"
+python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
+                      --test "4fs_ahm2017_perturbed_lrs" \
+                      --description "4MOST LRS - 13 labels - Train on GES UVES AHM2017. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H],[Eu/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_13label"
+
+python cannon_test.py --train "4fs_ges_dwarf_sample_hrs[SNR=250]" \
+                      --test "4fs_ges_dwarfs_perturbed_hrs" \
+                      --description "4MOST HRS - 13 labels - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H],[Eu/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_hrs_13label"
+python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250]" \
+                      --test "4fs_ges_dwarfs_perturbed_lrs" \
+                      --description "4MOST LRS - 13 labels - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H],[Eu/H]" \
+                      --assume-scaled-solar \
+                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_lrs_13label"
+
 
 # All stellar labels set of GES stars
 # logg, [Nd/H], [O/H], [Mg/H], [V/H], [Ba/H], [Al/H], [Ca/H], [Mn/H], [S/H], [Sc/H], [Ce/H], [Ti/H], [Na/H], [Si/H], [La/H], [Ni/H], [C/H], [Zn/H], [Fe/H], [Co/H], [Cr/H], Teff
