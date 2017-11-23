@@ -145,6 +145,21 @@ if args.assume_scaled_solar:
             if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                 # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
                 metadata[label] = metadata["[Fe/H]"]
+else:
+    training_library_ids_filtered = []
+    for index in range(len(training_spectra)):
+        accept = True
+        metadata = training_spectra.get_metadata(index)
+        for label in test_labels:
+            if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
+                accept = False
+                break
+        if accept:
+            training_library_ids_filtered.append(training_library_ids[index])
+    logger.info("Accepted {:d} / {:d} training spectra; others had labels missing.".
+                format(len(training_library_ids_filtered), len(training_library_ids)))
+    training_library_ids = training_library_ids_filtered
+    training_spectra = training_library.open(ids=training_library_ids)
 
 # If required, generate the censoring masks
 censoring_masks = None
