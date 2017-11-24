@@ -369,16 +369,29 @@ python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H]" \
                       --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_12label"
 
-python cannon_test.py --train "4fs_ges_dwarf_sample_hrs[SNR=250]" \
-                      --test "4fs_ges_dwarfs_perturbed_hrs" \
-                      --description "4MOST HRS - 12 labels - Train on GES UVES dwarfs. Test on perturbed version." \
+python cannon_test.py --train "4fs_galah_hrs[SNR=250]" \
+                      --test "4fs_ahm2017_sample_hrs" \
+                      --description "4MOST HRS - 12 labels - Train on GALAH sample. Test on GES UVES AHM2017." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H]" \
-                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_hrs_12label"
-python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250]" \
-                      --test "4fs_ges_dwarfs_perturbed_lrs" \
-                      --description "4MOST LRS - 12 labels - Train on GES UVES dwarfs. Test on perturbed version." \
+                      --output-file "../output_data/cannon/cannon_galah_ahm2017_hrs_12label"
+python cannon_test.py --train "4fs_galah_lrs[SNR=250]" \
+                      --test "4fs_ahm2017_sample_hls" \
+                      --description "4MOST LRS - 12 labels - Train on GALAH sample. Test on GES UVES AHM2017." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H]" \
-                      --output-file "../output_data/cannon/cannon_ges_dwarfs_perturbed_lrs_12label"
+                      --output-file "../output_data/cannon/cannon_galah_ahm2017_lrs_12label"
+
+python cannon_test.py --train "4fs_galah_hrs[SNR=250]" \
+                      --test "4fs_ahm2017_sample_hrs" \
+                      --description "4MOST HRS (censored) - 12 labels - Train on GALAH sample. Test on GES UVES AHM2017." \
+                      --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H]" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --output-file "../output_data/cannon/cannon_galah_ahm2017_censored_hrs_12label"
+python cannon_test.py --train "4fs_galah_lrs[SNR=250]" \
+                      --test "4fs_ahm2017_sample_hls" \
+                      --description "4MOST LRS (censored) - 12 labels - Train on GALAH sample. Test on GES UVES AHM2017." \
+                      --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H]" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                      --output-file "../output_data/cannon/cannon_galah_ahm2017_censored_lrs_12label"
 
 
 # All stellar labels set of GES stars

@@ -10,7 +10,7 @@ import argparse
 import json
 
 
-def tabulate_labels(output_stub, labels, cannon):
+def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar):
     # library_values[Starname] = [list of label values]
     # cannon_values[Starname][SNR] = [list of label values]
     # cannon_errors[Starname][SNR] = [list of label uncertainties, as estimated by the Cannon]
@@ -47,7 +47,7 @@ def tabulate_labels(output_stub, labels, cannon):
             key = "target_{}".format(label)
             if key in item:
                 label_values.append(item[key])
-            elif "target_[Fe/H]":
+            elif assume_scaled_solar and ("target_[Fe/H]" in item):
                 label_values.append(item["target_[Fe/H]"])  # If no target value available, scale with [Fe/H]
             else:
                 label_values.append("-")  # If even [Fe/H] isn't available, leave blank
@@ -111,8 +111,19 @@ if __name__ == "__main__":
                         default="",
                         dest='cannon',
                         help="Cannon output file.")
+    parser.add_argument('--assume-scaled-solar',
+                        action='store_true',
+                        dest="assume_scaled_solar",
+                        help="Assume scaled solar abundances for any elements which don't have abundances individually "
+                             "specified. Useful for working with incomplete data sets.")
+    parser.add_argument('--no-assume-scaled-solar',
+                        action='store_false',
+                        dest="assume_scaled_solar",
+                        help="Do not assume scaled solar abundances; "
+                             "throw an error if training set is has missing labels.")
+    parser.set_defaults(assume_scaled_solar=False)
     parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                         help="Data file to write output to.")
     args = parser.parse_args()
 
-    tabulate_labels(args.output_stub, args.labels, args.cannon)
+    tabulate_labels(args.output_stub, args.labels, args.cannon, args.assume_scaled_solar)

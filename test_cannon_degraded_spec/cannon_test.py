@@ -49,6 +49,7 @@ parser.add_argument('--no-assume-scaled-solar',
                     action='store_false',
                     dest="assume_scaled_solar",
                     help="Do not assume scaled solar abundances; throw an error if training set is has missing labels.")
+parser.set_defaults(assume_scaled_solar=False)
 parser.add_argument('--multithread',
                     action='store_true',
                     dest="multithread",
