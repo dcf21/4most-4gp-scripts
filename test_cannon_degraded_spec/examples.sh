@@ -360,36 +360,42 @@ python cannon_test.py --train "4fs_ges_dwarf_sample_lrs[SNR=250,-1<[Fe/H]<1]" \
 
 python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_hrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST HRS - 12 labels - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H]" \
-                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_hrs_12label"
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_hrs_12label"
 python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_lrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST LRS - 12 labels - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H],[Li/H],[Ba/H]" \
-                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_12label"
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_lrs_12label"
 
 python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_hrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST HRS - 10 labels with C, O - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H]" \
-                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_hrs_10label_CO"
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_hrs_10label_CO"
 python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_lrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST LRS - 10 labels with C, O - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[C/H],[O/H]" \
-                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_10label_CO"
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_lrs_10label_CO"
 
 python cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_hrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST HRS - 10 labels qith Li, Ba - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[Li/H],[Ba/H]" \
-                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_hrs_10label_LiBa"
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_hrs_10label_LiBa"
 python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                       --test "4fs_ahm2017_perturbed_lrs" \
+                      --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                       --description "4MOST LRS - 10 labels qith Li, Ba - Train on GES UVES AHM2017. Test on perturbed version." \
                       --labels "Teff,logg,[Fe/H],[Mg/H],[Ti/H],[Na/H],[Ni/H],[Cr/H],[Li/H],[Ba/H]" \
-                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_10label_LiBa"
+                      --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_lrs_10label_LiBa"
 
 
 # All stellar labels set of GES stars

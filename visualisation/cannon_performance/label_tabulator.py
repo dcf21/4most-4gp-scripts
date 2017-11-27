@@ -10,7 +10,7 @@ import argparse
 import json
 
 
-def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar):
+def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
     # library_values[Starname] = [list of label values]
     # cannon_values[Starname][SNR] = [list of label values]
     # cannon_errors[Starname][SNR] = [list of label uncertainties, as estimated by the Cannon]
