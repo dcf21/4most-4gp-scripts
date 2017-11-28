@@ -24,21 +24,33 @@ python mean_performance_vs_snr.py \
   --cannon-output "../../output_data/cannon/cannon_hawkins_hrs_10label.json" --dataset-label "Hawkins HRS" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_10label.json" --dataset-label "Ford LRS" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_10label.json" --dataset-label "Ford HRS" \
-  --output-file "../../output_plots/cannon_performance/performance_vs_snr/apokasc_hawkins_comparison"
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_hawkins"
 
 python mean_performance_vs_snr.py \
   --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_10label.json" --dataset-label "LRS -- SNR/A defined at 6000\AA" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_10label.json" --dataset-label "HRS -- SNR/A defined at 6000\AA" \
-  --output-file "../../output_plots/cannon_performance/performance_vs_snr/apokasc_snrperband_comparison"
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_snrperband"
 
 python mean_performance_vs_snr.py \
   --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band (no blue)" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band (no blue)" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band" \
   --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band" \
-  --output-file "../../output_plots/cannon_performance/performance_vs_snr/apokasc_snrperband_noblue_comparison"
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_snrperband_noblue"
+
+for mode in lrs hrs
+do
+
+python mean_performance_vs_snr.py \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>-1" --dataset-label "Giants; [Fe/H]$>-1$" --dataset-colour "blue" --dataset-linetype 1 \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>-1" --dataset-label "Dwarfs; [Fe/H]$>-1$" --dataset-colour "red" --dataset-linetype 1 \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "blue" --dataset-linetype 2 \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "red" --dataset-linetype 2 \
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_ahm2017_${mode}"
+
+done
 
 for cannon_output in ../../output_data/cannon/*.json
 do

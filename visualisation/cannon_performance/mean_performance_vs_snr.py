@@ -7,6 +7,7 @@ Plot results of testing the Cannon against noisy test spectra, to see how well i
 
 import os
 from os import path as os_path
+import re
 from operator import itemgetter
 import argparse
 import numpy as np
@@ -50,24 +51,26 @@ class PlotLabelPrecision:
 
         # ( LaTeX title , minimum offset , maximum offset , 4MOST target accuracy )
         self.latex_labels = {
-            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 500, [100]),
-            "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 1, [0.3]),
-            "[Fe/H]": (r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 300, [100]),
+            "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 0.8, [0.3]),
+            "[Fe/H]": (r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
             "[C/H]": (r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
             "[N/H]": (r"$[{\rm N}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
             "[O/H]": (r"$[{\rm O}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Na/H]": (r"$[{\rm Na}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Mg/H]": (r"$[{\rm Mg}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Al/H]": (r"$[{\rm Al}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Si/H]": (r"$[{\rm Si}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Ca/H]": (r"$[{\rm Ca}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Ti/H]": (r"$[{\rm Ti}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Mn/H]": (r"$[{\rm Mn}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Co/H]": (r"$[{\rm Co}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Ni/H]": (r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Na/H]": (r"$[{\rm Na}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Mg/H]": (r"$[{\rm Mg}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Al/H]": (r"$[{\rm Al}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Si/H]": (r"$[{\rm Si}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Ca/H]": (r"$[{\rm Ca}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Ti/H]": (r"$[{\rm Ti}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Mn/H]": (r"$[{\rm Mn}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Co/H]": (r"$[{\rm Co}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Ni/H]": (r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
             "[Ba/H]": (r"$[{\rm Ba}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Sr/H]": (r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Cr/H]": (r"$[{\rm Cr}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
+            "[Sr/H]": (r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Cr/H]": (r"$[{\rm Cr}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
+            "[Li/H]": (r"$[{\rm Li}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.2, 0.4]),
+            "[Eu/H]": (r"$[{\rm Eu}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.2, 0.4]),
         }
 
         self.datasets = []
@@ -85,7 +88,7 @@ class PlotLabelPrecision:
 
     def add_data_set(self, cannon_output, label_reference_values,
                      legend_label=None,
-                     colour="red",
+                     colour="red", line_type=1,
                      pixels_per_angstrom=1.0,
                      metric=lambda x: np.sqrt(np.mean(np.square(x)))
                      ):
@@ -103,6 +106,9 @@ class PlotLabelPrecision:
 
         :param colour:
             The colour of this data set. Should be specified as a valid Pyxplot string describing a colour object.
+
+        :param line_type:
+            The Pyxplot line type to use for this data set. Should be specified as an integer.
 
         :param pixels_per_angstrom:
             The number of pixels per angstrom in the spectrum. Used to convert SNR per pixel into SNR per A.
@@ -190,10 +196,11 @@ class PlotLabelPrecision:
             np.savetxt("{}{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter), y)
 
             self.plot_precision[i].append("\"{}{:d}_{:d}.dat\" using 1:2 title \"{}\" "
-                                          "with lp pt 17 col {}".format(self.output_figure_stem,
-                                                                        i, self.data_set_counter,
-                                                                        legend_label,
-                                                                        colour))
+                                          "with lp pt 17 col {} lt {:d}".
+                                          format(self.output_figure_stem,
+                                                 i, self.data_set_counter,
+                                                 legend_label,
+                                                 colour, int(line_type)))
 
             self.plot_box_whiskers[i][self.data_set_counter] = [
                 "\"{0}{1:d}_{2:d}.dat\" using 1:5:3:7 with yerrorrange col black".format(
@@ -339,7 +346,7 @@ class PlotLabelPrecision:
                             ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\"\n".format(j, snr, plot_item))
                             ppl_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) "
                                              "title 'SNR/A {1:.1f}; SNR/pixel {2:.1f}'".
-                                             format(j, snr, snr/snr_scaling, k / k_max))
+                                             format(j, snr, snr / snr_scaling, k / k_max))
 
                     ppl.write("""
                     plot {0}
@@ -362,9 +369,6 @@ class PlotLabelPrecision:
 def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
     # Work out list of labels to plot, based on first data set we're provided with
     label_names = data_sets[0]['cannon_output']['labels']
-
-    # List of colours
-    colour_list = ("red", "blue", "orange", "green")
 
     # Instantiate plotter
     plotter = PlotLabelPrecision(label_names=label_names,
@@ -411,11 +415,38 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
                     reference_values[label] = reference_run[label]
             data_set['reference_values'][star_name] = reference_values
 
-        # Filter only those stars with metallicities >= -0.5
-        stars = [item for item in stars if item["[Fe/H]"] >= -0.5]
+        # Filter only those stars which meet input criteria
+        stars_output = []
+        for star in stars:
+            star_name = star['Starname']
+            reference_values = data_set['reference_values'][star_name]
 
-        # Pick a colour for this data set
-        colour = colour_list[counter % len(colour_list)]
+            meets_filters = True
+            for constraint in data_set['filters'].split(";"):
+                constraint = constraint.strip()
+                if constraint == "":
+                    continue
+                constraint_label = re.split("<|=|>", constraint)[0]
+                constraint_value_string = re.split("<|=|>", constraint)[-1]
+                constraint_value = constraint_value_string
+                try:
+                    constraint_value = float(constraint_value)
+                except ValueError:
+                    pass
+                if constraint == "{}={}".format(constraint_label, constraint_value_string):
+                    meets_filters = meets_filters and (reference_values[constraint_label] == constraint_value)
+                elif constraint == "{}<={}".format(constraint_label, constraint_value_string):
+                    meets_filters = meets_filters and (reference_values[constraint_label] <= constraint_value)
+                elif constraint == "{}<{}".format(constraint_label, constraint_value_string):
+                    meets_filters = meets_filters and (reference_values[constraint_label] < constraint_value)
+                elif constraint == "{}>={}".format(constraint_label, constraint_value_string):
+                    meets_filters = meets_filters and (reference_values[constraint_label] >= constraint_value)
+                elif constraint == "{}>{}".format(constraint_label, constraint_value_string):
+                    meets_filters = meets_filters and (reference_values[constraint_label] > constraint_value)
+                else:
+                    assert False, "Could not parse constraint <{}>.".format(constraint)
+            if meets_filters:
+                stars_output.append(star)
 
         # Convert SNR/pixel to SNR/A at 6000A
         raster = np.array(data_set['cannon_output']['wavelength_raster'])
@@ -423,9 +454,10 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
         pixels_per_angstrom = 1.0 / raster_diff[0]
 
         # Add data set to plot
-        plotter.add_data_set(cannon_output=stars,
+        plotter.add_data_set(cannon_output=stars_output,
                              label_reference_values=data_set['reference_values'],
-                             colour=colour,
+                             colour=data_set['colour'],
+                             line_type=data_set['line_type'],
                              legend_label="{} ({})".format(data_set['title'], run_title),
                              pixels_per_angstrom=pixels_per_angstrom
                              )
@@ -441,6 +473,12 @@ if __name__ == "__main__":
                         help="JSON structure containing the label values estimated by the Cannon.")
     parser.add_argument('--dataset-label', action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
+    parser.add_argument('--dataset-filter', action="append", dest='data_set_filter',
+                        help="A list of semi-colon-separated label constraints on the target label values.")
+    parser.add_argument('--dataset-colour', action="append", dest='data_set_colour',
+                        help="A list of colours with which to plot each run of the Cannon.")
+    parser.add_argument('--dataset-linetype', action="append", dest='data_set_linetype',
+                        help="A list of Pyxplot line types with which to plot Cannon runs.")
     parser.add_argument('--output-file', default="/tmp/cannon_performance_plot", dest='output_file',
                         help="Data file to write output to.")
     parser.add_argument('--use-reference-labels',
@@ -456,17 +494,40 @@ if __name__ == "__main__":
     parser.set_defaults(use_reference_labels=True)
     args = parser.parse_args()
 
-    # If titles are not supplied for Cannon runs, we use the descriptions stored in the JSON files
+    # If titles, colours, etc, are not supplied for Cannon runs, we use the descriptions stored in the JSON files
     if (args.data_set_label is None) or (len(args.data_set_label) == 0):
         args.data_set_label = [None for i in args.cannon_output]
+
+    if (args.data_set_filter is None) or (len(args.data_set_filter) == 0):
+        args.data_set_filter = ["" for i in args.cannon_output]
+
+    if (args.data_set_colour is None) or (len(args.data_set_colour) == 0):
+        # List of default colours
+        colour_list = ("red", "blue", "orange", "green")
+
+        args.data_set_colour = [colour_list[i % len(colour_list)] for i in range(len(args.cannon_output))]
+
+    if (args.data_set_linetype is None) or (len(args.data_set_linetype) == 0):
+        args.data_set_linetype = [1 for i in args.cannon_output]
 
     # Check that we have a matching number of labels and sets of Cannon output
     assert len(args.cannon_output) == len(args.data_set_label), \
         "Must have a matching number of libraries and data set labels."
+    assert len(args.cannon_output) == len(args.data_set_filter), \
+        "Must have a matching number of libraries and data set filters."
+    assert len(args.cannon_output) == len(args.data_set_colour), \
+        "Must have a matching number of libraries and data set colours."
+    assert len(args.cannon_output) == len(args.data_set_linetype), \
+        "Must have a matching number of libraries and data set line types."
 
     # Assemble list of input Cannon output data files
     cannon_outputs = []
-    for cannon_output, data_set_label in zip(args.cannon_output, args.data_set_label):
+    for cannon_output, data_set_label, data_set_filter, data_set_colour, data_set_line_type in \
+            zip(args.cannon_output,
+                args.data_set_label,
+                args.data_set_filter,
+                args.data_set_colour,
+                args.data_set_linetype):
         # Read the JSON file which we dumped after running the Cannon
         data = json.loads(open(cannon_output).read())
 
@@ -476,7 +537,11 @@ if __name__ == "__main__":
 
         # Append to list of Cannon data sets
         cannon_outputs.append({'cannon_output': data,
-                               'title': data_set_label})
+                               'title': data_set_label,
+                               'filters': data_set_filter,
+                               'colour': data_set_colour,
+                               'line_type': data_set_line_type
+                               })
 
     generate_set_of_plots(data_sets=cannon_outputs,
                           compare_against_reference_labels=args.use_reference_labels,
