@@ -251,6 +251,7 @@ class PlotLabelPrecision:
                 set term dpi 200
                 set key top right
                 set nodisplay
+                set fontsize 1.8
                 set label 1 "{2}" page 1, page {3}
                 
                 """.format(width, aspect, latex_label[0], width * aspect - 0.5))
