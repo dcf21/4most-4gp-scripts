@@ -184,9 +184,14 @@ if args.censor_line_list != "":
             element_symbol = words[0]
             wavelength = words[2]
 
-            # Only select lines from elements we're trying to fit
-            if (element_symbol != "H") and ("[{}/H]".format(element_symbol) not in test_labels):
-                continue
+            # Only select lines from elements we're trying to fit. Always use H lines.
+            if element_symbol != "H":
+                if label_name in ("Teff", "logg"):
+                    if "[{}/H]".format(element_symbol) not in test_labels:
+                        continue
+                else:
+                    if "[{}/H]".format(element_symbol) != label_name:
+                        continue
 
             # Is line specified as a range (broad), or a single central wavelength (assume narrow)
             if "-" in wavelength:
