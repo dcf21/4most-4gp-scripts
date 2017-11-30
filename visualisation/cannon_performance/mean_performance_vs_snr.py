@@ -82,6 +82,7 @@ class PlotLabelPrecision:
         self.plot_precision = [[] for i in label_names]
         self.plot_box_whiskers = [[[] for j in range(number_data_sets)] for i in label_names]
         self.plot_histograms = [[{} for j in range(number_data_sets)] for i in label_names]
+        self.plot_cross_correlations = [{} for j in range(number_data_sets)]
 
     def set_latex_label(self, label, latex, axis_min=0, axis_max=1.1):
         self.latex_labels[label] = (latex, axis_min, axis_max)
@@ -159,7 +160,36 @@ class PlotLabelPrecision:
 
         self.data_set_counter += 1
 
-        # Extract list of label offsets for each label, and for each SNR
+        # Extract list of label offsets for each label, and for each SNR to use to make histograms
+        scale = np.sqrt(pixels_per_angstrom)
+        for k, xk in enumerate(snr_values):
+            snr_per_a = xk * scale
+
+            y = []
+            for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
+                # List of offsets
+                diffs = label_offset[xk][label_name]
+                y.append(diffs)
+
+                # Output histogram of label mismatches at this SNR
+                self.plot_histograms[i][self.data_set_counter][snr_per_a] = [
+                    ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, snr_per_a),
+                     scale,
+                     i+1  # Pyxplot counts columns starting from 1, not 0
+                     )
+                ]
+
+            # Output data file of label mismatches at this SNR
+            np.savetxt("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, snr_per_a),
+                       np.transpose(y))
+
+            # Output scatter plots of label cross-correlations at this SNR
+            self.plot_cross_correlations[self.data_set_counter][snr_per_a] = \
+                ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, snr_per_a),
+                 scale
+                 )
+
+        # Extract list of label offsets for each label, and for each SNR to use for precision plot
         for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
             scale = np.sqrt(pixels_per_angstrom)
 
@@ -180,17 +210,6 @@ class PlotLabelPrecision:
                 y[-1].extend([snr_per_a])
                 y[-1].extend(
                     [metric(diffs), percentile(5), percentile(25), percentile(50), percentile(75), percentile(95)])
-
-                # Output histogram of label mismatches at this SNR
-                np.savetxt(
-                    "{}{:d}_{:d}_{:06.1f}.dat".format(self.output_figure_stem, i, self.data_set_counter, snr_per_a),
-                    np.transpose(diffs))
-
-                self.plot_histograms[i][self.data_set_counter][snr_per_a] = [
-                    ("{}{:d}_{:d}_{:06.1f}.dat".format(self.output_figure_stem, i, self.data_set_counter, snr_per_a),
-                     scale
-                     )
-                ]
 
             # Output table of statistical measures of label-mismatch-distribution as a function of SNR (first column)
             np.savetxt("{}{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter), y)
@@ -234,13 +253,14 @@ class PlotLabelPrecision:
         # LaTeX strings to use to label each stellar label on graph axes
         latex_labels = [self.latex_labels[ln] for ln in self.label_names]
 
-        # Create a new pyxplot script for precision plots
+        # Compile lists of plots so that we can merge them into multiplots
         eps_files = {
             "precision": [],
             "whiskers": [],
             "histograms": []
         }
 
+        # Create a new pyxplot script for precision plots
         for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
             stem = "{}precision_{:d}".format(self.output_figure_stem, i)
             with open("{}.ppl".format(stem), "w") as ppl:
@@ -343,8 +363,9 @@ class PlotLabelPrecision:
                         k_max = 1.
 
                     for k, (snr, plot_items) in enumerate(sorted(data_set_items.iteritems())):
-                        for j, (plot_item, snr_scaling) in enumerate(plot_items):
-                            ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\"\n".format(j, snr, plot_item))
+                        for j, (plot_item, snr_scaling, column) in enumerate(plot_items):
+                            ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}\n".format(j, snr,
+                                                                                               plot_item, column))
                             ppl_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) "
                                              "title 'SNR/A {1:.1f}; SNR/pixel {2:.1f}'".
                                              format(j, snr, snr / snr_scaling, k / k_max))
@@ -359,6 +380,63 @@ class PlotLabelPrecision:
                     """.format(", ".join(ppl_items), stem))
                 os.system("timeout 10s pyxplot {0}.ppl".format(stem))
                 eps_files["histograms"].append("{0}.eps".format(stem))
+
+        # Create a new pyxplot script for correlation plots
+        for data_set_counter, data_set_items in enumerate(self.plot_cross_correlations):
+            for k, (snr, plot_item) in enumerate(sorted(data_set_items.iteritems())):
+                (data_filename, snr_scaling) = plot_item
+                stem = "{}correlation_{:d}_{:d}".format(self.output_figure_stem, k, data_set_counter)
+                with open("{}.ppl".format(stem), "w") as ppl:
+                    item_width = 4
+                    ppl.write("""
+                
+                    set width {0}
+                    set size ratio {1}
+                    set term dpi 100
+                    set nokey
+                    set nodisplay
+                    set multiplot
+                    text "{2}" at {3}, {3}-1 val center hal right
+                    text "SNR/A {4:.1f}; SNR/pixel {5:.1f}" at {3}, {3}-2 val center hal right
+                    
+                    """.format(item_width, 1,
+                               self.datasets[data_set_counter],
+                               item_width * len(self.label_names),
+                               snr, snr / snr_scaling
+                               ))
+
+                    for i in range(len(self.label_names) - 1):
+                        for j in range(i + 1, len(self.label_names)):
+                            latex_label = self.latex_labels[self.label_names[j]]
+                            if i == 0:
+                                ppl.write("unset yformat\n")
+                                ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                            else:
+                                ppl.write("set yformat '' ; set ylabel ''\n")
+                            ppl.write("set yrange [{}:{}]\n".format(-latex_label[2] * 1.2, latex_label[2] * 1.2))
+
+                            latex_label = self.latex_labels[self.label_names[i]]
+                            if j == len(self.label_names) - 1:
+                                ppl.write("unset xformat\n")
+                                ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                            else:
+                                ppl.write("set xformat '' ; set xlabel ''\n")
+                            ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 1.2, latex_label[2] * 1.2))
+
+                            ppl.write("set origin {},{}\n".format(i * item_width,
+                                                                  (len(self.label_names) - 1 - j) * item_width))
+
+                            ppl.write("plot  \"{}\" using {}:{} w p\n".
+                                      format(data_filename, i, j))
+
+                    ppl.write("""
+                    
+                    set term eps ; set output '{0}.eps' ; set display ; refresh
+                    set term png ; set output '{0}.png' ; set display ; refresh
+                    set term pdf ; set output '{0}.pdf' ; set display ; refresh
+                    
+                    """.format(stem))
+                os.system("timeout 10s pyxplot {0}.ppl".format(stem))
 
         for name, items in eps_files.iteritems():
             make_multiplot(eps_files=items,
