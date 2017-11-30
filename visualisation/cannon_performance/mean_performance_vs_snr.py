@@ -396,8 +396,8 @@ class PlotLabelPrecision:
                     set nokey
                     set nodisplay
                     set multiplot
-                    text "{2}" at {3}, {3}-1 val center hal right
-                    text "SNR/A {4:.1f}; SNR/pixel {5:.1f}" at {3}, {3}-2 val center hal right
+                    text "{2}" at {3}-2, {3}-6 val center hal right
+                    text "SNR/A {4:.1f}; SNR/pixel {5:.1f}" at {3}-2, {3}-7 val center hal right
                     
                     """.format(item_width, 1,
                                self.datasets[data_set_counter],
@@ -426,8 +426,8 @@ class PlotLabelPrecision:
                             ppl.write("set origin {},{}\n".format(i * item_width,
                                                                   (len(self.label_names) - 1 - j) * item_width))
 
-                            ppl.write("plot  \"{}\" using {}:{} w p\n".
-                                      format(data_filename, i, j))
+                            ppl.write("plot  \"{}\" using {}:{} w dots ps 2\n".
+                                      format(data_filename, i+1, j+1))
 
                     ppl.write("""
                     
