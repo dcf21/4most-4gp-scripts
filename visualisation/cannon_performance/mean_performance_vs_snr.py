@@ -378,7 +378,7 @@ class PlotLabelPrecision:
                     set term pdf ; set output '{1}.pdf' ; set display ; refresh
                     
                     """.format(", ".join(ppl_items), stem))
-                os.system("timeout 10s pyxplot {0}.ppl".format(stem))
+                os.system("timeout 30s pyxplot {0}.ppl".format(stem))
                 eps_files["histograms"].append("{0}.eps".format(stem))
 
         # Create a new pyxplot script for correlation plots
@@ -436,7 +436,7 @@ class PlotLabelPrecision:
                     set term pdf ; set output '{0}.pdf' ; set display ; refresh
                     
                     """.format(stem))
-                os.system("timeout 10s pyxplot {0}.ppl".format(stem))
+                os.system("timeout 30s pyxplot {0}.ppl".format(stem))
 
         for name, items in eps_files.iteritems():
             make_multiplot(eps_files=items,
