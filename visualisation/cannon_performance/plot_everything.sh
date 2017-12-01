@@ -9,6 +9,26 @@ mkdir -p ../../output_plots/cannon_performance/required_snrA
 mkdir -p ../../output_plots/cannon_performance/required_snrB
 mkdir -p ../../output_plots/cannon_performance/label_offsets
 
+for mode in lrs hrs
+do
+
+python mean_performance_vs_snr.py \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label.json" --dataset-label "No censoring" --dataset-colour "green" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored2_${mode}_10label.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_censoring_schemes_${mode}"
+
+for run in "_LiBa" "_CO"
+do
+
+python mean_performance_vs_snr.py \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label${run}.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored2_${mode}_10label${run}.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_censoring_schemes_${mode}${run}"
+
+done
+done
+
 python scatter_plot_arrows.py --output-stub "../../output_plots/cannon_performance/arrows/apokasc_teff_logg_hrs_offset_arrows" \
                               --label "Teff{5100:4000}" --label "logg{3.8:1.2}" \
                               --label-axis-latex "Teff" --label-axis-latex "log(g)" \

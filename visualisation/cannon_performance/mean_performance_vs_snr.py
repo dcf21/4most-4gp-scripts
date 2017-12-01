@@ -175,7 +175,7 @@ class PlotLabelPrecision:
                 self.plot_histograms[i][self.data_set_counter][snr_per_a] = [
                     ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, snr_per_a),
                      scale,
-                     i+1  # Pyxplot counts columns starting from 1, not 0
+                     i + 1  # Pyxplot counts columns starting from 1, not 0
                      )
                 ]
 
@@ -269,12 +269,16 @@ class PlotLabelPrecision:
                 set width {0}
                 set size ratio {1}
                 set term dpi 200
-                set key top right
                 set nodisplay
-                set fontsize 1.8
+                set fontsize 1.7
                 set label 1 "{2}" page 1, page {3}
                 
-                """.format(width, aspect, latex_label[0], width * aspect - 0.5))
+                """.format(width, aspect, latex_label[0], width * aspect - 0.8))
+
+                if len(self.plot_precision[i]) > 1:
+                    ppl.write("set key top right\n")
+                else:
+                    ppl.write("set nokey\n")
 
                 ppl.write("set ylabel \"RMS offset in {}\"\n".format(latex_label[0]))
                 ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
@@ -427,7 +431,7 @@ class PlotLabelPrecision:
                                                                   (len(self.label_names) - 1 - j) * item_width))
 
                             ppl.write("plot  \"{}\" using {}:{} w dots ps 2\n".
-                                      format(data_filename, i+1, j+1))
+                                      format(data_filename, i + 1, j + 1))
 
                     ppl.write("""
                     
