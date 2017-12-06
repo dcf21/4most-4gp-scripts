@@ -185,8 +185,9 @@ if args.censor_line_list != "":
             wavelength = words[2]
 
             # Only select lines from elements we're trying to fit. Always use H lines.
+            censoring_scheme = 1  # Because scheme 2 is a disaster
             if element_symbol != "H":
-                if label_name in ("Teff", "logg"):
+                if (censoring_scheme == 1) or (label_name in ("Teff", "logg")):
                     if "[{}/H]".format(element_symbol) not in test_labels:
                         continue
                 else:
