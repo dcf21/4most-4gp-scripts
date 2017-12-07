@@ -82,6 +82,12 @@ parser.add_argument('--line-lists-dir',
                     default=root_path,
                     dest="lines_dir",
                     help="Specify a directory where line lists for TurboSpectrum can be found.")
+parser.add_argument('--elements',
+                    required=False,
+                    default="",
+                    dest="elements",
+                    help="Only read the abundances of a comma-separated list of elements, and use scaled-solar "
+                         "abundances for everything else.")
 parser.add_argument('--binary-path',
                     required=False,
                     default=root_path,
@@ -272,14 +278,15 @@ with open(logfile, "w") as result_log:
         free_abundances = {}
         for elements, ionisation_state in ((element_list, 1), (element_list_ionised, 2)):
             for element in elements:
-                fits_field_name = "{}{}".format(element.upper(), ionisation_state)
+                if args.elements and (element in args.elements.split(",")):
+                    fits_field_name = "{}{}".format(element.upper(), ionisation_state)
 
-                # Normalise abundance of element to solar
-                abundance = star_list[fits_field_name][star] - ges[fits_field_name][sun_id]
+                    # Normalise abundance of element to solar
+                    abundance = star_list[fits_field_name][star] - ges[fits_field_name][sun_id]
 
-                if np.isfinite(abundance):
-                    free_abundances[element] = float(abundance)
-                    metadata["[{}/H]".format(element)] = float(abundance)
+                    if np.isfinite(abundance):
+                        free_abundances[element] = float(abundance)
+                        metadata["[{}/H]".format(element)] = float(abundance)
 
         # Propagate all ionisation states into metadata
         for element in element_list:

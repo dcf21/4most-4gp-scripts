@@ -26,8 +26,9 @@ export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 # run the program
 cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/synthesize_grids
 python synthesize_ahm2017_perturbed.py --every 80 --skip ${item} --create \
-                                       --output-library turbospec_ahm2017_perturbed_${item} \
-                                       --log-dir ../output_data/logs/turbospec_ahm2017_perturbed_${item}
+                                       --output-library turbospec_ahm2017_8element_perturbed_${item} \
+                                       --elements Fe,Ca,Mg,Ti,Si,Na,Ni,Cr \
+                                       --log-dir ../output_data/logs/turbospec_ahm2017_8element_perturbed_${item}
 
 # rescue the results back to job directory
 # cp -p result.dat ${JOB_DIR}
