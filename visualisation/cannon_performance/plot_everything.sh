@@ -12,18 +12,13 @@ mkdir -p ../../output_plots/cannon_performance/label_offsets
 for mode in lrs hrs
 do
 
-python mean_performance_vs_snr.py \
-  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label.json" --dataset-label "No censoring" --dataset-colour "green" \
-  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
-  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored2_${mode}_10label.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
-  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_censoring_schemes_${mode}"
-
-for run in "_LiBa" "_CO"
+for run in "" "_LiBa" "_CO"
 do
 
 python mean_performance_vs_snr.py \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label${run}.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored2_${mode}_10label${run}.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored3_${mode}_10label${run}.json" --dataset-label "Censoring scheme 3" --dataset-colour "purple" \
   --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_censoring_schemes_${mode}${run}"
 
 done
