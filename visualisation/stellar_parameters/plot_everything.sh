@@ -36,6 +36,27 @@ python scatter_plot.py --library turbospec_apokasc_training_set --library-colour
 
 # -------------------------------------------------------------------------------------------------------------------
 
+python histogram.py --library turbospec_ahm2017_sample --library-colour red --library-title "Training set" \
+                    --library turbospec_ahm2017_perturbed  --library-colour blue --library-title "Test set" \
+                    --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{1:-3}" \
+                    --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                    --using "\$1" --using "\$2" --using "\$3" \
+                    --output ../../output_plots/stellar_parameters/histogram_ahm2017_pair
+
+python scatter_plot_coloured.py --library turbospec_ahm2017_sample --library-title "Training set" \
+                                --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
+                                --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                                --colour-range-min -0.7 --colour-range-max 0.5 \
+                                --output ../../output_plots/stellar_parameters/hr_coloured_ahm2017_pair_1
+
+python scatter_plot_coloured.py --library turbospec_ahm2017_perturbed --library-title "Test set" \
+                                --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
+                                --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                                --colour-range-min -0.7 --colour-range-max 0.5 \
+                                --output ../../output_plots/stellar_parameters/hr_coloured_ahm2017_pair_2
+
+# -------------------------------------------------------------------------------------------------------------------
+
 for library_path in ../../workspace/turbospec_*
 do
 

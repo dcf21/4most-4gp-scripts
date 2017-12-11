@@ -87,7 +87,7 @@ set key top left
 
 set xlabel "{2}"
 set xrange [{3}]
-set ylabel "Stars per unit $x$"
+set ylabel "Stars per unit {2}"
 
 set binwidth {4}
     

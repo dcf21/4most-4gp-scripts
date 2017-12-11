@@ -16,6 +16,7 @@ for run in "" "_LiBa" "_CO"
 do
 
 python mean_performance_vs_snr.py \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label${run}.json" --dataset-label "No censoring" --dataset-colour "green" \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label${run}.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored2_${mode}_10label${run}.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored3_${mode}_10label${run}.json" --dataset-label "Censoring scheme 3" --dataset-colour "purple" \
@@ -61,9 +62,16 @@ do
 python mean_performance_vs_snr.py \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>-1" --dataset-label "Giants; [Fe/H]$>-1$" --dataset-colour "blue" --dataset-linetype 1 \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>-1" --dataset-label "Dwarfs; [Fe/H]$>-1$" --dataset-colour "red" --dataset-linetype 1 \
-  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "blue" --dataset-linetype 2 \
-  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "red" --dataset-linetype 2 \
-  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_ahm2017_${mode}"
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "green" --dataset-linetype 1 \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "orange" --dataset-linetype 1 \
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparisonA_ahm2017_${mode}"
+
+python mean_performance_vs_snr.py \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_3label.json" --dataset-label "3 parameter; censored" --dataset-colour "blue" --dataset-linetype 1 \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparisonB_ahm2017_${mode}"
 
 done
 
