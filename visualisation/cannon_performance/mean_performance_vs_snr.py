@@ -276,7 +276,7 @@ class PlotLabelPrecision:
                 ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
 
                 # Set axis limits
-                ppl.write("set yrange [{}:{}]\n".format(latex_labels[2][1], latex_labels[2][2]))
+                ppl.write("set yrange [0:0.5]")
 
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
@@ -285,7 +285,8 @@ class PlotLabelPrecision:
                 for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
                     if label_name.startswith("["):
                         item = self.plot_precision[i][j]
-                        plot_items.append("{} title \"{}\" w lp pt 17".format(item[0], latex_label[0]))
+                        # Remove string "[dex]" from end of legend label
+                        plot_items.append("{} title \"{}\" w lp pt {}".format(item[0], latex_label[0][:-5], 16+(i-2)))
 
                 # Add lines for target accuracy in this label
                 for target_value in (0.1, 0.2):
