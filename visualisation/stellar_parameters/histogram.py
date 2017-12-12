@@ -73,7 +73,7 @@ for index, library in enumerate(args.libraries):
 eps_list = []
 pyxplot_input = ""
 for counter, using_expression in enumerate(args.using):
-    width = 20
+    width = 16
     aspect = 1 / 1.618034  # Golden ratio
 
     stub = "{0}_{1}".format(args.output, counter)
@@ -83,7 +83,7 @@ for counter, using_expression in enumerate(args.using):
 set nodisplay
 set width {0}
 set size ratio {1}
-set key top left
+set key top right
 
 set xlabel "{2}"
 set xrange [{3}]

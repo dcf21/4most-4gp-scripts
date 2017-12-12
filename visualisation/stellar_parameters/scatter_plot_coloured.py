@@ -62,7 +62,7 @@ for index, library in enumerate(args.libraries):
 #
 
 # Create pyxplot script to produce this plot
-width = 20
+width = 16
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
@@ -79,7 +79,7 @@ set ylabel "{4}"
 set yrange [{5}]
 
 set textvalign top
-set label 1 "\\parbox{{{0}cm}}{{ {6} }}" at page 0.5, page {7}
+set label 1 "\\parbox{{{0}cm}}{{\\bf {6} }}" at page 0.5, page {7}
 
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
@@ -97,7 +97,7 @@ col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
 
 plot_items = []
 for index in range(len(args.libraries)):
-    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour col_scale({}) ps 5 """.
+    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour col_scale({}) ps 4 """.
                       format(index, args.library_titles[index], args.using, args.colour_expression))
 pyxplot_input += "plot " + ", ".join(plot_items)
 
@@ -135,6 +135,9 @@ pyxplot_input += """
 
 set nodisplay
 clear
+unset axis x y
+unset xtics
+unset mxtics
 set width {0}
 set size ratio {1}
 set nokey
@@ -146,7 +149,7 @@ set ylabel "{4}"
 set yrange [{5}]
 
 set textvalign top
-set label 1 "\\parbox{{{0}cm}}{{ {6} }}" at page 0.5, page {7}
+set label 1 "\\parbox{{{0}cm}}{{\\bf {6} }}" at page 0.5, page {7}
 
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
@@ -156,7 +159,7 @@ set label 1 "\\parbox{{{0}cm}}{{ {6} }}" at page 0.5, page {7}
 
 plot_items = []
 for index in range(len(args.libraries)):
-    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour black ps 5 """.
+    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour black ps 4 """.
                       format(index, args.library_titles[index], args.using, args.colour_expression))
 pyxplot_input += "plot " + ", ".join(plot_items)
 

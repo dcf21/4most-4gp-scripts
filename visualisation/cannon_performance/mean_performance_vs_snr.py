@@ -214,20 +214,16 @@ class PlotLabelPrecision:
             # Output table of statistical measures of label-mismatch-distribution as a function of SNR (first column)
             np.savetxt("{}{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter), y)
 
-            self.plot_precision[i].append("\"{}{:d}_{:d}.dat\" using 1:2 title \"{}\" "
-                                          "with lp pt 17 col {} lt {:d}".
-                                          format(self.output_figure_stem,
-                                                 i, self.data_set_counter,
-                                                 legend_label,
-                                                 colour, int(line_type)))
+            self.plot_precision[i].append([
+                "\"{}{:d}_{:d}.dat\" using 1:2".format(self.output_figure_stem, i, self.data_set_counter),
+                legend_label,
+                "with lp pt 17 col {} lt {:d}".format(colour, int(line_type)),
+            ])
 
             self.plot_box_whiskers[i][self.data_set_counter] = [
                 "\"{0}{1:d}_{2:d}.dat\" using 1:5:3:7 with yerrorrange col black".format(
                     self.output_figure_stem, i, self.data_set_counter)
             ]
-
-            for target_value in latex_label[3]:
-                self.plot_precision[i].append("{} with lines col grey(0.75) notitle".format(target_value))
 
             with open("{}{:d}_{:d}_cracktastic.dat".format(self.output_figure_stem, i, self.data_set_counter),
                       "w") as f:
@@ -247,7 +243,7 @@ class PlotLabelPrecision:
 
     def make_plots(self):
 
-        width = 22
+        width = 18
         aspect = 1 / 1.618034  # Golden ratio
 
         # LaTeX strings to use to label each stellar label on graph axes
@@ -260,6 +256,52 @@ class PlotLabelPrecision:
             "histograms": []
         }
 
+        # Create a new pyxplot script for precision in all elements in one plot
+        for j in range(len(self.plot_precision[0])):
+            stem = "{}precisionall_{:d}".format(self.output_figure_stem, j)
+            with open("{}.ppl".format(stem), "w") as ppl:
+                ppl.write("""
+                
+                set width {0}
+                set size ratio {1}
+                set term dpi 200
+                set nodisplay
+                set fontsize 1.6
+                set label 1 "{2}" page 1, page {3}
+                
+                """.format(width, aspect, self.plot_precision[2][j][1], width * aspect - 0.8))
+
+                ppl.write("set key top right ; set keycols 2\n")
+                ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
+                ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
+
+                # Set axis limits
+                ppl.write("set yrange [{}:{}]\n".format(latex_labels[2][1], latex_labels[2][2]))
+
+                if self.common_x_limits is not None:
+                    ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
+
+                plot_items = []
+                for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
+                    if label_name.startswith("["):
+                        item = self.plot_precision[i][j]
+                        plot_items.append("{} title \"{}\" w lp pt 17".format(item[0], latex_label[0]))
+
+                # Add lines for target accuracy in this label
+                for target_value in (0.1, 0.2):
+                    plot_items.append("{} with lines col grey(0.75) notitle".format(target_value))
+
+                ppl.write("plot {}\n".format(",".join(plot_items)))
+
+                ppl.write("""
+                
+                set term eps ; set output '{0}.eps' ; set display ; refresh
+                set term png ; set output '{0}.png' ; set display ; refresh
+                set term pdf ; set output '{0}.pdf' ; set display ; refresh
+
+                """.format(stem))
+            os.system("pyxplot {}.ppl".format(stem))
+
         # Create a new pyxplot script for precision plots
         for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
             stem = "{}precision_{:d}".format(self.output_figure_stem, i)
@@ -270,7 +312,7 @@ class PlotLabelPrecision:
                 set size ratio {1}
                 set term dpi 200
                 set nodisplay
-                set fontsize 1.7
+                set fontsize 1.6
                 set label 1 "{2}" page 1, page {3}
                 
                 """.format(width, aspect, latex_label[0], width * aspect - 0.8))
@@ -289,7 +331,13 @@ class PlotLabelPrecision:
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
 
-                ppl.write("plot {}\n".format(",".join(self.plot_precision[i])))
+                plot_items = ["{} title \"{}\" {}".format(item[0], item[1], item[2]) for item in self.plot_precision[i]]
+
+                # Add lines for target accuracy in this label
+                for target_value in latex_label[3]:
+                    plot_items.append("{} with lines col grey(0.75) notitle".format(target_value))
+
+                ppl.write("plot {}\n".format(",".join(plot_items)))
 
                 ppl.write("""
                 
@@ -312,6 +360,7 @@ class PlotLabelPrecision:
                     set term dpi 200
                     set nokey
                     set nodisplay
+                    set fontsize 1.6
                     set label 1 "{2}; {3}" page 1, page {4}
                     
                     """.format(width, aspect, latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
@@ -348,14 +397,15 @@ class PlotLabelPrecision:
                     set term dpi 200
                     set key ycentre right
                     set nodisplay
+                    set fontsize 1.6
                     set binwidth {2}
                     set label 1 "{3}; {4}" page 1, page {5}
                     
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
-                    """.format(width, aspect,
+                    """.format(width * 1.15, aspect,
                                latex_label[2] / 60.,
-                               latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
+                               latex_label[0], self.datasets[data_set_counter], width * 1.15 * aspect - 0.8))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(latex_label[0]))
@@ -398,6 +448,7 @@ class PlotLabelPrecision:
                     set size ratio {1}
                     set term dpi 100
                     set nokey
+                    set fontsize 1.6
                     set nodisplay
                     set multiplot
                     text "{2}" at {3}-2, {3}-6 val center hal right
@@ -537,11 +588,15 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
         pixels_per_angstrom = 1.0 / raster_diff[0]
 
         # Add data set to plot
+        legend_label = data_set['title']
+        if run_title:
+            legend_label += " ({})".format(run_title)
+
         plotter.add_data_set(cannon_output=stars_output,
                              label_reference_values=data_set['reference_values'],
                              colour=data_set['colour'],
                              line_type=data_set['line_type'],
-                             legend_label="{} ({})".format(data_set['title'], run_title),
+                             legend_label=legend_label,
                              pixels_per_angstrom=pixels_per_angstrom
                              )
 
@@ -629,5 +684,5 @@ if __name__ == "__main__":
     generate_set_of_plots(data_sets=cannon_outputs,
                           compare_against_reference_labels=args.use_reference_labels,
                           output_figure_stem=args.output_file,
-                          run_title="External" if args.use_reference_labels else "Internal"
+                          run_title=""  # ""External" if args.use_reference_labels else "Internal"
                           )
