@@ -276,7 +276,7 @@ class PlotLabelPrecision:
                 ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
 
                 # Set axis limits
-                ppl.write("set yrange [0:0.5]")
+                ppl.write("set yrange [0:0.5]\n")
 
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
@@ -398,15 +398,15 @@ class PlotLabelPrecision:
                     set term dpi 200
                     set key ycentre right
                     set nodisplay
-                    set fontsize 1.6
+                    set fontsize 1.25
                     set binwidth {2}
                     set label 1 "{3}; {4}" page 1, page {5}
                     
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
-                    """.format(width * 1.15, aspect,
+                    """.format(width * 1.25, aspect,
                                latex_label[2] / 60.,
-                               latex_label[0], self.datasets[data_set_counter], width * 1.15 * aspect - 0.8))
+                               latex_label[0], self.datasets[data_set_counter], width * 1.25 * aspect - 0.8))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(latex_label[0]))
