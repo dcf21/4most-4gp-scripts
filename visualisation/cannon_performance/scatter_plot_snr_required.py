@@ -78,27 +78,31 @@ for star in cannon_output['stars']:
     object_name = star['Starname']
     if object_name not in offsets:
         offsets[object_name] = {}
-    offsets[object_name][star['SNR']] = abs(star[args.colour_label] - star["target_{}".format(args.colour_label)])
-    label_values[object_name] = [star["target_{}".format(item)] for item in label_names]
+    try:
+        offsets[object_name][star['SNR']] = abs(star[args.colour_label] - star["target_{}".format(args.colour_label)])
+        label_values[object_name] = [star["target_{}".format(item)] for item in label_names]
+    except KeyError:
+        del offsets[object_name]
 
 # Loop over stars, calculating the SNR needed for each one
 output = []
 for star_name in star_names:
-    snr_required_per_a = 1e6
-    previous_offset = 1e6
-    previous_snr = 0
-    for snr in snr_values:
-        new_offset = offsets[star_name][snr]
-        if new_offset > args.target_accuracy:
-            previous_offset = new_offset
-            previous_snr = snr
-            continue
-        weight_a = abs(new_offset - args.target_accuracy)
-        weight_b = abs(previous_offset - args.target_accuracy)
-        snr_required_per_pixel = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
-        snr_required_per_a = snr_required_per_pixel * sqrt(pixels_per_angstrom)
-        break
-    output.append(label_values[star_name] + [snr_required_per_a])
+    if star_name in offsets:
+        snr_required_per_a = 1e6
+        previous_offset = 1e6
+        previous_snr = 0
+        for snr in snr_values:
+            new_offset = offsets[star_name][snr]
+            if new_offset > args.target_accuracy:
+                previous_offset = new_offset
+                previous_snr = snr
+                continue
+            weight_a = abs(new_offset - args.target_accuracy)
+            weight_b = abs(previous_offset - args.target_accuracy)
+            snr_required_per_pixel = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
+            snr_required_per_a = snr_required_per_pixel * sqrt(pixels_per_angstrom)
+            break
+        output.append(label_values[star_name] + [snr_required_per_a])
 
 # Write values to data files
 filename = "{}.dat".format(args.output_stub)
@@ -123,6 +127,7 @@ set nodisplay
 set origin 0,0
 set width {}
 set size ratio {}
+set fontsize 1.1
 set nokey
 
 set multiplot
@@ -132,7 +137,7 @@ set xrange [{}]
 set ylabel "Input {}"
 set yrange [{}]
 
-set label 1 "{}" at page 0.5, page {}
+# set label 1 "{}" at page 0.5, page {}
 
 """.format(width, aspect,
            args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],

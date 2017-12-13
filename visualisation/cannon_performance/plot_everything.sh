@@ -86,7 +86,7 @@ python mean_performance_vs_snr.py --cannon-output "${cannon_output}" \
 python scatter_plot_cannon_uncertainty.py --cannon-output "${cannon_output}" \
                                           --output-stub "../../output_plots/cannon_performance/uncertainties/${cannon_run}"
 
-for colour_label in "Teff" "logg" "[Fe/H]"
+for colour_label in "Teff" "logg" "[Fe/H]" "[Ca/H]" "[Mg/H]" "[Ti/H]" "[Si/H]" "[Na/H]" "[Ni/H]" "[Cr/H]"
 do
 
 target_accuracy="0.1"
