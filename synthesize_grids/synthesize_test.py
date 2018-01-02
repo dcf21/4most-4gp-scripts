@@ -121,16 +121,18 @@ logfile = os.path.join(args.log_to, "synthesis.log")
 
 # Iterate over the spectra we're supposed to be synthesizing
 with open(logfile, "w") as result_log:
-    for (name, t_eff, log_g, metallicity) in (
-            ("Sun", 5771.8, 4.44, 0),
-            ("test_3500", 3500, 2, 0),
-            ("test_4000", 4000, 2, 0),
-            ("test_4500", 4500, 2, 0),
-            ("test_5000", 5000, 2, 0),
-            ("test_5500", 5500, 2, 0),
-            ("test_6000", 6000, 2, 0),
-            ("test_6500", 6500, 2, 0),
-            ("test_7000", 7000, 2, 0),
+    for (name, t_eff, log_g, metallicity, set_id) in (
+            ("Sun", 5771.8, 4.44, 0, 1),
+            ("Red_clump", 5000, 3, 0, 1),
+            ("Dwarf", 6000, 4, -0.8, 1),
+            ("test_3500", 3500, 2, 0, 0),
+            ("test_4000", 4000, 2, 0, 0),
+            ("test_4500", 4500, 2, 0, 0),
+            ("test_5000", 5000, 2, 0, 0),
+            ("test_5500", 5500, 2, 0, 0),
+            ("test_6000", 6000, 2, 0, 0),
+            ("test_6500", 6500, 2, 0, 0),
+            ("test_7000", 7000, 2, 0, 0),
     ):
         # User can specify that we should only do every nth spectrum, if we're running in parallel
         counter_output += 1
@@ -169,7 +171,7 @@ with open(logfile, "w") as result_log:
         filepath = os_path.join(turbospectrum_out["output_file"])
 
         # Insert spectrum into SpectrumLibrary
-        metadata = {'Starname': name, 'Teff': t_eff, '[Fe/H]': metallicity, 'log_g': log_g}
+        metadata = {'Starname': name, 'Teff': t_eff, '[Fe/H]': metallicity, 'log_g': log_g, "set_id": set_id}
         try:
             filename = "spectrum_{:08d}".format(counter_output)
 
