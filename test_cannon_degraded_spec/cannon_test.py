@@ -14,7 +14,7 @@ import json
 import time
 import numpy as np
 
-from fourgp_speclib import SpectrumLibrarySqlite
+from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
 from fourgp_cannon import CannonInstance
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
@@ -27,6 +27,8 @@ parser.add_argument('--test', required=True, dest='test_library',
                     help="Library of spectra to test the trained Cannon on.")
 parser.add_argument('--train', required=True, dest='train_library',
                     help="Library of labelled spectra to train the Cannon on.")
+parser.add_argument('--reload-cannon', required=False, dest='reload_cannon', default=None,
+                    help="Skip training step, and reload a Cannon that we've previously trained.")
 parser.add_argument('--description', dest='description',
                     help="A description of this fitting run.")
 parser.add_argument('--labels', dest='labels',
@@ -112,7 +114,6 @@ def open_input_libraries(library_spec):
                 constraints[constraint_name] = (constraint_value_a, constraint_value_b)
             else:
                 assert False, "Could not parse constraint <{}>".format(constraint)
-    constraints["continuum_normalised"] = 1  # All input spectra must be continuum normalised
     library_path = os_path.join(workspace, library_name)
     input_library = SpectrumLibrarySqlite(path=library_path, create=False)
     library_items = input_library.search(**constraints)
@@ -185,7 +186,7 @@ if args.censor_line_list != "":
             wavelength = words[2]
 
             # Only select lines from elements we're trying to fit. Always use H lines.
-            censoring_scheme = 3  # Because scheme 2 is a disaster
+            censoring_scheme = 1  # Because schemes 2 and 3 are a disaster
             if element_symbol != "H":
                 if censoring_scheme == 1:  # All elements can see all lines
                     if "[{}/H]".format(element_symbol) not in test_labels:
@@ -222,12 +223,21 @@ if args.censor_line_list != "":
 
 # Construct and train a model
 time_training_start = time.time()
-model = CannonInstance(training_set=training_spectra,
-                       label_names=test_labels,
-                       tolerance=args.tolerance,
-                       censors=censoring_masks,
-                       threads=None if args.multithread else 1
-                       )
+if not args.reload_cannon:
+    model = CannonInstance(training_set=training_spectra,
+                           label_names=test_labels,
+                           tolerance=args.tolerance,
+                           censors=censoring_masks,
+                           threads=None if args.multithread else 1
+                           )
+else:
+    model = CannonInstance(training_set=training_spectra,
+                           load_from_file=args.reload_cannon,
+                           label_names=test_labels,
+                           tolerance=args.tolerance,
+                           censors=censoring_masks,
+                           threads=None if args.multithread else 1
+                           )
 time_training_end = time.time()
 
 # Save the model
@@ -257,7 +267,24 @@ for index in range(N):
         spectrum = spectrum_new
 
     # Pass spectrum to the Cannon
-    labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
+    if spectrum.metadata["continuum_normalised"]:
+        # Spectrum is already continuum-normalised
+        labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
+    else:
+        # We need to manually continuum normalise spectrum
+        break_points = []
+        raster_diffs = np.diff(spectrum.wavelengths)
+        diff = raster_diffs[0]
+        for i in range(len(raster_diffs) - 2):
+            second_diff = raster_diffs[i] / diff
+            if (second_diff < 0.99) or (second_diff > 1.01):
+                break_points.append((raster[i] + raster[i + 1]) / 2)
+                diff = raster_diffs[i + 1]
+        labels, cov, meta, model, continuum_mask = model.fit_spectrum_with_continuum(
+            spectrum=spectrum,
+            wavelength_arms=break_points,
+            continuum_model_family=SpectrumPolynomial
+        )
 
     # Measure the time taken
     time_end = time.time()
