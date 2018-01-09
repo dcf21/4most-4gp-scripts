@@ -272,19 +272,29 @@ for index in range(N):
         labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
     else:
         # We need to manually continuum normalise spectrum
+
+        # First identify break-points in the wavelength raster, and fit the continuum separately to each arm
         break_points = []
         raster_diffs = np.diff(spectrum.wavelengths)
         diff = raster_diffs[0]
         for i in range(len(raster_diffs) - 2):
             second_diff = raster_diffs[i] / diff
+            diff = raster_diffs[i]
             if (second_diff < 0.99) or (second_diff > 1.01):
                 break_points.append((raster[i] + raster[i + 1]) / 2)
                 diff = raster_diffs[i + 1]
-        labels, cov, meta, model, continuum_mask = model.fit_spectrum_with_continuum(
+
+        # Use Cannon to do iterative fitting
+        labels, cov, meta, cannon_model, continuum_mask, continuum_spectrum = model.fit_spectrum_with_continuum(
             spectrum=spectrum,
             wavelength_arms=break_points,
-            continuum_model_family=SpectrumPolynomial
+            continuum_model_family=SpectrumPolynomial,
+            debugging=True
         )
+
+    # Check whether Cannon failed
+    if labels is None:
+        continue
 
     # Measure the time taken
     time_end = time.time()

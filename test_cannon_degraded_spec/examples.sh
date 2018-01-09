@@ -5,20 +5,20 @@ source ../../virtualenv/bin/activate
 
 mkdir -p ../output_data/cannon
 
-python cannon_test.py --train "4fs_demo_stars_lrs[SNR=250,continuum_normalised=1]" \
+python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250,continuum_normalised=1]" \
                       --test "4fs_demo_stars_lrs[continuum_normalised=1]" \
                       --description "4MOST LRS - 3 labels - Quick APOKASC test." \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_demo_3label"
 
-python cannon_test.py --train "4fs_demo_stars_lrs[SNR=250,continuum_normalised=1]" \
+python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250,continuum_normalised=1]" \
                       --test "4fs_demo_stars_lrs[continuum_normalised=1]" \
                       --reload-cannon "../output_data/cannon/cannon_demo_3label.cannon" \
                       --description "4MOST LRS - 3 labels - Quick APOKASC test." \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../output_data/cannon/cannon_demo_cp_3label"
 
-python cannon_test.py --train "4fs_demo_stars_lrs[SNR=250,continuum_normalised=1]" \
+python cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250,continuum_normalised=1]" \
                       --test "4fs_demo_stars_lrs[continuum_normalised=0]" \
                       --reload-cannon "../output_data/cannon/cannon_demo_3label.cannon" \
                       --description "4MOST LRS - 3 labels - Quick APOKASC test." \
