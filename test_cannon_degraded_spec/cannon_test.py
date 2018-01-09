@@ -4,6 +4,13 @@
 """
 Take a training set and a test set, and see how well the Cannon can reproduce the stellar labels on the test
 set of stars.
+
+In theory, this code can be used on either continuum-normalised spectra, or non-continuum-normalised spectra. It uses
+the metadata field "continuum_normalised" as a flag to determine which kind of spectrum has been supplied.
+
+Note, however, that the continuum normalisation code is currently very dodgy, so in practice you should always
+pass this code continuum normalised spectra if you want scientifically meaningful results.
+
 """
 
 import argparse
