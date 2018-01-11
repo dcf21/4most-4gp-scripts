@@ -9,20 +9,20 @@ export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 cd /home/dominic/iwg7_pipeline
 
 cd AnniesLasso
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 
 cd ../4most-4gp/src/pythonModules/fourgp_speclib/
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 cd ../fourgp_cannon
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 cd ../fourgp_degrade
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 cd ../fourgp_rv
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 cd ../fourgp_specsynth
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 cd ../fourgp_telescope_data
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 cd ../fourgp_fourfs
-python setup.py install --prefix=$HOME/local
+python2.7 setup.py install --prefix=$HOME/local
 

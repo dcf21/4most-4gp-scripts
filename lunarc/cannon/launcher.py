@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
 """
@@ -80,7 +80,7 @@ for job in args.jobs:
         line_buffer = ""
 
         # Ignore shell commands which don't run Cannon tests
-        if not line.startswith("python cannon_test.py"):
+        if not line.startswith("python2.7 cannon_test.py"):
             continue
 
         # If file product already exists, don't need to recreate it
