@@ -8,6 +8,7 @@ Take stellar parameters of GES dwarf stars and synthesize spectra using TurboSpe
 import os
 import re
 import time
+import hashlib
 import argparse
 import numpy as np
 from os import path as os_path
@@ -239,9 +240,11 @@ logfile = os.path.join(args.log_to, "synthesis.log")
 with open(logfile, "w") as result_log:
     for star in range(len(star_list)):
         star_name = star_list.CNAME[star]
+        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
 
         metadata = {
             "Starname": str(star_name),
+            "uid": str(unique_id),
             "Teff": float(star_list.TEFF[star]),
             "[Fe/H]": float(star_list.FEH[star]),
             "logg": float(star_list.LOGG[star]),

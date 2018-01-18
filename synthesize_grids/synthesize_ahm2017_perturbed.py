@@ -9,6 +9,7 @@ TurboSpectrum.
 import os
 import re
 import time
+import hashlib
 import argparse
 import numpy as np
 from os import path as os_path
@@ -236,9 +237,11 @@ logfile = os.path.join(args.log_to, "synthesis.log")
 with open(logfile, "w") as result_log:
     for star in test_stars:
         star_name = "ahm2017_perturbed_{:08d}".format(counter_output)
+        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
 
         metadata = {
             "Starname": str(star_name),
+            "uid": str(unique_id),
             "Teff": float(star["teff"]),
             "[Fe/H]": float(star["feh"]),
             "logg": float(star["logg"])

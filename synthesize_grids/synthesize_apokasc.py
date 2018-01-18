@@ -8,6 +8,7 @@ Take stellar parameters of the APOKASC training set and test sets, and synthesiz
 import os
 import re
 import time
+import hashlib
 import argparse
 import numpy as np
 from os import path as os_path
@@ -144,6 +145,8 @@ with open(logfile, "w") as result_log:
         # Look up stellar parameters of the star we're about to synthesize
         metadata = astropy_row_to_dict(star)
         star_name = metadata["Starname"]
+        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+        metadata['uid'] = str(unique_id)
         stellar_mass = 1  # If mass of star is not specified, default to 1 solar mass
         if 'Mass' in metadata:
             stellar_mass = metadata['Mass']

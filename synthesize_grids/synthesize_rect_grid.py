@@ -9,6 +9,7 @@ point in parameter space. Assume solar abundance ratios for all other elements.
 import os
 import re
 import time
+import hashlib
 import argparse
 from os import path as os_path
 import logging
@@ -144,6 +145,9 @@ with open(logfile, "w") as result_log:
             star_name += "_{:.1f}".format(x)
 
         metadata["Starname"] = str(star_name)
+
+        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+        metadata["uid"] = str(unique_id)
 
         # Configure Turbospectrum with the stellar parameters of the next star
         synthesizer.configure(lambda_min=lambda_min,

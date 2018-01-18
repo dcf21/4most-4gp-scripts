@@ -9,6 +9,7 @@ TurboSpectrum.
 import os
 import re
 import time
+import hashlib
 import argparse
 import numpy as np
 from os import path as os_path
@@ -169,9 +170,11 @@ if args.sqlite_out:
 star_list = []
 for star in range(len(galah_stars)):
     star_name = "star_{:08d}".format(star)
+    unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
 
     metadata = {
         "Starname": str(star_name),
+        "uid": str(unique_id),
         "Teff": float(galah_stars.Teff_sme[star]),
         "[Fe/H]": float(galah_stars.Feh_sme[star]),
         "logg": float(galah_stars.Logg_sme[star])

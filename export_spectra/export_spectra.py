@@ -9,13 +9,9 @@ import os
 from os import path as os_path
 import argparse
 import re
-import json
 import numpy as np
 
-from operator import itemgetter
-
 from fourgp_speclib import SpectrumLibrarySqlite
-from fourgp_cannon import CannonInstance
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -82,9 +78,18 @@ os.system("mkdir -p {}".format(args.output_stub))
 # Write out spectra one by one
 for i in range(len(library_spectra)):
     metadata = library_spectra.get_metadata(i)
+
+    if "Starname" not in metadata:
+        metadata["Starname"] = "untitled"
+    if "SNR" not in metadata:
+        metadata["SNR"] = 0
+    if "e_bv" not in metadata:
+        metadata["e_bv"] = 0
+
     spectrum = library_spectra.extract_item(i)
-    filename_stub = os_path.join(args.output_stub,
-                                 "{0}_{1:06.1f}".format(metadata["Starname"], metadata["SNR"]))
+    filename_stub = os_path.join(args.output_stub, "{0}_{1:06.4f}_{2:06.1f}".format(metadata["Starname"],
+                                                                                    metadata["e_bv"],
+                                                                                    metadata["SNR"]))
 
     # Write metadata
     with open("{}.txt".format(filename_stub), "w") as f:

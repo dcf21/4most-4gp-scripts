@@ -8,6 +8,7 @@ Synthesize a handful of test stars using TurboSpectrum.
 import os
 import re
 import time
+import hashlib
 import argparse
 from os import path as os_path
 import logging
@@ -142,6 +143,7 @@ with open(logfile, "w") as result_log:
             continue
 
         star_name = name
+        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
 
         # Configure Turbospectrum with the stellar parameters of the next star
         synthesizer.configure(
@@ -171,7 +173,14 @@ with open(logfile, "w") as result_log:
         filepath = os_path.join(turbospectrum_out["output_file"])
 
         # Insert spectrum into SpectrumLibrary
-        metadata = {'Starname': name, 'Teff': t_eff, '[Fe/H]': metallicity, 'logg': log_g, "set_id": set_id}
+        metadata = {'Starname': name,
+                    'uid': str(unique_id),
+                    'Teff': t_eff,
+                    '[Fe/H]': metallicity,
+                    'logg': log_g,
+                    'set_id': set_id
+                    }
+
         try:
             filename = "spectrum_{:08d}".format(counter_output)
 

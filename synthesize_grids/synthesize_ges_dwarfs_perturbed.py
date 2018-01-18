@@ -8,6 +8,7 @@ Take stellar parameters of GES dwarf stars and synthesize spectra using TurboSpe
 import os
 import re
 import time
+import hashlib
 import argparse
 import numpy as np
 from os import path as os_path
@@ -131,7 +132,7 @@ for metallicity_bin in (
         (None, -1)
 ):
     for stellar_type in [
-            {"name": "everything"}
+        {"name": "everything"}
     ]:
         bin_constraints = {}
         if metallicity_bin[0] is not None:
@@ -152,12 +153,12 @@ for star in range(len(star_list)):
     feh = star_list.FEH[star]
     for bin in bins:
         if (
-                                    ("teff_min" not in bin["constraints"] or teff >= bin["constraints"]["teff_min"]) and
-                                    ("teff_max" not in bin["constraints"] or teff < bin["constraints"]["teff_max"]) and
-                                ("logg_min" not in bin["constraints"] or logg >= bin["constraints"]["logg_min"]) and
-                            ("logg_max" not in bin["constraints"] or logg < bin["constraints"]["logg_max"]) and
-                        ("feh_min" not in bin["constraints"] or feh >= bin["constraints"]["feh_min"]) and
-                    ("feh_max" not in bin["constraints"] or feh < bin["constraints"]["feh_max"])
+                ("teff_min" not in bin["constraints"] or teff >= bin["constraints"]["teff_min"]) and
+                ("teff_max" not in bin["constraints"] or teff < bin["constraints"]["teff_max"]) and
+                ("logg_min" not in bin["constraints"] or logg >= bin["constraints"]["logg_min"]) and
+                ("logg_max" not in bin["constraints"] or logg < bin["constraints"]["logg_max"]) and
+                ("feh_min" not in bin["constraints"] or feh >= bin["constraints"]["feh_min"]) and
+                ("feh_max" not in bin["constraints"] or feh < bin["constraints"]["feh_max"])
         ):
             bin["contents"].append(star)
             break
@@ -188,11 +189,11 @@ for bin in bins:
                     if np.isfinite(abundance):
                         free_abundances[element] = float(abundance) + random.gauss(0, 0.1)
 
-import json
 # print len(test_stars)
-print json.dumps(test_stars)
-import sys
-sys.exit(0)
+# print json.dumps(test_stars)
+
+# import sys
+# sys.exit(0)
 
 # test_stars = json.loads(open("ges_dwarf_data.json").read())
 
@@ -225,9 +226,11 @@ logfile = os.path.join(args.log_to, "synthesis.log")
 with open(logfile, "w") as result_log:
     for star in test_stars:
         star_name = "ges_dwarf_perturbed_{:08d}".format(counter_output)
+        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
 
         metadata = {
             "Starname": str(star_name),
+            "uid": str(unique_id),
             "Teff": float(star["teff"]),
             "[Fe/H]": float(star["feh"]),
             "logg": float(star["logg"])
