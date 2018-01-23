@@ -57,16 +57,16 @@ python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,continuum
                          --description "4MOST LRS - 3 labels - Train on APOKASC(1). Test on APOKASC(2)." \
                          --labels "Teff,logg,[Fe/H]" \
                          --output-file "../output_data/cannon/cannon_apokasc_lrs_3label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_lrs_snrperband[continuum_normalised=1]" \
-                         --description "4MOST LRS - 3 labels - SNR per band - Train on APOKASC(1). Test on APOKASC(2)." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_3label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_lrs_snrperband_noblue[continuum_normalised=1]" \
-                         --description "4MOST LRS - 3 labels - SNR per band + no blue - Train on APOKASC(1). Test on APOKASC(2)." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_3label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_lrs_snrperband[continuum_normalised=1]" \
+#                          --description "4MOST LRS - 3 labels - SNR per band - Train on APOKASC(1). Test on APOKASC(2)." \
+#                          --labels "Teff,logg,[Fe/H]" \
+#                          --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_3label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_lrs_snrperband_noblue[continuum_normalised=1]" \
+#                          --description "4MOST LRS - 3 labels - SNR per band + no blue - Train on APOKASC(1). Test on APOKASC(2)." \
+#                          --labels "Teff,logg,[Fe/H]" \
+#                          --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_3label"
 
 python2.7 cannon_test.py --train "hawkins_apokasc_training_set_hrs[SNR=250,continuum_normalised=1]" \
                          --test "hawkins_apokasc_test_set_hrs[continuum_normalised=1]" \
@@ -79,16 +79,16 @@ python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs[SNR=250,continuum
                          --description "4MOST HRS - 3 labels - Train on APOKASC(1). Test on APOKASC(2)." \
                          --labels "Teff,logg,[Fe/H]" \
                          --output-file "../output_data/cannon/cannon_apokasc_hrs_3label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_hrs_snrperband[continuum_normalised=1]" \
-                         --description "4MOST HRS - 3 labels - SNR per band - Train on APOKASC(1). Test on APOKASC(2)." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_3label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_hrs_snrperband_noblue[continuum_normalised=1]" \
-                         --description "4MOST HRS - 3 labels - SNR per band + no blue - Train on APOKASC(1). Test on APOKASC(2)." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_3label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_hrs_snrperband[continuum_normalised=1]" \
+#                          --description "4MOST HRS - 3 labels - SNR per band - Train on APOKASC(1). Test on APOKASC(2)." \
+#                          --labels "Teff,logg,[Fe/H]" \
+#                          --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_3label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_hrs_snrperband_noblue[continuum_normalised=1]" \
+#                          --description "4MOST HRS - 3 labels - SNR per band + no blue - Train on APOKASC(1). Test on APOKASC(2)." \
+#                          --labels "Teff,logg,[Fe/H]" \
+#                          --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_3label"
 
 python2.7 cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250,continuum_normalised=1]" \
                          --test "4fs_ahm2017_perturbed_hrs[continuum_normalised=1]" \
@@ -279,18 +279,18 @@ python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,continuum
                          --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
                          --assume-scaled-solar \
                          --output-file "../output_data/cannon/cannon_apokasc_lrs_10label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_lrs_snrperband[continuum_normalised=1]" \
-                         --description "4MOST LRS - 10 labels - SNR per band - Train on APOKASC(1). Test on APOKASC(2)." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_10label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_lrs_snrperband_noblue[continuum_normalised=1]" \
-                         --description "4MOST LRS - 10 labels - SNR per band + no blue - Train on APOKASC(1). Test on APOKASC(2)." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_10label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_lrs_snrperband[continuum_normalised=1]" \
+#                          --description "4MOST LRS - 10 labels - SNR per band - Train on APOKASC(1). Test on APOKASC(2)." \
+#                          --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+#                          --assume-scaled-solar \
+#                          --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_10label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_lrs_snrperband_noblue[continuum_normalised=1]" \
+#                          --description "4MOST LRS - 10 labels - SNR per band + no blue - Train on APOKASC(1). Test on APOKASC(2)." \
+#                          --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+#                          --assume-scaled-solar \
+#                          --output-file "../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_10label"
 
 python2.7 cannon_test.py --train "hawkins_apokasc_training_set_hrs[SNR=250,continuum_normalised=1]" \
                          --test "hawkins_apokasc_test_set_hrs[continuum_normalised=1]" \
@@ -304,18 +304,18 @@ python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs[SNR=250,continuum
                          --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
                          --assume-scaled-solar \
                          --output-file "../output_data/cannon/cannon_apokasc_hrs_10label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_hrs_snrperband[continuum_normalised=1]" \
-                         --description "4MOST HRS - 10 labels - SNR per band - Train on Hawkins(1). Test on Hawkins(2)." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_10label"
-python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
-                         --test "4fs_apokasc_test_set_hrs_snrperband_noblue[continuum_normalised=1]" \
-                         --description "4MOST HRS - 10 labels - SNR per band + no blue - Train on Hawkins(1). Test on Hawkins(2)." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_10label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_hrs_snrperband[continuum_normalised=1]" \
+#                          --description "4MOST HRS - 10 labels - SNR per band - Train on Hawkins(1). Test on Hawkins(2)." \
+#                          --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+#                          --assume-scaled-solar \
+#                          --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_10label"
+# python2.7 cannon_test.py --train "4fs_apokasc_training_set_hrs_snrperband_noblue[SNR=250,continuum_normalised=1]" \
+#                          --test "4fs_apokasc_test_set_hrs_snrperband_noblue[continuum_normalised=1]" \
+#                          --description "4MOST HRS - 10 labels - SNR per band + no blue - Train on Hawkins(1). Test on Hawkins(2)." \
+#                          --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+#                          --assume-scaled-solar \
+#                          --output-file "../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_10label"
 
 python2.7 cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250,continuum_normalised=1]" \
                          --test "4fs_ahm2017_perturbed_hrs[continuum_normalised=1]" \

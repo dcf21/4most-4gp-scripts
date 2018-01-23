@@ -150,27 +150,27 @@ python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
                                    --output-library-lrs 4fs_apokasc_${mode}_lrs \
                                    --output-library-hrs 4fs_apokasc_${mode}_hrs
 
-python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
-                                   --output-library-lrs 4fs_apokasc_${mode}_lrs_snrperband \
-                                   --output-library-hrs 4fs_apokasc_${mode}_hrs_snrperband \
-                                   --snr-definition "BH,4130,4150" \
-                                   --snr-definition "GH,5435,5455" \
-                                   --snr-definition "RH,6435,6455" \
-                                   --snr-definition "BL,4503,4523" \
-                                   --snr-definition "GL,6170,6190" \
-                                   --snr-definition "RL,8255,8275" \
-                                   --snr-definitions-lrs "RL,GL,BL" \
-                                   --snr-definitions-hrs "RH,GH,BH"
+# python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
+#                                    --output-library-lrs 4fs_apokasc_${mode}_lrs_snrperband \
+#                                    --output-library-hrs 4fs_apokasc_${mode}_hrs_snrperband \
+#                                    --snr-definition "BH,4130,4150" \
+#                                    --snr-definition "GH,5435,5455" \
+#                                    --snr-definition "RH,6435,6455" \
+#                                    --snr-definition "BL,4503,4523" \
+#                                    --snr-definition "GL,6170,6190" \
+#                                    --snr-definition "RL,8255,8275" \
+#                                    --snr-definitions-lrs "RL,GL,BL" \
+#                                    --snr-definitions-hrs "RH,GH,BH"
 
-python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
-                                   --output-library-lrs 4fs_apokasc_${mode}_lrs_snrperband_noblue \
-                                   --output-library-hrs 4fs_apokasc_${mode}_hrs_snrperband_noblue \
-                                   --snr-definition "GH,5435,5455" \
-                                   --snr-definition "RH,6435,6455" \
-                                   --snr-definition "GL,6170,6190" \
-                                   --snr-definition "RL,8255,8275" \
-                                   --snr-definitions-lrs "RL,GL," \
-                                   --snr-definitions-hrs "RH,GH,"
+# python degrade_library_with_4fs.py --input-library turbospec_apokasc_${mode} \
+#                                    --output-library-lrs 4fs_apokasc_${mode}_lrs_snrperband_noblue \
+#                                    --output-library-hrs 4fs_apokasc_${mode}_hrs_snrperband_noblue \
+#                                    --snr-definition "GH,5435,5455" \
+#                                    --snr-definition "RH,6435,6455" \
+#                                    --snr-definition "GL,6170,6190" \
+#                                    --snr-definition "RL,8255,8275" \
+#                                    --snr-definitions-lrs "RL,GL," \
+#                                    --snr-definitions-hrs "RH,GH,"
 done
 
 python degrade_library_with_4fs.py --input-library turbospec_ges_dwarf_sample \
@@ -200,17 +200,12 @@ for mode in lrs hrs
 do
 for source in hawkins 4fs
 do
-for settings in '' '_snrperband' '_snrperband_noblue'
+for settings in '' # '_snrperband' '_snrperband_noblue'
 do
 
 python cannon_test.py --train "${source}_apokasc_training_set_${mode}${settings}[SNR=250]" \
                       --test "${source}_apokasc_test_set_${mode}${settings}" \
                       --output-file "../output_data/cannon_${source}_${mode}${settings}"
-
-#python cannon_test.py --train "${source}_apokasc_training_set_${mode}${settings}[SNR=250]" \
-#                      --test "${source}_apokasc_test_set_${mode}${settings}" \
-#                      --censor "../../4MOST_testspectra/ges_master_v5.fits" \
-#                      --output-file "../output_data/cannon_${source}_${mode}${settings}_censored"
 
 done
 done
