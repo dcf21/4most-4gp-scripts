@@ -308,8 +308,10 @@ for index in range(N):
     time_taken[index] = time_end - time_start
 
     # Identify which star it is and what the SNR is
-    star_name = spectrum.metadata["Starname"]
-    snr = spectrum.metadata["SNR"]
+    star_name = spectrum.metadata["Starname"] if "Starname" in spectrum.metadata else ""
+    snr = spectrum.metadata["SNR"] if "SNR" in spectrum.metadata else 0
+    ebv = spectrum.metadata["e_bv"] if "e_bv" in spectrum.metadata else 0
+    uid = spectrum.metadata["uid"] if "uid" in spectrum.metadata else ""
 
     # From the label covariance matrix extract the standard deviation in each label value
     # (diagonal terms in the matrix are variances)
@@ -327,7 +329,7 @@ for index in range(N):
             result["target_{}".format(label_name)] = spectrum.metadata[label_name]
 
     # Add the star name and the SNR ratio of the test spectrum
-    result.update({"Starname": star_name, "SNR": snr, "time": time_taken[index]})
+    result.update({"Starname": star_name, "SNR": snr, "e_bv": ebv, "uid":uid, "time": time_taken[index]})
     results.append(result)
 
 # Report time taken
