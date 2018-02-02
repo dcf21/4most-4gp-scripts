@@ -30,6 +30,7 @@ class PlotLabelPrecision:
     def __init__(self,
                  label_names,
                  number_data_sets,
+                 abscissa_label="SNR/A",
                  common_x_limits=None,
                  output_figure_stem="/tmp/cannon_performance/"):
         """
@@ -40,6 +41,9 @@ class PlotLabelPrecision:
         :param common_x_limits:
             A two-length tuple containing the lower and upper limits to set on all
             x axes.
+
+        :param abscissa_label:
+            The name of the label to be plotted along the horizontal axis of the performance plots.
 
         :param output_figure_stem:
             The file path where we are to save plots, pyxplot scripts and data files.
@@ -73,8 +77,16 @@ class PlotLabelPrecision:
             "[Eu/H]": (r"$[{\rm Eu}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.2, 0.4]),
         }
 
+        self.abscissa_labels = {
+            # label name, latex label, log axes, axis range
+            "SNR/A": ["SNR", "$S/N$ $[{\\rm \\AA}^{-1}]$", False, (0, 250)],
+            "SNR/pixel": ["SNR", "$S/N$ $[{\\rm pixel}^{-1}]$", False, (0, 250)],
+            "ebv": ["e_bv", "$E(B-V)$", True, (0.01, 0.7)]
+        }
+
         self.datasets = []
         self.label_names = label_names
+        self.abscissa_label = abscissa_label
         self.number_data_sets = number_data_sets
         self.common_x_limits = common_x_limits
         self.output_figure_stem = os_path.abspath(output_figure_stem) + "/"
@@ -112,7 +124,7 @@ class PlotLabelPrecision:
             The Pyxplot line type to use for this data set. Should be specified as an integer.
 
         :param pixels_per_angstrom:
-            The number of pixels per angstrom in the spectrum. Used to convert SNR per pixel into SNR per A.
+            The number of pixels per angstrom in the spectrum. Used to convert SNR/pixel into SNR/A.
 
         :param metric:
             The metric used to convert a list of absolute offsets into an average offset.
@@ -126,25 +138,26 @@ class PlotLabelPrecision:
         # LaTeX strings to use to label each stellar label on graph axes
         latex_labels = [self.latex_labels[ln] for ln in self.label_names]
 
-        # Create a sorted list of all the SNR values we've got
-        snr_values = [item['SNR'] for item in cannon_output]
-        snr_values = sorted(set(snr_values))
+        # Create a sorted list of all the abscissa values we've got
+        abscissa_info = self.abscissa_labels[self.abscissa_label]
+        abscissa_values = [item[abscissa_info[0]] for item in cannon_output]
+        abscissa_values = sorted(set(abscissa_values))
 
         # Create a sorted list of all the stars we've got
         star_names = [item['Starname'] for item in cannon_output]
         star_names = sorted(set(star_names))
 
         # Construct the dictionary for storing the Cannon's mismatch to each stellar label
-        # label_offset[snr][label_name][reference_value_set_counter] = offset
+        # label_offset[abscissa][label_name][reference_value_set_counter] = offset
         label_offset = {}
-        for snr in snr_values:
-            label_offset[snr] = {}
+        for abscissa in abscissa_values:
+            label_offset[abscissa] = {}
             for label_name in self.label_names:
-                label_offset[snr][label_name] = []
+                label_offset[abscissa][label_name] = []
 
         # Loop over stars in the Cannon output
         for star_name in star_names:
-            # Loop over the Cannon's various attempts to match this star (e.g. at different SNR values)
+            # Loop over the Cannon's various attempts to match this star (e.g. at different abscissa values)
             for star in cannon_output:
                 if star['Starname'] == star_name:
                     # Loop over the labels the Cannon tried to match
@@ -156,14 +169,18 @@ class PlotLabelPrecision:
                             ref = np.nan
 
                         # Calculate the offset of the Cannon's output from the reference value
-                        label_offset[star['SNR']][label_name].append(star[label_name] - ref)
+                        label_offset[star[abscissa_info[0]]][label_name].append(star[label_name] - ref)
 
         self.data_set_counter += 1
 
-        # Extract list of label offsets for each label, and for each SNR to use to make histograms
+        # Extract list of offsets for each label, and for each abscissa value, use to make histograms
         scale = np.sqrt(pixels_per_angstrom)
-        for k, xk in enumerate(snr_values):
-            snr_per_a = xk * scale
+        for k, xk in enumerate(abscissa_values):
+            snr_per_a = None
+            if self.abscissa_label.startswith("SNR"):
+                snr_per_a = xk * scale
+
+            keyword = snr_per_a if self.abscissa_label == "SNR/A" else xk
 
             y = []
             for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
@@ -171,31 +188,35 @@ class PlotLabelPrecision:
                 diffs = label_offset[xk][label_name]
                 y.append(diffs)
 
-                # Output histogram of label mismatches at this SNR
-                self.plot_histograms[i][self.data_set_counter][snr_per_a] = [
-                    ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, snr_per_a),
+                # Output histogram of label mismatches at this abscissa value
+                self.plot_histograms[i][self.data_set_counter][keyword] = [
+                    ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
                      scale,
                      i + 1  # Pyxplot counts columns starting from 1, not 0
                      )
                 ]
 
-            # Output data file of label mismatches at this SNR
-            np.savetxt("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, snr_per_a),
+            # Output data file of label mismatches at this abscissa value
+            np.savetxt("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
                        np.transpose(y))
 
-            # Output scatter plots of label cross-correlations at this SNR
-            self.plot_cross_correlations[self.data_set_counter][snr_per_a] = \
-                ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, snr_per_a),
+            # Output scatter plots of label cross-correlations at this abscissa value
+            self.plot_cross_correlations[self.data_set_counter][keyword] = \
+                ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
                  scale
                  )
 
-        # Extract list of label offsets for each label, and for each SNR to use for precision plot
+        # Extract list of label offsets for each label, and for each abscissa value to use for precision plot
         for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
             scale = np.sqrt(pixels_per_angstrom)
 
             y = []
-            for k, xk in enumerate(snr_values):
-                snr_per_a = xk * scale
+            for k, xk in enumerate(abscissa_values):
+                snr_per_a = None
+                if self.abscissa_label.startswith("SNR"):
+                    snr_per_a = xk * scale
+
+                keyword = snr_per_a if self.abscissa_label == "SNR/A" else xk
 
                 # List of offsets
                 diffs = label_offset[xk][label_name]
@@ -207,11 +228,11 @@ class PlotLabelPrecision:
                     return diffs[int(fraction / 100. * len(diffs))]
 
                 y.append([])
-                y[-1].extend([snr_per_a])
+                y[-1].extend([keyword])
                 y[-1].extend(
                     [metric(diffs), percentile(5), percentile(25), percentile(50), percentile(75), percentile(95)])
 
-            # Output table of statistical measures of label-mismatch-distribution as a function of SNR (first column)
+            # Output table of statistical measures of label-mismatch-distribution as a function of abscissa (1st col)
             np.savetxt("{}{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter), y)
 
             self.plot_precision[i].append([
@@ -249,6 +270,8 @@ class PlotLabelPrecision:
         # LaTeX strings to use to label each stellar label on graph axes
         latex_labels = [self.latex_labels[ln] for ln in self.label_names]
 
+        abscissa_info = self.abscissa_labels[self.abscissa_label]
+
         # Compile lists of plots so that we can merge them into multiplots
         eps_files = {
             "precision": [],
@@ -273,10 +296,13 @@ class PlotLabelPrecision:
 
                 ppl.write("set key top right ; set keycols 2\n")
                 ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
-                ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
+                ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
                 # Set axis limits
                 ppl.write("set yrange [0:0.5]\n")
+
+                if abscissa_info[2]:
+                    ppl.write("set log x\n")
 
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
@@ -286,7 +312,8 @@ class PlotLabelPrecision:
                     if label_name.startswith("["):
                         item = self.plot_precision[i][j]
                         # Remove string "[dex]" from end of legend label
-                        plot_items.append("{} title \"{}\" w lp pt {}".format(item[0], latex_label[0][:-13], 16+(i-2)))
+                        plot_items.append(
+                            "{} title \"{}\" w lp pt {}".format(item[0], latex_label[0][:-13], 16 + (i - 2)))
 
                 # Add lines for target accuracy in this label
                 for target_value in (0.1, 0.2):
@@ -324,10 +351,13 @@ class PlotLabelPrecision:
                     ppl.write("set nokey\n")
 
                 ppl.write("set ylabel \"RMS offset in {}\"\n".format(latex_label[0]))
-                ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
+                ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
                 # Set axis limits
                 ppl.write("set yrange [{}:{}]\n".format(latex_label[1], latex_label[2]))
+
+                if abscissa_info[2]:
+                    ppl.write("set log x\n")
 
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
@@ -367,10 +397,13 @@ class PlotLabelPrecision:
                     """.format(width, aspect, latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
 
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
-                    ppl.write("set xlabel \"$S/N$ $[{\\rm \\AA}^{-1}]$\"\n")
+                    ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
                     # Set axis limits
                     ppl.write("set yrange [{}:{}]\n".format(-2 * latex_label[2], 2 * latex_label[2]))
+
+                    if abscissa_info[2]:
+                        ppl.write("set log x\n")
 
                     if self.common_x_limits is not None:
                         ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
@@ -417,13 +450,23 @@ class PlotLabelPrecision:
                     if k_max < 1:
                         k_max = 1.
 
-                    for k, (snr, plot_items) in enumerate(sorted(data_set_items.iteritems())):
+                    for k, (abscissa_value, plot_items) in enumerate(sorted(data_set_items.iteritems())):
                         for j, (plot_item, snr_scaling, column) in enumerate(plot_items):
-                            ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}\n".format(j, snr,
-                                                                                               plot_item, column))
+                            ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}\n".
+                                      format(j, abscissa_value, plot_item, column))
+
+                            if self.abscissa_label == "SNR/A":
+                                caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                                    format(abscissa_value, abscissa_value / snr_scaling)
+                            elif self.abscissa_label == "SNR/pixel":
+                                caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                                    format(abscissa_value * snr_scaling, abscissa_value)
+                            else:
+                                caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
+
                             ppl_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) "
-                                             "title 'SNR/A {1:.1f}; SNR/pixel {2:.1f}'".
-                                             format(j, snr, snr / snr_scaling, k / k_max))
+                                             "title '{2:s}'".
+                                             format(j, abscissa_value, caption, k / k_max))
 
                     ppl.write("""
                     plot {0}
@@ -438,11 +481,21 @@ class PlotLabelPrecision:
 
         # Create a new pyxplot script for correlation plots
         for data_set_counter, data_set_items in enumerate(self.plot_cross_correlations):
-            for k, (snr, plot_item) in enumerate(sorted(data_set_items.iteritems())):
+            for k, (abscissa_value, plot_item) in enumerate(sorted(data_set_items.iteritems())):
                 (data_filename, snr_scaling) = plot_item
                 stem = "{}correlation_{:d}_{:d}".format(self.output_figure_stem, k, data_set_counter)
                 with open("{}.ppl".format(stem), "w") as ppl:
                     item_width = 4
+
+                    if self.abscissa_label == "SNR/A":
+                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                            format(abscissa_value, abscissa_value / snr_scaling)
+                    elif self.abscissa_label == "SNR/pixel":
+                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                            format(abscissa_value * snr_scaling, abscissa_value)
+                    else:
+                        caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
+
                     ppl.write("""
                 
                     set width {0}
@@ -453,12 +506,12 @@ class PlotLabelPrecision:
                     set nodisplay
                     set multiplot
                     text "{2}" at {3}-2, {3}-6 val center hal right
-                    text "SNR/A {4:.1f}; SNR/pixel {5:.1f}" at {3}-2, {3}-7 val center hal right
+                    text "{4:s}" at {3}-2, {3}-7 val center hal right
                     
                     """.format(item_width, 1,
                                self.datasets[data_set_counter],
                                item_width * len(self.label_names),
-                               snr, snr / snr_scaling
+                               caption
                                ))
 
                     for i in range(len(self.label_names) - 1):
@@ -501,15 +554,18 @@ class PlotLabelPrecision:
                            )
 
 
-def generate_set_of_plots(data_sets, compare_against_reference_labels, output_figure_stem, run_title):
+def generate_set_of_plots(data_sets, abscissa_label, compare_against_reference_labels, output_figure_stem, run_title):
     # Work out list of labels to plot, based on first data set we're provided with
     label_names = data_sets[0]['cannon_output']['labels']
 
     # Instantiate plotter
     plotter = PlotLabelPrecision(label_names=label_names,
-                                 common_x_limits=(0, 250),
+                                 abscissa_label=abscissa_label,
                                  number_data_sets=len(data_sets),
                                  output_figure_stem=output_figure_stem)
+
+    abscissa_info = plotter.abscissa_labels[abscissa_label]
+    plotter.common_x_limits = abscissa_info[3]
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
@@ -525,15 +581,15 @@ def generate_set_of_plots(data_sets, compare_against_reference_labels, output_fi
 
         # Loop over all the stars the Cannon tried to fit
         for star_name in star_names_distinct:
-            # Create a list of all the available SNRs for this star
-            snr_list = [(index, stars[index]['SNR'])
-                        for index in range(len(stars))
-                        if stars[index]['Starname'] == star_name
-                        ]
+            # Create a list of all the available abscissa values for this star
+            abscissa_list = [(index, stars[index][abscissa_info[0]])
+                             for index in range(len(stars))
+                             if stars[index]['Starname'] == star_name
+                             ]
             # Sort the list into order of ascending SNR
-            snr_list.sort(key=itemgetter(1))
+            abscissa_list.sort(key=itemgetter(1))
 
-            reference_run = stars[snr_list[-1][0]]
+            reference_run = stars[abscissa_list[-1][0]]
             reference_values = {}
             for label in label_names:
                 if compare_against_reference_labels:
@@ -610,6 +666,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cannon-output', action="append", dest='cannon_output',
                         help="JSON structure containing the label values estimated by the Cannon.")
+    parser.add_argument('--abscissa', default="SNR/A", dest='abscissa_label',
+                        help="Name of the quantity to plot on the horizontal axis. Must be a keyword of the "
+                             "dictionary abscissa_labels.")
     parser.add_argument('--dataset-label', action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
     parser.add_argument('--dataset-filter', action="append", dest='data_set_filter',
@@ -629,7 +688,8 @@ if __name__ == "__main__":
                         required=False,
                         action='store_false',
                         dest="use_reference_labels",
-                        help="Compare the output of the Cannon against what it produced at the highest SNR available.")
+                        help="Compare the output of the Cannon against what it produced at the highest abscissa value "
+                             "available.")
     parser.set_defaults(use_reference_labels=True)
     args = parser.parse_args()
 
@@ -683,7 +743,8 @@ if __name__ == "__main__":
                                })
 
     generate_set_of_plots(data_sets=cannon_outputs,
+                          abscissa_label=args.abscissa_label,
                           compare_against_reference_labels=args.use_reference_labels,
                           output_figure_stem=args.output_file,
-                          run_title=""  # ""External" if args.use_reference_labels else "Internal"
+                          run_title=""  # "External" if args.use_reference_labels else "Internal"
                           )

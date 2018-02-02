@@ -23,6 +23,12 @@ python mean_performance_vs_snr.py \
   --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_censoring_schemes_${mode}${run}"
 
 done
+
+python mean_performance_vs_snr.py \
+  --abscissa "ebv" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_reddened_censored_${mode}_10label.json" --dataset-label "Reddened" --dataset-colour "green" \
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_reddening_${mode}"
+
 done
 
 python scatter_plot_arrows.py --output-stub "../../output_plots/cannon_performance/arrows/apokasc_teff_logg_hrs_offset_arrows" \
@@ -42,19 +48,19 @@ python mean_performance_vs_snr.py \
   --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_10label.json" --dataset-label "Ford HRS" \
   --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_hawkins"
 
-python mean_performance_vs_snr.py \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band" \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band" \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_10label.json" --dataset-label "LRS -- SNR/A defined at 6000\AA" \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_10label.json" --dataset-label "HRS -- SNR/A defined at 6000\AA" \
-  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_snrperband"
+#python mean_performance_vs_snr.py \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band" \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band" \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_10label.json" --dataset-label "LRS -- SNR/A defined at 6000\AA" \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_10label.json" --dataset-label "HRS -- SNR/A defined at 6000\AA" \
+#  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_snrperband"
 
-python mean_performance_vs_snr.py \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band (no blue)" \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band (no blue)" \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band" \
-  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band" \
-  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_snrperband_noblue"
+#python mean_performance_vs_snr.py \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_noblue_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band (no blue)" \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_noblue_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band (no blue)" \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_lrs_snrperband_10label.json" --dataset-label "LRS -- SNR/A defined in centre of each band" \
+#  --cannon-output "../../output_data/cannon/cannon_apokasc_hrs_snrperband_10label.json" --dataset-label "HRS -- SNR/A defined in centre of each band" \
+#  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_apokasc_snrperband_noblue"
 
 for mode in lrs hrs
 do
