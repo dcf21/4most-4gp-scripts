@@ -29,6 +29,12 @@ python mean_performance_vs_snr.py \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_reddened_censored_${mode}_10label.json" --dataset-label "Reddened" --dataset-colour "green" \
   --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_reddening_${mode}"
 
+python mean_performance_vs_snr.py \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_fehcut2_${mode}_10label.json" --dataset-label "Trained \$z<-1\$ only (UVES)" --dataset-colour "green" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_fehcut2b_${mode}_10label.json" --dataset-label "Trained \$z<-1\$ only (GALAH)" --dataset-colour "blue" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained on full UVES sample" --dataset-colour "red" \
+  --output-file "../../output_plots/cannon_performance/performance_vs_snr/comparison_low_z_${mode}"
+
 done
 
 python scatter_plot_arrows.py --output-stub "../../output_plots/cannon_performance/arrows/apokasc_teff_logg_hrs_offset_arrows" \
