@@ -21,8 +21,11 @@ import json
 import time
 import numpy as np
 
-from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
-from fourgp_cannon import CannonInstance
+from fourgp_speclib import SpectrumLibrarySqlite
+from fourgp_cannon import \
+    CannonInstance, \
+    CannonInstanceWithRunningMeanNormalisation, \
+    CannonInstanceWithContinuumNormalisation
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -34,6 +37,8 @@ parser.add_argument('--test', required=True, dest='test_library',
                     help="Library of spectra to test the trained Cannon on.")
 parser.add_argument('--train', required=True, dest='train_library',
                     help="Library of labelled spectra to train the Cannon on.")
+parser.add_argument('--continuum-normalisation', default="none", dest='continuum_normalisation',
+                    help="Select continuum normalisation method: none, running_mean or polynomial.")
 parser.add_argument('--reload-cannon', required=False, dest='reload_cannon', default=None,
                     help="Skip training step, and reload a Cannon that we've previously trained.")
 parser.add_argument('--description', dest='description',
@@ -84,6 +89,22 @@ logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test
                                                                        args.censor_line_list,
                                                                        args.output_file))
 
+# Make sure that a valid continuum normalisation option is selected
+assert args.continuum_normalisation in ["none", "running_mean", "polynomial"]
+
+if args.continuum_normalisation == "running_mean":
+    CannonClass = CannonInstanceWithRunningMeanNormalisation
+    continuum_normalised_training = False
+    continuum_normalised_testing = False
+elif args.continuum_normalisation == "polynomial":
+    CannonClass = CannonInstanceWithContinuumNormalisation
+    continuum_normalised_training = True
+    continuum_normalised_testing = False
+else:
+    CannonClass = CannonInstance
+    continuum_normalised_training = True
+    continuum_normalised_testing = True
+
 # List of labels over which we are going to test the performance of the Cannon
 test_labels = args.labels.split(",")
 
@@ -93,9 +114,9 @@ workspace = os_path.join(our_path, "..", "workspace")
 
 
 # Helper for opening input SpectrumLibrary(s)
-def open_input_libraries(library_spec):
+def open_input_libraries(library_spec, need_continuum_normalised):
     test = re.match("([^\[]*)\[(.*)\]$", library_spec)
-    constraints = {}
+    constraints = {"continuum_normalised": need_continuum_normalised}
     if test is None:
         library_name = library_spec
     else:
@@ -131,11 +152,13 @@ def open_input_libraries(library_spec):
 
 
 # Open training set
-spectra = open_input_libraries(args.train_library)
+spectra = open_input_libraries(library_spec=args.train_library,
+                               need_continuum_normalised=continuum_normalised_training)
 training_library, training_library_items = [spectra[i] for i in ("library", "items")]
 
 # Open test set
-spectra = open_input_libraries(args.test_library)
+spectra = open_input_libraries(library_spec=args.test_library,
+                               need_continuum_normalised=continuum_normalised_testing)
 test_library, test_library_items = [spectra[i] for i in ("library", "items")]
 
 # Load training set
@@ -228,17 +251,32 @@ if args.censor_line_list != "":
                                                                               len(raster), allowed_lines))
         censoring_masks[label_name] = ~mask
 
+# If we're doing our own continuum normalisation, we need to treat each wavelength arm separately
+# We look at the wavelength raster of the first training spectrum, and look for break points
+spectrum = training_spectra.extract_item(0)
+break_points = []
+raster_diffs = np.diff(spectrum.wavelengths)
+diff = raster_diffs[0]
+for i in range(len(raster_diffs) - 2):
+    second_diff = raster_diffs[i] / diff
+    diff = raster_diffs[i]
+    if (second_diff < 0.99) or (second_diff > 1.01):
+        break_points.append((raster[i] + raster[i + 1]) / 2)
+        diff = raster_diffs[i + 1]
+
 # Construct and train a model
 time_training_start = time.time()
 if not args.reload_cannon:
-    model = CannonInstance(training_set=training_spectra,
+    model = CannonClass(training_set=training_spectra,
+                        wavelength_arms=break_points,
                            label_names=test_labels,
                            tolerance=args.tolerance,
                            censors=censoring_masks,
                            threads=None if args.multithread else 1
                            )
 else:
-    model = CannonInstance(training_set=training_spectra,
+    model = CannonClass(training_set=training_spectra,
+                        wavelength_arms=break_points,
                            load_from_file=args.reload_cannon,
                            label_names=test_labels,
                            tolerance=args.tolerance,
@@ -274,30 +312,7 @@ for index in range(N):
         spectrum = spectrum_new
 
     # Pass spectrum to the Cannon
-    if spectrum.metadata["continuum_normalised"]:
-        # Spectrum is already continuum-normalised
-        labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
-    else:
-        # We need to manually continuum normalise spectrum
-
-        # First identify break-points in the wavelength raster, and fit the continuum separately to each arm
-        break_points = []
-        raster_diffs = np.diff(spectrum.wavelengths)
-        diff = raster_diffs[0]
-        for i in range(len(raster_diffs) - 2):
-            second_diff = raster_diffs[i] / diff
-            diff = raster_diffs[i]
-            if (second_diff < 0.99) or (second_diff > 1.01):
-                break_points.append((raster[i] + raster[i + 1]) / 2)
-                diff = raster_diffs[i + 1]
-
-        # Use Cannon to do iterative fitting
-        labels, cov, meta, cannon_model, continuum_mask, continuum_spectrum = model.fit_spectrum_with_continuum(
-            spectrum=spectrum,
-            wavelength_arms=break_points,
-            continuum_model_family=SpectrumPolynomial,
-            debugging=True
-        )
+    labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
 
     # Check whether Cannon failed
     if labels is None:
