@@ -64,7 +64,7 @@ if not os.path.exists(args.cannon):
 cannon_output = json.loads(open(args.cannon).read())
 
 for label in label_names:
-    if label_names not in cannon_output["labels"]:
+    if label not in cannon_output["labels"]:
         print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".format(label, args.cannon)
         sys.exit()
 

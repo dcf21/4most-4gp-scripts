@@ -62,7 +62,7 @@ cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
 
 for label in label_names:
-    if label_names not in cannon_output["labels"]:
+    if label not in cannon_output["labels"]:
         print "scatter_plot_coloured.py could not proceed: Label <{}> not present in <{}>".format(label, args.cannon)
         sys.exit()
 
