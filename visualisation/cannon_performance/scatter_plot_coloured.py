@@ -7,6 +7,7 @@ and the colour of the points representing the error in one of the derived labels
 """
 
 import os
+import sys
 import argparse
 import re
 import json
@@ -52,12 +53,21 @@ for item in args.labels + [args.colour_label]:
     })
     label_names.append(test.group(1))
 
-# Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
-
 # Fetch title for this Cannon run
+if not os.path.exists(args.cannon):
+        print "scatter_plot_coloured.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+        sys.exit()
+
 cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
+
+for label in label_names:
+    if label_names not in cannon_output["labels"]:
+        print "scatter_plot_coloured.py could not proceed: Label <{}> not present in <{}>".format(label, args.cannon)
+        sys.exit()
+
+# Create data files listing parameter values
+snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
 # Convert SNR/pixel to SNR/A at 6000A
 raster = np.array(cannon_output['wavelength_raster'])

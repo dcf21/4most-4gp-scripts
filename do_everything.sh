@@ -194,7 +194,7 @@ wait
 
 # Test Cannon
 cd ${cwd}
-cd test_cannon_degraded_spec/
+cd test_cannon/
 
 for mode in lrs hrs
 do
@@ -223,7 +223,7 @@ for all in *.ppl ; do pyxplot ${all} ; done
 cd ${cwd}
 cd visualisation/cannon_performance
 
-python mean_performance_vs_snr.py \
+python mean_performance_vs_label.py \
   --cannon-output ../../output_data/cannon_hawkins_lrs.dat --dataset-label "Hawkins LRS" \
   --cannon-output ../../output_data/cannon_hawkins_hrs.dat --dataset-label "Hawkins HRS" \
   --cannon-output ../../output_data/cannon_4fs_lrs.dat --dataset-label "Ford LRS" \

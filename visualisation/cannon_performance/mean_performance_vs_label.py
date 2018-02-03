@@ -7,6 +7,7 @@ Plot results of testing the Cannon against noisy test spectra, to see how well i
 
 import os
 from os import path as os_path
+import sys
 import re
 from operator import itemgetter
 import argparse
@@ -727,7 +728,12 @@ if __name__ == "__main__":
                 args.data_set_filter,
                 args.data_set_colour,
                 args.data_set_linetype):
+
         # Read the JSON file which we dumped after running the Cannon
+        if not os.path.exists(cannon_output):
+                print "mean_performance_vs_label.py could not proceed: Cannon run <{}> not found".format(cannon_output)
+                sys.exit()
+
         data = json.loads(open(cannon_output).read())
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output

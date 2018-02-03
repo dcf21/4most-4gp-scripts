@@ -7,6 +7,7 @@ and the colour of the points representing the SNR needed to attain some required
 """
 
 import os
+import sys
 import argparse
 import re
 import json
@@ -56,7 +57,16 @@ for item in args.labels:
     label_names.append(test.group(1))
 
 # Read Cannon output
+if not os.path.exists(args.cannon):
+        print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+        sys.exit()
+
 cannon_output = json.loads(open(args.cannon).read())
+
+for label in label_names:
+    if label_names not in cannon_output["labels"]:
+        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".format(label, args.cannon)
+        sys.exit()
 
 # Create a sorted list of all the SNR values we've got
 snr_values = [item['SNR'] for item in cannon_output['stars']]

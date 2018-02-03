@@ -7,6 +7,7 @@ those estimated by the Cannon.
 """
 
 import os
+import sys
 import argparse
 import re
 import json
@@ -50,6 +51,10 @@ for item in args.labels:
 snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
 # Fetch title for this Cannon run
+if not os.path.exists(args.cannon):
+        print "scatter_plot_arrows.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+        sys.exit()
+
 cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
 

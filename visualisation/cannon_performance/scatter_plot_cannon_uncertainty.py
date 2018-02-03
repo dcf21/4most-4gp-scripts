@@ -7,6 +7,7 @@ uncertainty that the Cannon quotes.
 """
 
 import os
+import sys
 import argparse
 import json
 import numpy as np
@@ -25,6 +26,10 @@ parser.add_argument('--output-stub', default="/tmp/cannon_uncertainty_", dest='o
 args = parser.parse_args()
 
 # Fetch title for this Cannon run
+if not os.path.exists(args.cannon):
+        print "scatter_plot_cannon_uncertainty.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+        sys.exit()
+
 cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
 
