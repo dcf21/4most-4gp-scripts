@@ -20,7 +20,7 @@ python2.7 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
 
 python2.7 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                          --test "4fs_demo_stars_lrs" \
-                         --continuum_normalisation "running_mean" \
+                         --continuum-normalisation "running_mean" \
                          --description "4MOST LRS - 3 labels - Quick APOKASC test." \
                          --labels "Teff,logg,[Fe/H]" \
                          --output-file "../output_data/cannon/cannon_demo_cn_3label"
@@ -34,7 +34,7 @@ python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4850<Teff
 
 python2.7 cannon_test.py --train "4fs_apokasc_training_set_lrs[SNR=250,4850<Teff<9999,-1<[Fe/H]<1]" \
                          --test "4fs_apokasc_test_set_lrs[4950<Teff<9999,-1<[Fe/H]<1]" \
-                         --continuum_normalisation "running_mean" \
+                         --continuum-normalisation "running_mean" \
                          --description "4MOST LRS - 3 labels - Quick APOKASC test." \
                          --labels "Teff,logg,[Fe/H]" \
                          --output-file "../output_data/cannon/cannon_quick_cn_3label"
