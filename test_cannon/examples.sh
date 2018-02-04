@@ -331,18 +331,18 @@ python2.7 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                          --assume-scaled-solar \
                          --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_10label"
 
-python2.7 cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=5000]" \
-                         --test "4fs_ahm2017_perturbed_hrs" \
-                         --description "4MOST HRS - 10 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../output_data/cannon/cannon_ahm2017_perturbed_hrs_highsnr_10label"
-python2.7 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=5000]" \
-                         --test "4fs_ahm2017_perturbed_lrs" \
-                         --description "4MOST LRS - 10 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_highsnr_10label"
+#python2.7 cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=5000]" \
+#                         --test "4fs_ahm2017_perturbed_hrs" \
+#                         --description "4MOST HRS - 10 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
+#                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+#                         --assume-scaled-solar \
+#                         --output-file "../output_data/cannon/cannon_ahm2017_perturbed_hrs_highsnr_10label"
+#python2.7 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=5000]" \
+#                         --test "4fs_ahm2017_perturbed_lrs" \
+#                         --description "4MOST LRS - 10 labels - Train on GES UVES AHM2017 (SNR 5000). Test on perturbed version." \
+#                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+#                         --assume-scaled-solar \
+#                         --output-file "../output_data/cannon/cannon_ahm2017_perturbed_lrs_highsnr_10label"
 
 python2.7 cannon_test.py --train "4fs_ahm2017_sample_hrs[SNR=250]" \
                          --test "4fs_ahm2017_perturbed_hrs" \
