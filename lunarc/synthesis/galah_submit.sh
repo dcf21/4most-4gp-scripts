@@ -12,7 +12,9 @@
 #SBATCH -e stderr_galah_farm_%j.out
 cat $0
 
-module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.20.1  SQLite/3.9.2
+module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
+
+source activate myenv
 
 # set the number of jobs - change for your requirements
 export NB_of_jobs=80

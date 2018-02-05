@@ -3,26 +3,28 @@
 # This script is designed to be run on aurora.lunarc.lu.se
 # It installs the Cannon and 4GP in Dominic's home directory
 
-module load GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.20.1  SQLite/3.9.2
-export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
+module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
+
+source activate myenv
 
 cd /home/dominic/iwg7_pipeline
 
 cd AnniesLasso
-python2.7 setup.py install --prefix=$HOME/local
+pip install .
 
 cd ../4most-4gp/src/pythonModules/fourgp_speclib/
-python2.7 setup.py install --prefix=$HOME/local
+pip install .
 cd ../fourgp_cannon
-python2.7 setup.py install --prefix=$HOME/local
+pip install .
 cd ../fourgp_degrade
-python2.7 setup.py install --prefix=$HOME/local
-cd ../fourgp_rv
-python2.7 setup.py install --prefix=$HOME/local
+pip install .
+# This depends on emcee, which isn't installed...
+# cd ../fourgp_rv
+# pip install .
 cd ../fourgp_specsynth
-python2.7 setup.py install --prefix=$HOME/local
+pip install .
 cd ../fourgp_telescope_data
-python2.7 setup.py install --prefix=$HOME/local
+pip install .
 cd ../fourgp_fourfs
-python2.7 setup.py install --prefix=$HOME/local
+pip install .
 

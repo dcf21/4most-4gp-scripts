@@ -43,9 +43,9 @@ slurm_script = """#!/bin/sh
 #SBATCH -e stderr_cannon_%j.out
 cat $0
 
-module add GCC/5.4.0-2.26  OpenMPI/1.10.3  scipy/0.17.0-Python-2.7.11  SQLite/3.20.1  SQLite/3.9.2
+module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
 
-export PYTHONPATH=${{HOME}}/local/lib/python2.7/site-packages:${{PYTHONPATH}}
+source activate myenv
 
 cd {}
 python cannon_test.py {}
