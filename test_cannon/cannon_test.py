@@ -47,7 +47,7 @@ parser.add_argument('--labels', dest='labels',
                     default="Teff,logg,[Fe/H],[C/H],[N/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H],[Ca/H],[Ti/H],"
                             "[Mn/H],[Co/H],[Ni/H],[Ba/H],[Sr/H]",
                     help="List of the labels the Cannon is to learn to estimate.")
-parser.add_argument('--censor-scheme', default="", dest='censor_scheme',
+parser.add_argument('--censor-scheme', default="1", dest='censor_scheme',
                     help="Censoring scheme version to use (1, 2 or 3).")
 parser.add_argument('--censor', default="", dest='censor_line_list',
                     help="Optional list of line positions for the Cannon to fit, ignoring continuum between.")
