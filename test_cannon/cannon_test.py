@@ -47,6 +47,8 @@ parser.add_argument('--labels', dest='labels',
                     default="Teff,logg,[Fe/H],[C/H],[N/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H],[Ca/H],[Ti/H],"
                             "[Mn/H],[Co/H],[Ni/H],[Ba/H],[Sr/H]",
                     help="List of the labels the Cannon is to learn to estimate.")
+parser.add_argument('--censor-scheme', default="", dest='censor_scheme',
+                    help="Censoring scheme version to use (1, 2 or 3).")
 parser.add_argument('--censor', default="", dest='censor_line_list',
                     help="Optional list of line positions for the Cannon to fit, ignoring continuum between.")
 parser.add_argument('--tolerance', default=1e-4, dest='tolerance', type=float,
@@ -216,7 +218,8 @@ if args.censor_line_list != "":
             wavelength = words[2]
 
             # Only select lines from elements we're trying to fit. Always use H lines.
-            censoring_scheme = 1  # Because schemes 2 and 3 are a disaster
+            censoring_scheme = int(args.censor_scheme)
+            assert censoring_scheme in [1, 2, 3]
             if element_symbol != "H":
                 if censoring_scheme == 1:  # All elements can see all lines
                     if "[{}/H]".format(element_symbol) not in test_labels:
@@ -268,20 +271,20 @@ time_training_start = time.time()
 if not args.reload_cannon:
     model = CannonClass(training_set=training_spectra,
                         wavelength_arms=break_points,
-                           label_names=test_labels,
-                           tolerance=args.tolerance,
-                           censors=censoring_masks,
-                           threads=None if args.multithread else 1
-                           )
+                        label_names=test_labels,
+                        tolerance=args.tolerance,
+                        censors=censoring_masks,
+                        threads=None if args.multithread else 1
+                        )
 else:
     model = CannonClass(training_set=training_spectra,
                         wavelength_arms=break_points,
-                           load_from_file=args.reload_cannon,
-                           label_names=test_labels,
-                           tolerance=args.tolerance,
-                           censors=censoring_masks,
-                           threads=None if args.multithread else 1
-                           )
+                        load_from_file=args.reload_cannon,
+                        label_names=test_labels,
+                        tolerance=args.tolerance,
+                        censors=censoring_masks,
+                        threads=None if args.multithread else 1
+                        )
 time_training_end = time.time()
 
 # Save the model
@@ -343,7 +346,7 @@ for index in range(N):
             result["target_{}".format(label_name)] = spectrum.metadata[label_name]
 
     # Add the star name and the SNR ratio of the test spectrum
-    result.update({"Starname": star_name, "SNR": snr, "e_bv": ebv, "uid":uid, "time": time_taken[index]})
+    result.update({"Starname": star_name, "SNR": snr, "e_bv": ebv, "uid": uid, "time": time_taken[index]})
     results.append(result)
 
 # Report time taken
