@@ -253,14 +253,13 @@ if args.censor_line_list != "":
 
 # If we're doing our own continuum normalisation, we need to treat each wavelength arm separately
 # We look at the wavelength raster of the first training spectrum, and look for break points
-spectrum = training_spectra.extract_item(0)
 break_points = []
-raster_diffs = np.diff(spectrum.wavelengths)
+raster_diffs = np.diff(raster)
 diff = raster_diffs[0]
 for i in range(len(raster_diffs) - 2):
     second_diff = raster_diffs[i] / diff
     diff = raster_diffs[i]
-    if (second_diff < 0.99) or (second_diff > 1.01):
+    if (second_diff < 0.98) or (second_diff > 1.02):
         break_points.append((raster[i] + raster[i + 1]) / 2)
         diff = raster_diffs[i + 1]
 
