@@ -13,4 +13,3 @@ python2.7 degrade_library_with_4fs.py --input-library reddened_ahm2017_perturbed
                                       --snr-list 50 \
                                       --output-library-lrs 4fs_reddened_ahm2017_perturbed_lrs \
                                       --output-library-hrs 4fs_reddened_ahm2017_perturbed_hrs
-

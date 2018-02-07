@@ -37,7 +37,7 @@ parser.add_argument('--output-library',
                     help="Specify the name of the SpectrumLibrary we are to feed reddened spectra into.")
 parser.add_argument('--ebv-list',
                     required=False,
-                    default="0.016,0.032,0.064,0.096,0.16,0.32,0.64",
+                    default="0.016,0.032,0.064,0.096,0.16,0.32,0.64,2,4,8",
                     dest="ebv_list",
                     help="Specify a comma-separated list of the E_BV values we are to use when reddening spectra.")
 parser.add_argument('--create',
