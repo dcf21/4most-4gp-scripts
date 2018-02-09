@@ -91,7 +91,7 @@ for job in args.jobs:
         else:
             print "Product <{}> needs making".format(destination)
 
-        command = line[22:]
+        command = line[25:]
         counter += 1
         slurm_tmp_filename = "tmp_{}_{}.sh".format(uid, counter)
 
@@ -99,3 +99,4 @@ for job in args.jobs:
             f.write(slurm_script.format(config_path, command))
 
         # os.system("sbatch {}".format(slurm_tmp_filename))
+
