@@ -47,8 +47,11 @@ module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQ
 
 source activate myenv
 
-cd {}
-python cannon_test.py {}
+cd {0}
+echo {1}
+mkdir {1}
+{2}
+python cannon_test.py --workspace \"{1}\" {3}
 
 """
 
@@ -59,6 +62,10 @@ for job in args.jobs:
     config_path = os.path.split(os.path.abspath(job))[0]
     line_buffer = ""
     destination = ""
+    libraries = []
+
+    start_string = "python2.7 cannon_test.py"
+
     for line in open(job):
         line = line.strip()
         # Ignore blank lines and lines which begin with a hash
@@ -70,6 +77,11 @@ for job in args.jobs:
         if test is not None:
             destination = test.group(1)
 
+        # Check for spectrum libraries we need
+        test = re.search("(?:--train|--test) \"([^\"\\[]*)([^\"]*)?\"", line)
+        if test is not None:
+            libraries.append(test.group(1))
+
         # Lines which end in backslashes append
         if line[-1] == "\\":
             line_buffer = "{} {}".format(line_buffer, line[:-1])
@@ -80,7 +92,7 @@ for job in args.jobs:
         line_buffer = ""
 
         # Ignore shell commands which don't run Cannon tests
-        if not line.startswith("python2.7 cannon_test.py"):
+        if not line.startswith(start_string):
             continue
 
         # If file product already exists, don't need to recreate it
@@ -91,12 +103,19 @@ for job in args.jobs:
         else:
             print "Product <{}> needs making".format(destination)
 
-        command = line[25:]
+        # Create rsync command to copy spectrum libraries to node local storage
+        run_id = "{}_{}".format(uid, counter)
+        tmp_dir ="${{TMPDIR}}/cannon_{}".format(run_id)
+        rsyncs = ["rsync ../workspace/{} {}/".format(library, tmp_dir) for library in libraries]
+        rsync_commands = "\n".join(rsyncs)
+        libraries = []
+
+        command = line[len(start_string):]
         counter += 1
-        slurm_tmp_filename = "tmp_{}_{}.sh".format(uid, counter)
+        slurm_tmp_filename = "tmp_{}.sh".format(run_id)
 
         with open(slurm_tmp_filename, "w") as f:
-            f.write(slurm_script.format(config_path, command))
+            f.write(slurm_script.format(config_path, tmp_dir, rsync_commands, command))
 
         # os.system("sbatch {}".format(slurm_tmp_filename))
 
