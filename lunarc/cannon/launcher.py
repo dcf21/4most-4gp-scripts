@@ -108,7 +108,7 @@ for job in args.jobs:
         # Create rsync command to copy spectrum libraries to node local storage
         run_id = "{}_{}".format(uid, counter)
         tmp_dir ="${{TMPDIR}}/cannon_{}".format(run_id)
-        rsyncs = ["rsync ../workspace/{} {}/".format(library, tmp_dir) for library in libraries]
+        rsyncs = ["rsync -a ../workspace/{} {}/".format(library, tmp_dir) for library in libraries]
         rsync_commands = "\n".join(rsyncs)
         libraries = []
 

@@ -10,21 +10,21 @@ source activate myenv
 cd /home/dominic/iwg7_pipeline
 
 cd AnniesLasso
-pip install .
+pip install --upgrade .
 
 cd ../4most-4gp/src/pythonModules/fourgp_speclib/
-pip install .
+pip install --upgrade .
 cd ../fourgp_cannon
-pip install .
+pip install --upgrade .
 cd ../fourgp_degrade
-pip install .
+pip install --upgrade .
 # This depends on emcee, which isn't installed...
 # cd ../fourgp_rv
-# pip install .
+# pip install --upgrade .
 cd ../fourgp_specsynth
-pip install .
+pip install --upgrade .
 cd ../fourgp_telescope_data
-pip install .
+pip install --upgrade .
 cd ../fourgp_fourfs
-pip install .
+pip install --upgrade .
 
