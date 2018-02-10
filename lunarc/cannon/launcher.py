@@ -48,9 +48,11 @@ module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQ
 source activate myenv
 
 cd {0}
-echo {1}
+echo Starting rsync: `date`
+echo Temporary directory: {1}
 mkdir {1}
 {2}
+echo Rsync done: `date`
 python cannon_test.py --workspace \"{1}\" {3}
 
 """
