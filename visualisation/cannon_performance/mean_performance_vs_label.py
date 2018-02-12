@@ -82,7 +82,7 @@ class PlotLabelPrecision:
             # label name, latex label, log axes, axis range
             "SNR/A": ["SNR", "$S/N$ $[{\\rm \\AA}^{-1}]$", False, (0, 250)],
             "SNR/pixel": ["SNR", "$S/N$ $[{\\rm pixel}^{-1}]$", False, (0, 250)],
-            "ebv": ["e_bv", "$E(B-V)$", True, (0.01, 0.7)]
+            "ebv": ["e_bv", "$E(B-V)$", True, (0.01, 4)]
         }
 
         self.datasets = []

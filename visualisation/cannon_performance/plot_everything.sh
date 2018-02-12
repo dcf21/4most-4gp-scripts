@@ -26,7 +26,7 @@ done
 
 python2.7 mean_performance_vs_label.py \
   --abscissa "ebv" \
-  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_reddened_censored_${mode}_10label.json" --dataset-label "Reddened" --dataset-colour "green" \
+  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_reddened_censored_${mode}_10label.json" --dataset-label "Reddened ${mode}" --dataset-colour "green" \
   --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_reddening_${mode}"
 
 python2.7 mean_performance_vs_label.py \
