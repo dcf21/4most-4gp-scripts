@@ -33,6 +33,8 @@ parser.add_argument('--output-library',
                     default='demo_stars',
                     dest='library',
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
+parser.add_argument('--workspace', dest='workspace', default="",
+                    help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--create',
                     required=False,
                     action='store_true',
@@ -85,7 +87,7 @@ logger.info("Synthesizing test stars with arguments <{}> <{}>".format(args.libra
 
 # Set path to workspace where we create libraries of spectra
 root_path = os_path.join(our_path, "..", "..")
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
 # Create new SpectrumLibrary

@@ -16,8 +16,6 @@ import numpy as np
 from os import path as os_path
 import logging
 import json
-import sqlite3
-from astropy.io import fits
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 from fourgp_telescope_data import FourMost
@@ -46,6 +44,8 @@ parser.add_argument('--output-library',
                     default="turbospec_saga_sample",
                     dest="library",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
+parser.add_argument('--workspace', dest='workspace', default="",
+                    help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--create',
                     required=False,
                     action='store_true',
@@ -113,7 +113,7 @@ args = parser.parse_args()
 logger.info("Synthesizing SAGA stars with arguments <{}> <{}>".format(args.library, args.star_list))
 
 # Set path to workspace where we create libraries of spectra
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
 

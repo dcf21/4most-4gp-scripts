@@ -27,19 +27,21 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--input-library',
                     required=False,
-                    default="turbospec_apokasc_training_set",
+                    default="demo_stars",
                     dest="input_library",
                     help="Specify the name of the SpectrumLibrary we are to read input spectra from.")
 parser.add_argument('--output-library-lrs',
                     required=False,
-                    default="4fs_apokasc_training_set_lrs",
+                    default="4fs_demo_stars_lrs",
                     dest="output_library_lrs",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized LRS spectra into.")
 parser.add_argument('--output-library-hrs',
                     required=False,
-                    default="4fs_apokasc_training_set_hrs",
+                    default="4fs_demo_stars_hrs",
                     dest="output_library_hrs",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized HRS spectra into.")
+parser.add_argument('--workspace', dest='workspace', default="",
+                    help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--snr-definition',
                     action="append",
                     dest="snr_definitions",
@@ -47,9 +49,14 @@ parser.add_argument('--snr-definition',
                          "median SNR per pixel between minimum and maximum wavelengths in Angstrom.")
 parser.add_argument('--snr-list',
                     required=False,
-                    default="10,20,50,80,100,130,180,250,5000",
+                    default="10,20,50,80,100,130,180,250,500",
                     dest="snr_list",
                     help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
+parser.add_argument('--mag-list',
+                    required=False,
+                    default="15",
+                    dest="mag_list",
+                    help="Specify a comma-separated list of the r' band magnitudes to pass to 4FS.")
 parser.add_argument('--snr-definitions-lrs',
                     required=False,
                     default="",
@@ -88,7 +95,7 @@ logger.info("Running 4FS on spectra with arguments <{}> <{}> <{}>".format(args.i
                                                                           args.output_library_hrs))
 
 # Set path to workspace where we create libraries of spectra
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
 
@@ -167,58 +174,64 @@ else:
 
 snr_list = [float(item.strip()) for item in args.snr_list.split(",")]
 
-# Instantiate 4FS wrapper
-etc_wrapper = FourFS(
-    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
-    snr_definitions=snr_definitions,
-    lrs_use_snr_definitions=snr_definitions_lrs,
-    hrs_use_snr_definitions=snr_definitions_hrs,
-    snr_list=snr_list
-)
+mag_list = [float(item.strip()) for item in args.mag_list.split(",")]
 
 # Loop over spectra to process
 with open(args.log_to, "w") as result_log:
-    for input_spectrum_id in input_spectra_ids:
-        logger.info("Working on <{}>".format(input_spectrum_id['filename']))
-        # Open Spectrum data from disk
-        input_spectrum_array = input_library.open(ids=input_spectrum_id['specId'])
-        input_spectrum = input_spectrum_array.extract_item(0)
+    for magnitude in mag_list:
 
-        # Look up the name of the star we've just loaded
-        spectrum_matching_field = 'uid' if 'uid' in input_spectrum.metadata else 'Starname'
-        object_name = input_spectrum.metadata[spectrum_matching_field]
-
-        # Write log message
-        result_log.write("\n[{}] {}... ".format(time.asctime(), object_name))
-        result_log.flush()
-
-        # Search for the continuum-normalised version of this same object
-        search_criteria = input_spectra_constraints.copy()
-        search_criteria[spectrum_matching_field] = object_name
-        search_criteria['continuum_normalised'] = 1
-        continuum_normalised_spectrum_id = input_library.search(**search_criteria)
-
-        # Check that continuum-normalised spectrum exists
-        assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
-
-        # Load the continuum-normalised version
-        input_spectrum_continuum_normalised_arr = input_library.open(ids=continuum_normalised_spectrum_id[0]['specId'])
-        input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
-
-        # Process spectra through 4FS
-        degraded_spectra = etc_wrapper.process_spectra(
-            spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
+        # Instantiate 4FS wrapper
+        etc_wrapper = FourFS(
+            path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
+            snr_definitions=snr_definitions,
+            magnitude=magnitude,
+            lrs_use_snr_definitions=snr_definitions_lrs,
+            hrs_use_snr_definitions=snr_definitions_hrs,
+            snr_list=snr_list
         )
 
-        # Import degraded spectra into output spectrum library
-        for mode in degraded_spectra:
-            for index in degraded_spectra[mode]:
-                for snr in degraded_spectra[mode][index]:
-                    unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
-                    for spectrum_type in degraded_spectra[mode][index][snr]:
-                        output_libraries[mode].insert(spectra=degraded_spectra[mode][index][snr][spectrum_type],
-                                                      filenames=input_spectrum_id['filename'],
-                                                      metadata_list={"uid": unique_id})
+        for input_spectrum_id in input_spectra_ids:
+            logger.info("Working on <{}>".format(input_spectrum_id['filename']))
+            # Open Spectrum data from disk
+            input_spectrum_array = input_library.open(ids=input_spectrum_id['specId'])
+            input_spectrum = input_spectrum_array.extract_item(0)
 
-# Clean up 4FS
-etc_wrapper.close()
+            # Look up the name of the star we've just loaded
+            spectrum_matching_field = 'uid' if 'uid' in input_spectrum.metadata else 'Starname'
+            object_name = input_spectrum.metadata[spectrum_matching_field]
+
+            # Write log message
+            result_log.write("\n[{}] {}... ".format(time.asctime(), object_name))
+            result_log.flush()
+
+            # Search for the continuum-normalised version of this same object
+            search_criteria = input_spectra_constraints.copy()
+            search_criteria[spectrum_matching_field] = object_name
+            search_criteria['continuum_normalised'] = 1
+            continuum_normalised_spectrum_id = input_library.search(**search_criteria)
+
+            # Check that continuum-normalised spectrum exists
+            assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
+
+            # Load the continuum-normalised version
+            input_spectrum_continuum_normalised_arr = input_library.open(
+                ids=continuum_normalised_spectrum_id[0]['specId'])
+            input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
+
+            # Process spectra through 4FS
+            degraded_spectra = etc_wrapper.process_spectra(
+                spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
+            )
+
+            # Import degraded spectra into output spectrum library
+            for mode in degraded_spectra:
+                for index in degraded_spectra[mode]:
+                    for snr in degraded_spectra[mode][index]:
+                        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+                        for spectrum_type in degraded_spectra[mode][index][snr]:
+                            output_libraries[mode].insert(spectra=degraded_spectra[mode][index][snr][spectrum_type],
+                                                          filenames=input_spectrum_id['filename'],
+                                                          metadata_list={"uid": unique_id})
+
+        # Clean up 4FS
+        etc_wrapper.close()

@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Take parameters of GALAH sample of stars proposed by Georges on 30 Oct 2017, and synthesize spectra using
-TurboSpectrum.
+Take parameters from Louise's email, and synthesize spectra using TurboSpectrum.
 """
 
 import os
@@ -15,29 +14,15 @@ import numpy as np
 from os import path as os_path
 import logging
 import json
-import sqlite3
-from astropy.io import fits
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 from fourgp_telescope_data import FourMost
 from fourgp_specsynth import TurboSpectrum
 
-# List of elements whose abundances we pass to TurboSpectrum
-element_list = (
-    'Al', 'Ba', 'C', 'Ca', 'Ce', 'Co', 'Cr', 'Cu', 'Eu', 'K', 'La', 'Li', 'Mg', 'Mn', 'Mo', 'Na', 'Nd', 'Ni', 'O',
-    'Rb', 'Ru', 'Sc', 'Si', 'Sm', 'Sr', 'Ti', 'V', 'Y', 'Zn', 'Zr'
-)
-
-
-# Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
-def astropy_row_to_dict(x):
-    return dict([(i, x[i]) for i in x.columns])
-
-
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
-logger.info("Synthesizing GALAH sample spectra")
+logger.info("Synthesizing fourteam spectra")
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -46,7 +31,7 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output-library',
                     required=False,
-                    default="turbospec_galah_sample",
+                    default="turbospec_saga_sample",
                     dest="library",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
 parser.add_argument('--workspace', dest='workspace', default="",
@@ -64,19 +49,9 @@ parser.add_argument('--no-create',
 parser.set_defaults(create=True)
 parser.add_argument('--log-dir',
                     required=False,
-                    default="/tmp/turbospec_galah_{}".format(pid),
+                    default="/tmp/turbospec_saga_{}".format(pid),
                     dest="log_to",
                     help="Specify a log directory where we log our progress and configuration files.")
-parser.add_argument('--dump-to-sqlite-file',
-                    required=False,
-                    default="",
-                    dest="sqlite_out",
-                    help="Specify an sqlite3 filename where we dump the stellar parameters of the stars.")
-parser.add_argument('--star-list',
-                    required=False,
-                    default="../../downloads/GALAH_trainingset_4MOST_errors.fits",
-                    dest="galah_stars",
-                    help="Specify an ASCII table which lists the stellar parameters of the stars to be synthesized.")
 parser.add_argument('--line-lists-dir',
                     required=False,
                     default=root_path,
@@ -109,98 +84,40 @@ parser.add_argument('--limit',
                     help="Only process a maximum of n spectra.")
 args = parser.parse_args()
 
-logger.info("Synthesizing GALAH sample with arguments <{}> <{}>".format(args.library, args.galah_stars))
+logger.info("Synthesizing four team stars with arguments <{}> <{}>".format(args.library, args.star_list))
 
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
-# Table supplies list of abundances for GES stars
-f = fits.open(args.galah_stars)
-galah_stars = f[1].data
-galah_fields = galah_stars.names
-# print galah_fields  # To print a list of available parameters
-
-"""
->>> print galah_fields
-['SNR', 'Teff_sme', 'e_Teff_sme', 'Logg_sme', 'e_Logg_sme', 'Feh_sme', 'e_Feh_sme', 'Vmic_sme', 'e_Vmic_sme',
- 'Vsini_sme', 'e_Vsini_sme', 'Ak', 'Alpha_fe_sme', 'e_Alpha_fe_sme', 'Al_abund_sme', 'e_Al_abund_sme',
- 'flag_Al_abund_sme', 'Ba_abund_sme', 'e_Ba_abund_sme', 'flag_Ba_abund_sme', 'C_abund_sme', 'e_C_abund_sme',
- 'flag_C_abund_sme', 'Ca_abund_sme', 'e_Ca_abund_sme', 'flag_Ca_abund_sme', 'Ce_abund_sme', 'e_Ce_abund_sme',
- 'flag_Ce_abund_sme', 'Co_abund_sme', 'e_Co_abund_sme', 'flag_Co_abund_sme', 'Cr_abund_sme', 'e_Cr_abund_sme',
- 'flag_Cr_abund_sme', 'Cu_abund_sme', 'e_Cu_abund_sme', 'flag_Cu_abund_sme', 'Eu_abund_sme', 'e_Eu_abund_sme',
- 'flag_Eu_abund_sme', 'K_abund_sme', 'e_K_abund_sme', 'flag_K_abund_sme', 'La_abund_sme', 'e_La_abund_sme',
- 'flag_La_abund_sme', 'Li_abund_sme', 'e_Li_abund_sme', 'flag_Li_abund_sme', 'Mg_abund_sme', 'e_Mg_abund_sme',
- 'flag_Mg_abund_sme', 'Mn_abund_sme', 'e_Mn_abund_sme', 'flag_Mn_abund_sme', 'Mo_abund_sme', 'e_Mo_abund_sme',
- 'flag_Mo_abund_sme', 'Na_abund_sme', 'e_Na_abund_sme', 'flag_Na_abund_sme', 'Nd_abund_sme', 'e_Nd_abund_sme',
- 'flag_Nd_abund_sme', 'Ni_abund_sme', 'e_Ni_abund_sme', 'flag_Ni_abund_sme', 'O_abund_sme', 'e_O_abund_sme',
- 'flag_O_abund_sme', 'Rb_abund_sme', 'e_Rb_abund_sme', 'flag_Rb_abund_sme', 'Ru_abund_sme', 'e_Ru_abund_sme',
- 'flag_Ru_abund_sme', 'Sc_abund_sme', 'e_Sc_abund_sme', 'flag_Sc_abund_sme', 'Si_abund_sme', 'e_Si_abund_sme',
- 'flag_Si_abund_sme', 'Sm_abund_sme', 'e_Sm_abund_sme', 'flag_Sm_abund_sme', 'Sr_abund_sme', 'e_Sr_abund_sme',
- 'flag_Sr_abund_sme', 'Ti_abund_sme', 'e_Ti_abund_sme', 'flag_Ti_abund_sme', 'V_abund_sme', 'e_V_abund_sme',
- 'flag_V_abund_sme', 'Y_abund_sme', 'e_Y_abund_sme', 'flag_Y_abund_sme', 'Zn_abund_sme', 'e_Zn_abund_sme',
- 'flag_Zn_abund_sme', 'Zr_abund_sme', 'e_Zr_abund_sme', 'flag_Zr_abund_sme']
-"""
-
-# Output data into sqlite3 db
-if args.sqlite_out:
-    os.system("rm -f {}".format(args.sqlite_out))
-    conn = sqlite3.connect(args.sqlite_out)
-    c = conn.cursor()
-    columns = []
-    for col_name in galah_fields:
-        col_type = galah_stars.dtype[col_name]
-        columns.append("{} {}".format(col_name, "TEXT" if col_type.type is np.string_ else "REAL"))
-    c.execute(
-        "CREATE TABLE stars (uid INTEGER PRIMARY KEY, name VARCHAR(32) UNIQUE NOT NULL, {});".format(",".join(columns)))
-
-    for i in range(len(galah_stars)):
-        star_name = "star_{:08d}".format(i)
-        print "%5d / %5d" % (i, len(galah_stars))
-        c.execute("INSERT INTO stars (name) VALUES (?);", (star_name,))
-        for col_name in galah_fields:
-            arguments = (
-                str(galah_stars[col_name][i]) if galah_stars.dtype[col_name].type is np.string_ else float(
-                    galah_stars[col_name][i]),
-                star_name
-            )
-            c.execute("UPDATE stars SET %s=? WHERE name=?;" % col_name, arguments)
-    conn.commit()
-    conn.close()
-
-# Iterate over the spectra we're supposed to be synthesizing
-star_list = []
-for star in range(len(galah_stars)):
-    star_name = "star_{:08d}".format(star)
-    unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
-
-    metadata = {
-        "Starname": str(star_name),
-        "uid": str(unique_id),
-        "Teff": float(galah_stars.Teff_sme[star]),
-        "[Fe/H]": float(galah_stars.Feh_sme[star]),
-        "logg": float(galah_stars.Logg_sme[star])
-    }
-
-    # Pass list of the abundances of individual elements to TurboSpectrum
-    free_abundances = {}
-    for element in element_list:
-        fits_field_name = "{}_abund_sme".format(element)
-
-        # Normalise abundance of element to solar
-        abundance = galah_stars[fits_field_name][star]
-
-        if np.isfinite(abundance):
-            free_abundances[element] = float(abundance)
-            metadata["[{}/H]".format(element)] = float(abundance)
-    star_list.append([metadata, free_abundances])
-
-# import json
-# print json.dumps(star_list)
-# import sys
-# sys.exit(0)
-
-# star_list = json.loads(open("synthesize_galah_data.json").read())
+# Open list of stars
+star_list = [
+    # Feh,Evol,Teff,logg
+    [-2.00, 'MS', 7000, 4.40],
+    [-2.00, 'TO', 7800, 4.05],
+    [-2.00, 'SGB', 6600, 3.60],
+    [-2.00, 'RGB', 5250, 2.40],
+    [-1.50, 'MS', 6750, 4.40],
+    [-1.50, 'TO', 7400, 4.05],
+    [-1.50, 'SGB', 6400, 3.65],
+    [-1.50, 'RGB', 5200, 2.40],
+    [-1.00, 'MS', 6500, 4.40],
+    [-1.00, 'TO', 6900, 4.05],
+    [-1.00, 'SGB', 6200, 3.70],
+    [-1.00, 'RGB', 5000, 2.40],
+    [-0.50, 'MS', 6200, 4.40],
+    [-0.50, 'TO', 6500, 4.05],
+    [-0.50, 'SGB', 5900, 3.75],
+    [-0.50, 'RGB', 4800, 2.40],
+    [0.00, 'MS', 5900, 4.40],
+    [0.00, 'TO', 6200, 4.05],
+    [0.00, 'SGB', 5700, 3.85],
+    [0.00, 'RGB', 4500, 2.40],
+    [0.25, 'MS', 5700, 4.40],
+    [0.25, 'TO', 5900, 4.05],
+    [0.25, 'SGB', 5600, 3.90],
+    [0.25, 'RGB', 4400, 2.40]
+]
 
 # Create new SpectrumLibrary
 library_name = re.sub("/", "_", args.library)
@@ -221,16 +138,25 @@ synthesizer = TurboSpectrum(
     interpol_path=os_path.join(args.binary_path, "interpol_marcs"),
     line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
     marcs_grid_path=os_path.join(args.binary_path, "fromBengt/marcs_grid"))
+counter_output = 0
 
 # Start making log output
 os.system("mkdir -p {}".format(args.log_to))
 logfile = os.path.join(args.log_to, "synthesis.log")
 
 # Iterate over the spectra we're supposed to be synthesizing
-counter_output = 0
 with open(logfile, "w") as result_log:
-    for (metadata, free_abundances) in star_list:
-        star_name = metadata["Starname"]
+    for star_number, star in enumerate(star_list):
+        star_name = "star_{:2d}".format(star_number)
+        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+
+        metadata = {
+            "Starname": star_name,
+            "uid": str(unique_id),
+            "Teff": float(star[2]),
+            "[Fe/H]": float(star[0]),
+            "logg": float(star[3])
+        }
 
         # User can specify that we should only do every nth spectrum, if we're running in parallel
         counter_output += 1
@@ -245,12 +171,13 @@ with open(logfile, "w") as result_log:
                               lambda_delta=float(lambda_min) / spectral_resolution,
                               line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
                               stellar_mass=1,
-                              t_eff=float(metadata["Teff"]),
-                              metallicity=float(metadata["[Fe/H]"]),
-                              log_g=float(metadata["logg"])
+                              t_eff=float(star[2]),
+                              metallicity=float(star[0]),
+                              log_g=float(star[3])
                               )
 
-        # Set free abundances
+        # Pass list of the abundances of individual elements to TurboSpectrum
+        free_abundances = {}
         synthesizer.configure(free_abundances=free_abundances)
 
         # Make spectrum

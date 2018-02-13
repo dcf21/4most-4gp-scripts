@@ -35,6 +35,8 @@ parser.add_argument('--output-library',
                     default="demo_stars_reddened",
                     dest="output_library",
                     help="Specify the name of the SpectrumLibrary we are to feed reddened spectra into.")
+parser.add_argument('--workspace', dest='workspace', default="",
+                    help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--ebv-list',
                     required=False,
                     default="0.016,0.032,0.064,0.096,0.16,0.32,0.64,2,4,8",
@@ -62,7 +64,7 @@ logger.info("Adding Gaussian noise to spectra with arguments <{}> <{}>".format(a
                                                                                args.output_library))
 
 # Set path to workspace where we create libraries of spectra
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
 

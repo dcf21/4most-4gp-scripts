@@ -41,6 +41,8 @@ parser.add_argument('--output-library-hrs',
                     default="4fs_apokasc_training_set_hrs",
                     dest="output_library_hrs",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized HRS spectra into.")
+parser.add_argument('--workspace', dest='workspace', default="",
+                    help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--snr-definition',
                     action="append",
                     dest="snr_definitions",
@@ -84,7 +86,7 @@ logger.info("Adding Gaussian noise to spectra with arguments <{}> <{}> <{}>".for
                                                                                     args.output_library_hrs))
 
 # Set path to workspace where we create libraries of spectra
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
 
