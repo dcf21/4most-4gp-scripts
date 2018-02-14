@@ -12,6 +12,9 @@ cd /home/dominic/iwg7_pipeline
 cd AnniesLasso
 pip install --upgrade .
 
+cd ../pyphot
+pip install --upgrade .
+
 cd ../4most-4gp/src/pythonModules/fourgp_speclib/
 pip install --upgrade .
 cd ../fourgp_cannon

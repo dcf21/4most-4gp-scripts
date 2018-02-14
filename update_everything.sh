@@ -41,3 +41,15 @@ cd ../fourgp_fourfs
 python2.7 setup.py clean --all
 python2.7 setup.py install --force
 
+# Make sure we've got the latest version of the Cannon installed in virtual environment
+cd ${cwd}
+cd ../AnniesLasso
+python2.7 setup.py clean --all
+python2.7 setup.py install --force
+
+# Make sure we've got the latest version of pyphot installed in virtual environment
+cd ${cwd}
+cd ../pyphot
+python2.7 setup.py clean --all
+python2.7 setup.py install --force
+

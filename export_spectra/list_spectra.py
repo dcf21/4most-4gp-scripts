@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Take spectrum library, and export the spectra in it in ASCII format.
+Take spectrum library, and list some basic stellar parameters and photometry for the spectra within.
 """
 
-import os
 from os import path as os_path
 import argparse
 import re
@@ -19,8 +18,6 @@ parser.add_argument('--library', required=True, dest='library',
                     help="Spectrum library we should export, with additional constraints if wanted.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
-parser.add_argument('--output-stub', default="/tmp/my_spectra", dest='output_stub',
-                    help="Directory to write output to.")
 args = parser.parse_args()
 
 
@@ -54,7 +51,7 @@ def open_input_libraries(library_spec, extra_constraints):
             else:
                 assert False, "Could not parse constraint <{}>".format(constraint)
     constraints.update(extra_constraints)
-    constraints["continuum_normalised"] = 1  # All input spectra must be continuum normalised
+    constraints["continuum_normalised"] = 0  # All input spectra must be continuum normalised
     library_path = os_path.join(workspace, library_name)
     input_library = SpectrumLibrarySqlite(path=library_path, create=False)
     library_items = input_library.search(**constraints)
@@ -74,10 +71,9 @@ input_library, library_items = [input_library_info[i] for i in ("library", "item
 library_ids = [i["specId"] for i in library_items]
 library_spectra = input_library.open(ids=library_ids)
 
-# Create output directory
-os.system("mkdir -p {}".format(args.output_stub))
 
 # Write out spectra one by one
+print "# {:18s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s}".format("Object", "Teff", "log(g)", "[Fe/H]", "E(B-V)", "SNR/pixel", "SDSS_r", "SDSS_g", "SDSS_u")
 for i in range(len(library_spectra)):
     metadata = library_spectra.get_metadata(i)
 
@@ -89,15 +85,14 @@ for i in range(len(library_spectra)):
         metadata["e_bv"] = 0
 
     spectrum = library_spectra.extract_item(i)
-    filename_stub = os_path.join(args.output_stub, "{0}_{1:06.4f}_{2:06.1f}".format(metadata["Starname"],
-                                                                                    metadata["e_bv"],
-                                                                                    metadata["SNR"]))
 
-    # Write metadata
-    with open("{}.txt".format(filename_stub), "w") as f:
-        for key in sorted(metadata.keys()):
-            f.write("{0:12s}: {1}\n".format(key, metadata[key]))
+    name = metadata["Starname"]
+    reddening = metadata.get("e_bv", np.nan)
+    snr = metadata.get("SNR", np.nan)
 
-    # Write spectrum
-    with open("{}.spec".format(filename_stub), "w") as f:
-        np.savetxt(f, np.asarray(zip(spectrum.wavelengths, spectrum.values, spectrum.value_errors)))
+    r = spectrum.photometry("SDSS_r")
+    g = spectrum.photometry("SDSS_g")
+    u = spectrum.photometry("SDSS_u")
+
+    print "{:20s} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.1f} {:8.3f} {:8.3f} {:8.3f}".\
+        format(name, metadata["Teff"], metadata["log_g"], metadata["[Fe/H]"], reddening, snr, r, g, u)

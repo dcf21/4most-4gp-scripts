@@ -47,7 +47,8 @@ parser.add_argument('--contamination-fraction',
 parser.add_argument('--output-fraction',
                     action="append",
                     dest="output_fraction",
-                    help="If multiple output libraries are specified, the input spectra are randomly split between them. Specify the fraction to end up in each output library.")
+                    help="If multiple output libraries are specified, the input spectra are randomly split between "
+                         "them. Specify the fraction to end up in each output library.")
 parser.add_argument('--create',
                     required=False,
                     action='store_true',
