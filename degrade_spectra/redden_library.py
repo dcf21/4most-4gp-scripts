@@ -39,7 +39,7 @@ parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--ebv-list',
                     required=False,
-                    default="0.016,0.032,0.064,0.096,0.16,0.32,0.64,2,4,8",
+                    default="0.01,0.02,0.05,0.1,0.2,0.5,0.7,1,1.5,2",
                     dest="ebv_list",
                     help="Specify a comma-separated list of the E_BV values we are to use when reddening spectra.")
 parser.add_argument('--create',
@@ -60,8 +60,8 @@ parser.add_argument('--log-file',
                     help="Specify a log file where we log our progress.")
 args = parser.parse_args()
 
-logger.info("Adding Gaussian noise to spectra with arguments <{}> <{}>".format(args.input_library,
-                                                                               args.output_library))
+logger.info("Reddening spectra with arguments <{}> <{}>".format(args.input_library,
+                                                                args.output_library))
 
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
