@@ -147,7 +147,7 @@ logfile = os.path.join(args.log_to, "synthesis.log")
 # Iterate over the spectra we're supposed to be synthesizing
 with open(logfile, "w") as result_log:
     for star_number, star in enumerate(star_list):
-        star_name = "star_{:2d}".format(star_number)
+        star_name = "star_{:02d}".format(star_number)
         unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
 
         metadata = {
@@ -171,9 +171,9 @@ with open(logfile, "w") as result_log:
                               lambda_delta=float(lambda_min) / spectral_resolution,
                               line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
                               stellar_mass=1,
-                              t_eff=float(star[2]),
-                              metallicity=float(star[0]),
-                              log_g=float(star[3])
+                              t_eff=float(star[2] + 1e-4),
+                              metallicity=float(star[0] + 1e-6),
+                              log_g=float(star[3] + 1e-6)
                               )
 
         # Pass list of the abundances of individual elements to TurboSpectrum

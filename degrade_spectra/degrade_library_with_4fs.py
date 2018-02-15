@@ -164,12 +164,16 @@ if len(args.snr_definitions_lrs) < 1:
     snr_definitions_lrs = None
 else:
     snr_definitions_lrs = args.snr_definitions_lrs.split(",")
+    if len(snr_definitions_lrs) == 1:
+        snr_definitions_lrs *= 3
     assert len(snr_definitions_lrs) == 3
 
 if len(args.snr_definitions_hrs) < 1:
     snr_definitions_hrs = None
 else:
     snr_definitions_hrs = args.snr_definitions_hrs.split(",")
+    if len(snr_definitions_hrs) == 1:
+        snr_definitions_hrs *= 3
     assert len(snr_definitions_hrs) == 3
 
 snr_list = [float(item.strip()) for item in args.snr_list.split(",")]

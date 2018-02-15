@@ -73,26 +73,30 @@ library_spectra = input_library.open(ids=library_ids)
 
 
 # Write out spectra one by one
-print "# {:18s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s}".format("Object", "Teff", "log(g)", "[Fe/H]", "E(B-V)", "SNR/pixel", "SDSS_r", "SDSS_g", "SDSS_u")
+print "# {:13s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:10s} {:8s} {:8s} {:8s}".\
+    format("Object", "Exposure", "Mag(4FS)", "E(B-V)", "Teff", "log(g)", "[Fe/H]",
+           "SNR/pixel", "SNR defn", "SDSS_r", "SDSS_g", "SDSS_u")
 for i in range(len(library_spectra)):
     metadata = library_spectra.get_metadata(i)
 
     if "Starname" not in metadata:
         metadata["Starname"] = "untitled"
-    if "SNR" not in metadata:
-        metadata["SNR"] = 0
-    if "e_bv" not in metadata:
-        metadata["e_bv"] = 0
 
     spectrum = library_spectra.extract_item(i)
 
     name = metadata["Starname"]
-    reddening = metadata.get("e_bv", np.nan)
-    snr = metadata.get("SNR", np.nan)
+    if metadata.get("exposure", np.nan) is None:
+        metadata["exposure"] = np.nan
+    exposure = float(metadata.get("exposure", np.nan))
+    mag_4fs = float(metadata.get("magnitude", np.nan))
+    reddening = float(metadata.get("e_bv", np.nan))
+    snr = float(metadata.get("SNR", np.nan))
+    snr_defn = metadata.get("snr_definition", "--")
 
     r = spectrum.photometry("SDSS_r")
     g = spectrum.photometry("SDSS_g")
     u = spectrum.photometry("SDSS_u")
 
-    print "{:20s} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.1f} {:8.3f} {:8.3f} {:8.3f}".\
-        format(name, metadata["Teff"], metadata["log_g"], metadata["[Fe/H]"], reddening, snr, r, g, u)
+    print "{:15s} {:8.1f} {:8.2f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.1f} {:10s} {:8.3f} {:8.3f} {:8.3f}".\
+        format(name, exposure, mag_4fs, reddening, metadata["Teff"], metadata["logg"], metadata["[Fe/H]"],
+               snr, snr_defn, r, g, u)
