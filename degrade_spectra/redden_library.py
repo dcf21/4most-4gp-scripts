@@ -116,6 +116,9 @@ library_name = re.sub("/", "_", args.output_library)
 library_path = os_path.join(workspace, library_name)
 output_library = SpectrumLibrarySqlite(path=library_path, create=args.create)
 
+# Photometric bands to save extinction values for
+photometric_bands = ["SDSS_r", "SDSS_g", "GROUND_JOHNSON_V", "GROUND_JOHNSON_B"]
+
 # Reddening values
 ebv_list = [float(item.strip()) for item in args.ebv_list.split(",")]
 
@@ -151,12 +154,22 @@ with open(args.log_to, "w") as result_log:
         # Process spectra through reddening model
         reddener = SpectrumReddener(input_spectrum=input_spectrum)
 
+        # Loop over different values of E(B-V)
         for e_bv in ebv_list:
             unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
             reddened_spectrum = reddener.redden(e_bv=e_bv)
+
+            metadata = {"e_bv": e_bv, "uid": unique_id}
+
+            # Work out extinction values in photometric bands of interest
+            for band in photometric_bands:
+                metadata["A_{}".format(band)] = (reddened_spectrum.photometry(band=band) -
+                                                 input_spectrum.photometry(band=band))
+
+            # Save spectra
             output_library.insert(spectra=reddened_spectrum,
                                   filenames=input_spectrum_id['filename'],
-                                  metadata_list={"e_bv": e_bv, "uid": unique_id})
+                                  metadata_list=metadata)
             output_library.insert(spectra=input_spectrum_continuum_normalised,
                                   filenames=continuum_normalised_spectrum_id[0]['filename'],
-                                  metadata_list={"e_bv": e_bv, "uid": unique_id})
+                                  metadata_list=metadata)

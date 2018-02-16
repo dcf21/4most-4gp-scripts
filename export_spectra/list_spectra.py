@@ -71,11 +71,7 @@ input_library, library_items = [input_library_info[i] for i in ("library", "item
 library_ids = [i["specId"] for i in library_items]
 library_spectra = input_library.open(ids=library_ids)
 
-
 # Write out spectra one by one
-print "# {:13s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:10s} {:8s} {:8s} {:8s}".\
-    format("Object", "Exposure", "Mag(4FS)", "E(B-V)", "Teff", "log(g)", "[Fe/H]",
-           "SNR/pixel", "SNR defn", "SDSS_r", "SDSS_g", "SDSS_u")
 for i in range(len(library_spectra)):
     metadata = library_spectra.get_metadata(i)
 
@@ -92,11 +88,25 @@ for i in range(len(library_spectra)):
     reddening = float(metadata.get("e_bv", np.nan))
     snr = float(metadata.get("SNR", np.nan))
     snr_defn = metadata.get("snr_definition", "--")
+    snr_per_unit = "pix" if (metadata.get("SNR_per", None) != "A") else "A"
 
     r = spectrum.photometry("SDSS_r")
     g = spectrum.photometry("SDSS_g")
     u = spectrum.photometry("SDSS_u")
 
-    print "{:15s} {:8.1f} {:8.2f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.1f} {:10s} {:8.3f} {:8.3f} {:8.3f}".\
+    if ((("lrs" in args.library) and (int(mag_4fs) in [13, 16]) or (int(snr) in [100, 150])) or
+            (("hrs" in args.library) and (int(mag_4fs) in [15, 19]) or (int(snr) in [10, 50]))):
+        continue
+
+    if i == 0:
+        line = "# {:13s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:8s} {:10s}". \
+            format("Object", "Exposure", "Mag(4FS)", "E(B-V)", "Teff", "log(g)", "[Fe/H]",
+                   "SNR/" + snr_per_unit, "SNR defn")
+        # line += " {:8s} {:8s} {:8s}".format("SDSS_r", "SDSS_g", "SDSS_u")
+        print line
+
+    line = "{:15s} {:8.1f} {:8.2f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.1f} {:10s}". \
         format(name, exposure, mag_4fs, reddening, metadata["Teff"], metadata["logg"], metadata["[Fe/H]"],
-               snr, snr_defn, r, g, u)
+               snr, snr_defn)
+    # line += " {:8.3f} {:8.3f} {:8.3f}".format(r, g, u)
+    print line

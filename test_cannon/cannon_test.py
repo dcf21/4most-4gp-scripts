@@ -329,6 +329,7 @@ for index in range(N):
     # Identify which star it is and what the SNR is
     star_name = spectrum.metadata["Starname"] if "Starname" in spectrum.metadata else ""
     snr = spectrum.metadata["SNR"] if "SNR" in spectrum.metadata else 0
+    snr_per = spectrum.metadata["SNR_per"] if "SNR_per" in spectrum.metadata else "pixel"
     ebv = spectrum.metadata["e_bv"] if "e_bv" in spectrum.metadata else 0
     uid = spectrum.metadata["uid"] if "uid" in spectrum.metadata else ""
 
@@ -348,7 +349,13 @@ for index in range(N):
             result["target_{}".format(label_name)] = spectrum.metadata[label_name]
 
     # Add the star name and the SNR ratio of the test spectrum
-    result.update({"Starname": star_name, "SNR": snr, "e_bv": ebv, "uid": uid, "time": time_taken[index]})
+    result.update({"Starname": star_name,
+                   "SNR": snr,
+                   "SNR_per": snr_per,
+                   "e_bv": ebv,
+                   "uid": uid,
+                   "time": time_taken[index]
+                   })
     results.append(result)
 
 # Report time taken

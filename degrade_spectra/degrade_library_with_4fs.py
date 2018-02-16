@@ -47,6 +47,15 @@ parser.add_argument('--snr-definition',
                     dest="snr_definitions",
                     help="Specify a way of defining SNR, in the form 'name,minimum,maximum', meaning we calculate the "
                          "median SNR per pixel between minimum and maximum wavelengths in Angstrom.")
+parser.add_argument('--snr-per-pixel',
+                    action='store_true',
+                    dest="per_pixel",
+                    help="SNR values quoted per pixel")
+parser.add_argument('--snr-per-angstrom',
+                    action='store_false',
+                    dest="per_pixel",
+                    help="SNR values quoted per Angstrom")
+parser.set_defaults(per_pixel=True)
 parser.add_argument('--snr-list',
                     required=False,
                     default="10,20,50,80,100,130,180,250,500",
@@ -56,7 +65,22 @@ parser.add_argument('--mag-list',
                     required=False,
                     default="15",
                     dest="mag_list",
-                    help="Specify a comma-separated list of the r' band magnitudes to pass to 4FS.")
+                    help="Specify a comma-separated list of the magnitudes to assume when simulating observations "
+                         "of each object.")
+parser.add_argument('--photometric-band',
+                    required=False,
+                    default="SDSS_r",
+                    dest="photometric_band",
+                    help="The name of the photometric band in which the magnitudes in --mag-list are specified.")
+parser.add_argument('--magnitudes-post-reddening',
+                    action='store_true',
+                    dest="magnitudes_reddened",
+                    help="Magnitudes in --mag-list are specified post-reddening (i.e. are observed magnitudes)")
+parser.add_argument('--magnitudes-pre-reddening',
+                    action='store_false',
+                    dest="magnitudes_reddened",
+                    help="Magnitudes in --mag-list are specified pre-reddening (i.e. are NOT observed magnitudes)")
+parser.set_defaults(magnitudes_reddened=True)
 parser.add_argument('--snr-definitions-lrs',
                     required=False,
                     default="",
@@ -73,12 +97,10 @@ parser.add_argument('--binary-path',
                     dest="binary_path",
                     help="Specify a directory where 4FS package is installed.")
 parser.add_argument('--create',
-                    required=False,
                     action='store_true',
                     dest="create",
                     help="Create a clean SpectrumLibrary to feed synthesized spectra into")
 parser.add_argument('--no-create',
-                    required=False,
                     action='store_false',
                     dest="create",
                     help="Do not create a clean SpectrumLibrary to feed synthesized spectra into")
@@ -189,9 +211,12 @@ with open(args.log_to, "w") as result_log:
             path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
             snr_definitions=snr_definitions,
             magnitude=magnitude,
+            magnitude_unreddened=not args.magnitudes_reddened,
+            photometric_band=args.photometric_band,
             lrs_use_snr_definitions=snr_definitions_lrs,
             hrs_use_snr_definitions=snr_definitions_hrs,
-            snr_list=snr_list
+            snr_list=snr_list,
+            snr_per_pixel=args.per_pixel
         )
 
         for input_spectrum_id in input_spectra_ids:
