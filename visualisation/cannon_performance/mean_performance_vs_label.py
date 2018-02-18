@@ -250,11 +250,16 @@ class PlotLabelPrecision:
             with open("{}{:d}_{:d}_cracktastic.dat".format(self.output_figure_stem, i, self.data_set_counter),
                       "w") as f:
                 for j, datum in enumerate(y):
-                    w = 1.2
-                    f.write("{} {}\n".format(datum[0] - w, datum[3]))
-                    f.write("{} {}\n".format(datum[0] - w, datum[5]))
-                    f.write("{} {}\n".format(datum[0] + w, datum[5]))
-                    f.write("{} {}\n\n\n".format(datum[0] + w, datum[3]))
+                    if self.abscissa_label.startswith("SNR"):
+                        w1 = 1.2
+                        w2 = 1
+                    else:
+                        w1 = 0
+                        w2 = 1.024
+                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[3]))
+                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[5]))
+                    f.write("{} {}\n".format((datum[0] + w1) * w2, datum[5]))
+                    f.write("{} {}\n\n\n".format((datum[0] + w1) * w2, datum[3]))
 
                     self.plot_box_whiskers[i][self.data_set_counter]. \
                         insert(0,
@@ -731,8 +736,8 @@ if __name__ == "__main__":
 
         # Read the JSON file which we dumped after running the Cannon
         if not os.path.exists(cannon_output):
-                print "mean_performance_vs_label.py could not proceed: Cannon run <{}> not found".format(cannon_output)
-                sys.exit()
+            print "mean_performance_vs_label.py could not proceed: Cannon run <{}> not found".format(cannon_output)
+            sys.exit()
 
         data = json.loads(open(cannon_output).read())
 

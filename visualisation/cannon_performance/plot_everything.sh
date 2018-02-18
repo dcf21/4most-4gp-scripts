@@ -25,11 +25,6 @@ python2.7 mean_performance_vs_label.py \
 done
 
 python2.7 mean_performance_vs_label.py \
-  --abscissa "ebv" \
-  --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_reddened_censored_${mode}_10label.json" --dataset-label "Reddened ${mode}" --dataset-colour "green" \
-  --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_reddening_${mode}"
-
-python2.7 mean_performance_vs_label.py \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_fehcut2_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained \$z<-1\$ only (UVES)" --dataset-colour "green" \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_fehcut2b_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained \$z<-1\$ only (GALAH)" --dataset-colour "blue" \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained on full UVES sample" --dataset-colour "red" \
