@@ -94,8 +94,8 @@ for i in range(len(library_spectra)):
     g = spectrum.photometry("SDSS_g")
     u = spectrum.photometry("SDSS_u")
 
-    if ((("lrs" in args.library) and (int(mag_4fs) in [13, 16]) or (int(snr) in [100, 150])) or
-            (("hrs" in args.library) and (int(mag_4fs) in [15, 19]) or (int(snr) in [10, 50]))):
+    if ((("lrs" in args.library) and ((int(mag_4fs) in [13, 16]) or (int(snr) in [100, 150]))) or
+            (("hrs" in args.library) and ((int(mag_4fs) in [15, 19]) or (int(snr) in [10, 50])))):
         continue
 
     if i == 0:
