@@ -31,6 +31,7 @@ class PlotLabelPrecision:
     def __init__(self,
                  label_names,
                  number_data_sets,
+                 plot_width=18,
                  abscissa_label="SNR/A",
                  common_x_limits=None,
                  output_figure_stem="/tmp/cannon_performance/"):
@@ -78,6 +79,7 @@ class PlotLabelPrecision:
             "[Eu/H]": (r"$[{\rm Eu}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.2, 0.4]),
         }
 
+        self.plot_width = plot_width
         self.abscissa_labels = {
             # label name, latex label, log axes, axis range
             "SNR/A": ["SNR", "$S/N$ $[{\\rm \\AA}^{-1}]$", False, (0, 250)],
@@ -269,8 +271,6 @@ class PlotLabelPrecision:
                                    self.data_set_counter, j))
 
     def make_plots(self):
-
-        width = 18
         aspect = 1 / 1.618034  # Golden ratio
 
         # LaTeX strings to use to label each stellar label on graph axes
@@ -298,7 +298,7 @@ class PlotLabelPrecision:
                 set fontsize 1.6
                 set label 1 "{2}" page 1, page {3}
                 
-                """.format(width, aspect, self.plot_precision[2][j][1], width * aspect - 0.8))
+                """.format(self.plot_width, aspect, self.plot_precision[2][j][1], self.plot_width * aspect - 0.8))
 
                 ppl.write("set key top right ; set keycols 2\n")
                 ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
@@ -349,7 +349,7 @@ class PlotLabelPrecision:
                 set fontsize 1.6
                 set label 1 "{2}" page 1, page {3}
                 
-                """.format(width, aspect, latex_label[0], width * aspect - 0.8))
+                """.format(self.plot_width, aspect, latex_label[0], self.plot_width * aspect - 0.8))
 
                 if len(self.plot_precision[i]) > 1:
                     ppl.write("set key top right\n")
@@ -400,7 +400,8 @@ class PlotLabelPrecision:
                     set fontsize 1.6
                     set label 1 "{2}; {3}" page 1, page {4}
                     
-                    """.format(width, aspect, latex_label[0], self.datasets[data_set_counter], width * aspect - 0.5))
+                    """.format(self.plot_width, aspect, latex_label[0], self.datasets[data_set_counter],
+                               self.plot_width * aspect - 0.5))
 
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
@@ -443,9 +444,10 @@ class PlotLabelPrecision:
                     
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
-                    """.format(width * 1.25, aspect,
+                    """.format(self.plot_width * 1.25, aspect,
                                latex_label[2] / 60.,
-                               latex_label[0], self.datasets[data_set_counter], width * 1.25 * aspect - 0.8))
+                               latex_label[0], self.datasets[data_set_counter],
+                               self.plot_width * 1.25 * aspect - 0.8))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(latex_label[0]))
@@ -560,13 +562,15 @@ class PlotLabelPrecision:
                            )
 
 
-def generate_set_of_plots(data_sets, abscissa_label, compare_against_reference_labels, output_figure_stem, run_title):
+def generate_set_of_plots(data_sets, abscissa_label, plot_width,
+                          compare_against_reference_labels, output_figure_stem, run_title):
     # Work out list of labels to plot, based on first data set we're provided with
     label_names = data_sets[0]['cannon_output']['labels']
 
     # Instantiate plotter
     plotter = PlotLabelPrecision(label_names=label_names,
                                  abscissa_label=abscissa_label,
+                                 plot_width=plot_width,
                                  number_data_sets=len(data_sets),
                                  output_figure_stem=output_figure_stem)
 
@@ -623,8 +627,8 @@ def generate_set_of_plots(data_sets, abscissa_label, compare_against_reference_l
                 constraint = constraint.strip()
                 if constraint == "":
                     continue
-                constraint_label = re.split("<|=|>", constraint)[0]
-                constraint_value_string = re.split("<|=|>", constraint)[-1]
+                constraint_label = re.split("[<=>]", constraint)[0]
+                constraint_value_string = re.split("[<=>]", constraint)[-1]
                 constraint_value = constraint_value_string
                 try:
                     constraint_value = float(constraint_value)
@@ -675,6 +679,8 @@ if __name__ == "__main__":
     parser.add_argument('--abscissa', default="SNR/A", dest='abscissa_label',
                         help="Name of the quantity to plot on the horizontal axis. Must be a keyword of the "
                              "dictionary abscissa_labels.")
+    parser.add_argument('--plot-width', default="18", dest='width',
+                        help="Width of each plot.")
     parser.add_argument('--dataset-label', action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
     parser.add_argument('--dataset-filter', action="append", dest='data_set_filter',
@@ -754,6 +760,7 @@ if __name__ == "__main__":
                                })
 
     generate_set_of_plots(data_sets=cannon_outputs,
+                          plot_width=float(args.width),
                           abscissa_label=args.abscissa_label,
                           compare_against_reference_labels=args.use_reference_labels,
                           output_figure_stem=args.output_file,
