@@ -18,18 +18,17 @@ cd /projects/astro3/nobackup/dominic/iwg7_pipeline/4most-4gp-scripts/degrade_spe
 echo Starting rsync: `date`
 echo Temporary directory: ${TMPDIR}/cannon_59052_0
 mkdir ${TMPDIR}/cannon_59052_0
-rsync -a ../workspace/galah_training_sample_turbospec ${TMPDIR}/cannon_59052_0/
+rsync -a ../workspace/galah_test_sample_turbospec ${TMPDIR}/cannon_59052_0/
 echo Rsync done: `date`
 echo Running rearrange script: `date`
 
-
-python2.7 degrade_library_with_4fs.py --input-library galah_training_sample_turbospec \
+python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_turbospec \
                                       --workspace "${TMPDIR}/cannon_59052_0" \
-                                      --snr-list 250 \
-                                      --output-library-lrs galah_training_sample_4fs_lrs \
-                                      --output-library-hrs galah_training_sample_4fs_hrs
+                                      --snr-list 50 \
+                                      --output-library-lrs galah_test_sample_mini_4fs_lrs \
+                                      --output-library-hrs galah_test_sample_mini_4fs_hrs
 
 echo Starting rsync: `date`
-rsync -a ${TMPDIR}/cannon_59052_0/galah_training_sample_4fs_* ../workspace
+rsync -a ${TMPDIR}/cannon_59052_0/galah_test_sample_mini_4fs_* ../workspace
 echo Rsync done: `date`
 
