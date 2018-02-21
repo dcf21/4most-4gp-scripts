@@ -105,7 +105,7 @@ elif args.continuum_normalisation == "polynomial":
     continuum_normalised_training = True
     continuum_normalised_testing = False
 else:
-    CannonClass = CannonInstance
+    CannonClass = CannonInstance_2018_01_09  # FIXME Use old Cannon for now
     continuum_normalised_training = True
     continuum_normalised_testing = True
 
