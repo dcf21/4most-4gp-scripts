@@ -24,6 +24,7 @@ import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import \
     CannonInstance, \
+    CannonInstance_2018_01_09, \
     CannonInstanceWithRunningMeanNormalisation, \
     CannonInstanceWithContinuumNormalisation
 
