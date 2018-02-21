@@ -14,6 +14,8 @@ python2.7 degrade_library_with_4fs.py --input-library reddened_ahm2017_perturbed
                                       --output-library-lrs 4fs_reddened_ahm2017_perturbed_lrs \
                                       --output-library-hrs 4fs_reddened_ahm2017_perturbed_hrs
 
+# ------------------
+
 python2.7 redden_library.py --input-library turbospec_fourteam_sample \
                             --output-library reddened_fourteam_sample
 
@@ -41,3 +43,31 @@ python2.7 degrade_library_with_4fs.py --input-library reddened_fourteam_sample \
                                       --output-library-lrs 4fs_reddened_fourteam_sample_lrs \
                                       --output-library-hrs 4fs_reddened_fourteam_sample_hrs
 
+# ------------------
+
+python2.7 redden_library.py --input-library turbospec_fourteam2_sample \
+                            --output-library reddened_fourteam2_sample
+
+python2.7 degrade_library_with_4fs.py --input-library reddened_fourteam2_sample \
+                                      --create \
+                                      --mag-list 15 \
+                                      --photometric-band "SDSS_g" \
+                                      --snr-per-angstrom \
+                                      --snr-definition "A4261_4270,4261,4270" \
+                                      --snr-definitions-lrs "A4261_4270" \
+                                      --snr-definitions-hrs "A4261_4270" \
+                                      --snr-list "10,50,100,150" \
+                                      --output-library-lrs 4fs_reddened_fourteam_sample_lrs \
+                                      --output-library-hrs 4fs_reddened_fourteam_sample_hrs
+
+python2.7 degrade_library_with_4fs.py --input-library reddened_fourteam2_sample \
+                                      --no-create \
+                                      --mag-list 15 \
+                                      --photometric-band "SDSS_g" \
+                                      --snr-per-angstrom \
+                                      --snr-definition "A6190_6210,6190,6210" \
+                                      --snr-definitions-lrs "A6190_6210" \
+                                      --snr-definitions-hrs "A6190_6210" \
+                                      --snr-list "10,50,100,150" \
+                                      --output-library-lrs 4fs_reddened_fourteam_sample_lrs \
+                                      --output-library-hrs 4fs_reddened_fourteam_sample_hrs

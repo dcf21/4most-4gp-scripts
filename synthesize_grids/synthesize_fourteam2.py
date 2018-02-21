@@ -31,7 +31,7 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output-library',
                     required=False,
-                    default="turbospec_fourteam_sample",
+                    default="turbospec_fourteam2_sample",
                     dest="library",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
 parser.add_argument('--workspace', dest='workspace', default="",
@@ -49,7 +49,7 @@ parser.add_argument('--no-create',
 parser.set_defaults(create=True)
 parser.add_argument('--log-dir',
                     required=False,
-                    default="/tmp/turbospec_fourteam_{}".format(pid),
+                    default="/tmp/turbospec_fourteam2_{}".format(pid),
                     dest="log_to",
                     help="Specify a log directory where we log our progress and configuration files.")
 parser.add_argument('--line-lists-dir',
@@ -84,7 +84,7 @@ parser.add_argument('--limit',
                     help="Only process a maximum of n spectra.")
 args = parser.parse_args()
 
-logger.info("Synthesizing four team stars with arguments <{}> <{}>".format(args.library, args.create))
+logger.info("Synthesizing four team (2) stars with arguments <{}> <{}>".format(args.library, args.create))
 
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
@@ -93,30 +93,10 @@ os.system("mkdir -p {}".format(workspace))
 # Open list of stars
 star_list = [
     # Feh,Evol,Teff,logg
-    [-2.00, 'MS', 7000, 4.40],
-    [-2.00, 'TO', 7800, 4.05],
-    [-2.00, 'SGB', 6600, 3.60],
-    [-2.00, 'RGB', 5250, 2.40],
-    [-1.50, 'MS', 6750, 4.40],
-    [-1.50, 'TO', 7400, 4.05],
-    [-1.50, 'SGB', 6400, 3.65],
-    [-1.50, 'RGB', 5200, 2.40],
-    [-1.00, 'MS', 6500, 4.40],
-    [-1.00, 'TO', 6900, 4.05],
-    [-1.00, 'SGB', 6200, 3.70],
-    [-1.00, 'RGB', 5000, 2.40],
-    [-0.50, 'MS', 6200, 4.40],
     [-0.50, 'TO', 6500, 4.05],
-    [-0.50, 'SGB', 5900, 3.75],
     [-0.50, 'RGB', 4800, 2.40],
-    [0.00, 'MS', 5900, 4.40],
     [0.00, 'TO', 6200, 4.05],
-    [0.00, 'SGB', 5700, 3.85],
-    [0.00, 'RGB', 4500, 2.40],
-    [0.25, 'MS', 5700, 4.40],
-    [0.25, 'TO', 5900, 4.05],
-    [0.25, 'SGB', 5600, 3.90],
-    [0.25, 'RGB', 4400, 2.40]
+    [0.00, 'RGB', 4500, 2.40]
 ]
 
 # Create new SpectrumLibrary

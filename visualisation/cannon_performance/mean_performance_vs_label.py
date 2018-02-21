@@ -40,12 +40,18 @@ class PlotLabelPrecision:
         :param label_names:
             A tuple containing the names of the labels we are to plot the precision for.
 
-        :param common_x_limits:
-            A two-length tuple containing the lower and upper limits to set on all
-            x axes.
+        :param number_data_sets:
+            The number of Cannon runs we're going to plot.
+
+        :param plot_width:
+            The physical width of each graph in cm.
 
         :param abscissa_label:
             The name of the label to be plotted along the horizontal axis of the performance plots.
+
+        :param common_x_limits:
+            A two-length tuple containing the lower and upper limits to set on all
+            x axes.
 
         :param output_figure_stem:
             The file path where we are to save plots, pyxplot scripts and data files.
@@ -55,7 +61,10 @@ class PlotLabelPrecision:
         os.system("mkdir -p {}".format(output_figure_stem))
         os.system("rm -f {}/*".format(output_figure_stem))
 
-        # ( LaTeX title , minimum offset , maximum offset , 4MOST target accuracy )
+        # Define all of the allowed labels we can plot precision for. For each label we define the LaTeX
+        # title to put on the precision axis, as well the the limits of the axis and the target values to indicate.
+
+        # label_name : ( LaTeX title , minimum offset , maximum offset , 4MOST target accuracy )
         self.latex_labels = {
             "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 300, [100]),
             "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 0.8, [0.3]),
@@ -79,7 +88,8 @@ class PlotLabelPrecision:
             "[Eu/H]": (r"$[{\rm Eu}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.2, 0.4]),
         }
 
-        self.plot_width = plot_width
+        # All of the horizontal axes we can plot precision against. The parameter "abscissa_label" should be one of the
+        # keys to this dictionary.
         self.abscissa_labels = {
             # label name, latex label, log axes, axis range
             "SNR/A": ["SNR", "$S/N$ $[{\\rm \\AA}^{-1}]$", False, (0, 250)],
@@ -87,6 +97,7 @@ class PlotLabelPrecision:
             "ebv": ["e_bv", "$E(B-V)$", True, (0.01, 4)]
         }
 
+        self.plot_width = plot_width
         self.datasets = []
         self.label_names = label_names
         self.abscissa_label = abscissa_label
@@ -112,16 +123,19 @@ class PlotLabelPrecision:
         Add a data set to a set of precision plots.
 
         :param cannon_output:
-            An list of dictionaries containing the label values output by the Cannon.
+            The 'stars' structure from the JSON output from this run on the Cannon. Takes the form of a list of
+            dictionaries containing the label values output by the Cannon in each test.
 
         :param label_reference_values:
             A dictionary of dictionaries containing reference values for the labels for each star.
+            label_reference_values[star_name][label_name] = target_value
 
         :param legend_label:
-            The label which should appear in the figure legend for this data set.
+            The label which should appear in the figure legend for this data set. This is typically the title
+            supplied on the command line with the link to this Cannon run.
 
         :param colour:
-            The colour of this data set. Should be specified as a valid Pyxplot string describing a colour object.
+            The colour of this data set. Should be specified as a valid Pyxplot string describing a colour.
 
         :param line_type:
             The Pyxplot line type to use for this data set. Should be specified as an integer.
@@ -130,7 +144,7 @@ class PlotLabelPrecision:
             The number of pixels per angstrom in the spectrum. Used to convert SNR/pixel into SNR/A.
 
         :param metric:
-            The metric used to convert a list of absolute offsets into an average offset.
+            A function used as a metric to convert a numpy array of absolute offsets into an average offset.
 
         :return:
             None
@@ -564,6 +578,42 @@ class PlotLabelPrecision:
 
 def generate_set_of_plots(data_sets, abscissa_label, plot_width,
                           compare_against_reference_labels, output_figure_stem, run_title):
+    """
+Create a set of plots of a number of Cannon runs.
+
+    :param data_sets:
+    A list of runs of the Cannon which are to be plotted. This should be a list of dictinaries. Each dictionary should
+    have the entries:
+
+    cannon_output: The JSON output from the Cannon run.
+    title: Legend caption to use for each Cannon run.
+    filters: A string containing semicolon-separated set of constraints on stars we are to include.
+    colour: The colour to plot the dataset in.
+    line_type: The Pyxplot line type to use for this Cannon run.
+
+    :param abscissa_label:
+    The name of the label we are to plot on the horizontal axis. This should be 'SNR/A', 'SNR/pixel', 'ebv'. See
+    PlotLabelPrecision::abscissa_labels above, where these are defined.
+
+    :param plot_width:
+    The physical width of each graph in cm.
+
+    :param compare_against_reference_labels:
+    If true, we measure the difference between each label value estimated by the Cannon and the target value taken from
+    that star's metadata in the original spectrum library. I.e. the value used to synthesise the spectrum.
+
+    If false, we measure the deviation from the value for each label estimated at the highest abscissa value -- e.g.
+    highest SNR.
+
+    :param output_figure_stem:
+    Directory to save plots in.
+
+    :param run_title:
+    A suffix to put at the end of the label in the top-left corner of each plot
+
+    :return:
+    None
+    """
     # Work out list of labels to plot, based on first data set we're provided with
     label_names = data_sets[0]['cannon_output']['labels']
 
@@ -581,25 +631,30 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
     for counter, data_set in enumerate(data_sets):
 
         # Fetch Cannon output
-        stars = data_set['cannon_output']['stars']
+        test_items = data_set['cannon_output']['stars']
 
-        # Fetch reference values for each star
-        star_names = [item['Starname'] for item in stars]
+        # Create a list of the names of all the stars
+        # (each star may appear multiple times in a single Cannon run at different SNRs etc)
+        star_names = [item['Starname'] for item in test_items]
         star_names_distinct = set(star_names)
 
+        # We now create a look-up table of the target / reference values for each label for each star
         data_set['reference_values'] = {}
 
         # Loop over all the stars the Cannon tried to fit
         for star_name in star_names_distinct:
             # Create a list of all the available abscissa values for this star
-            abscissa_list = [(index, stars[index][abscissa_info[0]])
-                             for index in range(len(stars))
-                             if stars[index]['Starname'] == star_name
+            abscissa_list = [(index, test_items[index][abscissa_info[0]])
+                             for index in range(len(test_items))
+                             if test_items[index]['Starname'] == star_name
                              ]
             # Sort the list into order of ascending SNR
             abscissa_list.sort(key=itemgetter(1))
 
-            reference_run = stars[abscissa_list[-1][0]]
+            # Fetch the metadata from the run at the highest abscissa value
+            reference_run = test_items[abscissa_list[-1][0]]
+
+            # Create dictionary of reference values
             reference_values = {}
             for label in label_names:
                 if compare_against_reference_labels:
@@ -616,10 +671,10 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
                     reference_values[label] = reference_run[label]
             data_set['reference_values'][star_name] = reference_values
 
-        # Filter only those stars which meet input criteria
-        stars_output = []
-        for star in stars:
-            star_name = star['Starname']
+        # Select only those stars which meet filtering criteria
+        test_items_output = []  # A list of Cannon output for stars which meet the filter criteria
+        for test_item in test_items:
+            star_name = test_item['Starname']
             reference_values = data_set['reference_values'][star_name]
 
             meets_filters = True
@@ -636,9 +691,11 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
                     pass
 
                 if constraint_label in reference_values:
+                    # Can filter either on stellar parameters / abundances set for each unique star
                     reference_value = reference_values[constraint_label]
                 else:
-                    reference_value = star[constraint_label]
+                    # or on parameters like SNR and e_bv which are set spectrum by spectrum
+                    reference_value = test_item[constraint_label]
 
                 if constraint == "{}={}".format(constraint_label, constraint_value_string):
                     meets_filters = meets_filters and (reference_value == constraint_value)
@@ -653,7 +710,7 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
                 else:
                     assert False, "Could not parse constraint <{}>.".format(constraint)
             if meets_filters:
-                stars_output.append(star)
+                test_items_output.append(test_item)
 
         # Convert SNR/pixel to SNR/A at 6000A
         raster = np.array(data_set['cannon_output']['wavelength_raster'])
@@ -661,11 +718,11 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
         pixels_per_angstrom = 1.0 / raster_diff[0]
 
         # Add data set to plot
-        legend_label = data_set['title']
+        legend_label = data_set['title']  # Read the title which was supplied on the command line for this dataset
         if run_title:
-            legend_label += " ({})".format(run_title)
+            legend_label += " ({})".format(run_title)  # Possibly append a run title to the end, if supplied
 
-        plotter.add_data_set(cannon_output=stars_output,
+        plotter.add_data_set(cannon_output=test_items_output,
                              label_reference_values=data_set['reference_values'],
                              colour=data_set['colour'],
                              line_type=data_set['line_type'],

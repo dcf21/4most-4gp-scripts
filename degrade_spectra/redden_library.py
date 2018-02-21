@@ -39,7 +39,7 @@ parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--ebv-list',
                     required=False,
-                    default="0.01,0.02,0.05,0.1,0.2,0.5,0.7,1,1.5,2",
+                    default="0,0.01,0.02,0.05,0.1,0.2,0.5,0.7,1,1.5,2",
                     dest="ebv_list",
                     help="Specify a comma-separated list of the E_BV values we are to use when reddening spectra.")
 parser.add_argument('--create',
