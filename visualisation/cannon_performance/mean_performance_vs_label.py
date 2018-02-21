@@ -607,8 +607,8 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
                     key = "target_{}".format(label)
                     if key in reference_run:
                         reference_values[label] = reference_run["target_{}".format(label)]
-                    elif "[Fe/H]" in reference_run:
-                        reference_values[label] = reference_run["[Fe/H]"]  # Assume scales with [Fe/H]
+                    elif "target_[Fe/H]" in reference_run:
+                        reference_values[label] = reference_run["target_[Fe/H]"]  # Assume scales with [Fe/H]
                     else:
                         reference_values[label] = np.nan
                 else:
