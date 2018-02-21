@@ -634,16 +634,22 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
                     constraint_value = float(constraint_value)
                 except ValueError:
                     pass
+
+                if constraint_label in reference_values:
+                    reference_value = reference_values[constraint_label]
+                else:
+                    reference_value = star[constraint_label]
+
                 if constraint == "{}={}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_values[constraint_label] == constraint_value)
+                    meets_filters = meets_filters and (reference_value == constraint_value)
                 elif constraint == "{}<={}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_values[constraint_label] <= constraint_value)
+                    meets_filters = meets_filters and (reference_value <= constraint_value)
                 elif constraint == "{}<{}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_values[constraint_label] < constraint_value)
+                    meets_filters = meets_filters and (reference_value < constraint_value)
                 elif constraint == "{}>={}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_values[constraint_label] >= constraint_value)
+                    meets_filters = meets_filters and (reference_value >= constraint_value)
                 elif constraint == "{}>{}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_values[constraint_label] > constraint_value)
+                    meets_filters = meets_filters and (reference_value > constraint_value)
                 else:
                     assert False, "Could not parse constraint <{}>.".format(constraint)
             if meets_filters:
