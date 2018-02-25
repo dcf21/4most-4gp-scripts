@@ -12,7 +12,6 @@ import sys
 import argparse
 import json
 import re
-from math import sqrt
 import numpy as np
 
 from fourgp_speclib import SpectrumLibrarySqlite
@@ -24,7 +23,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--abundance-target', action="append", dest='targets',
                     help="Abundances we're trying to recover with a given precision target.")
 parser.add_argument('--cannon-output',
-                    default="../output_data/cannon/cannon_reddened_fourteam2_sample_hrs_10label.json",
+                    default="../../output_data/cannon/cannon_reddened_fourteam2_sample_hrs_10label.json",
                     dest='cannon',
                     help="Cannon output file we should analyse.")
 parser.add_argument('--workspace', dest='workspace', default="",
@@ -36,7 +35,7 @@ parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='out
 args = parser.parse_args()
 
 # Set path to workspace where we create libraries of spectra
-workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "..", "workspace")
 
 
 # Helper for opening input SpectrumLibrary(s)
