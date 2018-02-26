@@ -116,10 +116,11 @@ for star in cannon_output['stars']:
     if e_bv not in data[object_name]:
         data[object_name][e_bv] = {}
     uid = star['uid']
-    spectra = input_library.search(uid=uid)
-    assert len(spectra) == 1, "Multiple spectra with the same UID"
-    spectrum = spectra.extract_item(0)
-    metadata = spectrum.metadata
+    spectra_list = input_library.search(uid=uid, continuum_normalised=1)
+    assert len(spectra_list) == 1, "Multiple spectra with the same UID"
+    spectra_ids = [i["specId"] for i in spectra_list]
+    spectra_array = input_library.open(ids=spectra_ids)
+    metadata = spectra_array.get_metadata(0)
     exposure_time = metadata['exposure']
     if np.isfinite(exposure_time):
         data[object_name][e_bv][exposure_time] = star
@@ -160,26 +161,33 @@ for star_name in star_names:
             offsets = []
             for exposure_time in exposure_times:
                 x = cannon_data[exposure_time]
-                offset = abs(x[label_name] - x["target_{}".format(label_name)])
+                target_key = "target_{}".format(label_name)
+                # print x.keys()
+                if target_key not in x:
+                    x[target_key] = x["target_[Fe/H]"]  # If elemental abundance not in metadata, assume scaled solar
+                offset = abs(x[label_name] - x[target_key])
                 if target_over_fe:
                     offset -= abs(x["[Fe/H]"] - x["target_[Fe/H]"])
-                offsets.append(offset)
+                offsets.append([x["SNR"], offset])
 
             # Interpolate exposure time needed to meet precision target
             exposure_time_needed = 1e6
             previous_offset = 1e6
             previous_exp_time = 0
+            previous_snr = 0
             for i, exposure_time in enumerate(exposure_times):
-                new_offset = offsets[i]
+                snr, new_offset = offsets[i]
                 if new_offset > target_precision:
                     previous_offset = new_offset
                     previous_exp_time = exposure_time
+                    previous_snr = snr
                     continue
                 weight_a = abs(new_offset - target_precision)
                 weight_b = abs(previous_offset - target_precision)
                 exposure_time_needed = (previous_exp_time * weight_a + exposure_time * weight_b) / (weight_a + weight_b)
+                snr_needed = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
                 break
-            exposure[star_name][j][e_bv] = exposure_time_needed
+            exposure[star_name][j][e_bv] = [exposure_time_needed, snr_needed]
 
 # Write values to data files
 for k, star_name in enumerate(star_names):
@@ -187,12 +195,12 @@ for k, star_name in enumerate(star_names):
     with open(filename, "w") as f:
         for j, target in enumerate(args.targets):
             for e_bv in ebv_values:
-                exposure_time_needed = exposure[star_name][j][e_bv]
-                f.write("%16s %16s\n" % (e_bv, exposure_time_needed))
+                exposure_time_needed, snr_needed = exposure[star_name][j][e_bv]
+                f.write("%16s %16s %16s\n" % (e_bv, exposure_time_needed, snr_needed))
             f.write("\n\n")
 
     # Create pyxplot script to produce this plot
-    width = args.width
+    width = float(args.width)
     aspect = 1 / 1.618034  # Golden ratio
     pyxplot_input = ""
 
@@ -208,25 +216,26 @@ set nokey
 set xlabel "$E(B-V)$"
 set xrange [0.01:4]
 set log x
-set ylabel "Exposure time"
+set ylabel "Exposure time / min"
 set yrange [1:1000]
 set log y
 
-set label 1 "{}" at page 0.5, page {}
+set label 1 texify("{}") at page 0.5, page {}
 
 """.format(width, aspect,
            star_name, width * aspect - 0.5)
 
     datasets = []
     for j, target in enumerate(args.targets):
-        datasets.append(" \"{0}\" index {1} title {2} with lines ".format(filename, j, target))
+        # Plot exposure times in minutes
+        datasets.append(" \"{0}\" using $1:$2/60. index {1} title \"{2}\" with lines ".format(filename, j, target))
 
 
     pyxplot_input += """
     
 set output "{0}.png"
 
-plot "{0}" title "{1}" with lines
+plot {1}
 
 """.format(filename, ",".join(datasets))
 
