@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import numpy as np
+from operator import itemgetter
 
 from fourgp_speclib import SpectrumLibrarySqlite
 
@@ -28,7 +29,7 @@ parser.add_argument('--cannon-output',
                     help="Cannon output file we should analyse.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
-parser.add_argument('--plot-width', default="18", dest='width',
+parser.add_argument('--plot-width', default="15", dest='width',
                     help="Width of each plot.")
 parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
@@ -80,22 +81,36 @@ def open_input_libraries(library_spec, extra_constraints):
 
 # Read Cannon output
 if not os.path.exists(args.cannon):
-        print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
-        sys.exit()
+    print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+    sys.exit()
 
 cannon_output = json.loads(open(args.cannon).read())
+print "Number of Cannon tests: {:d}".format(len(cannon_output['stars']))
 
 # Create a sorted list of all the SNR values we've got
 snr_values = [item['SNR'] for item in cannon_output['stars']]
 snr_values = sorted(set(snr_values))
+print "Number of SNR values: {:d}".format(len(snr_values))
+
+# Create a sorted list of all the SNR definitions we've got
+snr_definitions = [item['snr_definition'] for item in cannon_output['stars']]
+snr_definitions = sorted(set(snr_definitions))
+print "Number of SNR definitions: {:d}".format(len(snr_definitions))
 
 # Create a sorted list of all the stars we've got
 star_names = [item['Starname'] for item in cannon_output['stars']]
 star_names = sorted(set(star_names))
+print "Number of unique stars: {:d}".format(len(star_names))
 
 # Create a sorted list of all the E(B-V) values we've got
 ebv_values = [item['e_bv'] for item in cannon_output['stars']]
 ebv_values = sorted(set(ebv_values))
+print "Number of unique E(B-V) values: {:d}".format(len(ebv_values))
+
+# Estimate number of observations in each configuration
+print "Number of observations per configuration: {:.3f}".format(float(len(cannon_output['stars'])) / len(snr_values)
+                                                                / len(snr_definitions) / len(star_names)
+                                                                / len(ebv_values))
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
 raster = np.array(cannon_output['wavelength_raster'])
@@ -116,14 +131,18 @@ for star in cannon_output['stars']:
     if e_bv not in data[object_name]:
         data[object_name][e_bv] = {}
     uid = star['uid']
+    snr_config = "{0} {1}".format(star['snr_definition'], star['SNR'])
+    if snr_config not in data[object_name][e_bv]:
+        data[object_name][e_bv][snr_config] = []
     spectra_list = input_library.search(uid=uid, continuum_normalised=1)
     assert len(spectra_list) == 1, "Multiple spectra with the same UID"
     spectra_ids = [i["specId"] for i in spectra_list]
     spectra_array = input_library.open(ids=spectra_ids)
     metadata = spectra_array.get_metadata(0)
     exposure_time = metadata['exposure']
-    if np.isfinite(exposure_time):
-        data[object_name][e_bv][exposure_time] = star
+    if not np.isfinite(exposure_time):
+        exposure_time = 1e9
+    data[object_name][e_bv][snr_config].append([float(exposure_time), star])
 
 # Loop over stars, plotting each in turn
 exposure = {}  # exposure[star_name][target][E_BV] = exposure time
@@ -153,30 +172,38 @@ for star_name in star_names:
 
         # Loop over all the reddening values we're considering
         for e_bv in ebv_values:
-            cannon_data = data[star_name][e_bv]
-            exposure_times = cannon_data.keys()
-            exposure_times.sort()
 
             # Start making a list of the offsets of the Cannon's estimates as a function of exposure time
-            offsets = []
-            for exposure_time in exposure_times:
-                x = cannon_data[exposure_time]
-                target_key = "target_{}".format(label_name)
-                # print x.keys()
-                if target_key not in x:
-                    x[target_key] = x["target_[Fe/H]"]  # If elemental abundance not in metadata, assume scaled solar
-                offset = abs(x[label_name] - x[target_key])
-                if target_over_fe:
-                    offset -= abs(x["[Fe/H]"] - x["target_[Fe/H]"])
-                offsets.append([x["SNR"], offset])
+            offset_vs_exposure = []
+            for snr_config in data[star_name][e_bv]:
+                observations = data[star_name][e_bv][snr_config]
+                exposure_times = []
+                offsets = []
+                for exposure_time, observation in observations:
+                    target_key = "target_{}".format(label_name)
+                    if target_key not in observation:
+                        # If elemental abundance not in metadata, assume scaled solar
+                        observation[target_key] = observation["target_[Fe/H]"]
+                    offset = observation[label_name] - observation[target_key]
+                    if target_over_fe:
+                        offset -= observation["[Fe/H]"] - observation["target_[Fe/H]"]
+                    offsets.append(pow(offset, 2))
+                    exposure_times.append(exposure_time)
+
+                # Take average exposure time and abundance offset
+                exposure_time = np.mean(exposure_times)
+                offset = np.sqrt(np.mean(offsets))
+
+                offset_vs_exposure.append([exposure_time, snr_config, offset])
 
             # Interpolate exposure time needed to meet precision target
+            offset_vs_exposure.sort(key=itemgetter(0))
             exposure_time_needed = 1e6
             previous_offset = 1e6
             previous_exp_time = 0
             previous_snr = 0
-            for i, exposure_time in enumerate(exposure_times):
-                snr, new_offset = offsets[i]
+            for configuration in offset_vs_exposure:
+                exposure_time, snr, new_offset = configuration
                 if new_offset > target_precision:
                     previous_offset = new_offset
                     previous_exp_time = exposure_time
@@ -185,9 +212,9 @@ for star_name in star_names:
                 weight_a = abs(new_offset - target_precision)
                 weight_b = abs(previous_offset - target_precision)
                 exposure_time_needed = (previous_exp_time * weight_a + exposure_time * weight_b) / (weight_a + weight_b)
-                snr_needed = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
+                # snr_needed = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
                 break
-            exposure[star_name][j][e_bv] = [exposure_time_needed, snr_needed]
+            exposure[star_name][j][e_bv] = [exposure_time_needed, offset_vs_exposure]
 
 # Write values to data files
 for k, star_name in enumerate(star_names):
@@ -195,8 +222,8 @@ for k, star_name in enumerate(star_names):
     with open(filename, "w") as f:
         for j, target in enumerate(args.targets):
             for e_bv in ebv_values:
-                exposure_time_needed, snr_needed = exposure[star_name][j][e_bv]
-                f.write("%16s %16s %16s\n" % (e_bv, exposure_time_needed, snr_needed))
+                exposure_time_needed, offsets = exposure[star_name][j][e_bv]
+                f.write("%16s %16s   # %s\n" % (e_bv, exposure_time_needed, str(offsets)))
             f.write("\n\n")
 
     # Create pyxplot script to produce this plot
@@ -208,10 +235,10 @@ for k, star_name in enumerate(star_names):
     
 set nodisplay
 set origin 0,0
-set width {}
-set size ratio {}
+set width {0}
+set size ratio {1}
 set fontsize 1.1
-set nokey
+set key bottom right
 
 set xlabel "$E(B-V)$"
 set xrange [0.01:4]
@@ -220,7 +247,7 @@ set ylabel "Exposure time / min"
 set yrange [1:1000]
 set log y
 
-set label 1 texify("{}") at page 0.5, page {}
+set label 1 texify("{2}") at page 0.5, page {3}
 
 """.format(width, aspect,
            star_name, width * aspect - 0.5)
@@ -228,8 +255,9 @@ set label 1 texify("{}") at page 0.5, page {}
     datasets = []
     for j, target in enumerate(args.targets):
         # Plot exposure times in minutes
-        datasets.append(" \"{0}\" using $1:$2/60. index {1} title \"{2}\" with lines ".format(filename, j, target))
-
+        datasets.append(" \"{0}\" using $1:$2/60. index {1} title \"RMS error in {2}\" with lines ".format(filename, j,
+                                                                                              re.sub("<", " $<$ ",
+                                                                                                     target)))
 
     pyxplot_input += """
     
