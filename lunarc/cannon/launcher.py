@@ -35,7 +35,7 @@ slurm_script = """#!/bin/sh
 #SBATCH --exclusive
 #
 # job time, change for what your job requires
-#SBATCH -t 24:00:00
+#SBATCH -t 48:00:00
 #
 # job name and output file names
 #SBATCH -J cannon_farm
