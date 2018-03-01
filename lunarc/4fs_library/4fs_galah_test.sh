@@ -2,7 +2,7 @@
 # requesting the number of nodes needed
 #
 # job time, change for what your job requires
-#SBATCH -t 48:00:00
+#SBATCH -t 100:00:00
 #
 # job name and output file names
 #SBATCH -J splitter
@@ -24,6 +24,7 @@ echo Running rearrange script: `date`
 
 python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_turbospec \
                                       --workspace "${TMPDIR}/cannon_59052_0" \
+                                      --snr-list "10,12,14,16,18,20,23,26,30,35,40,45,50,80,100,130,180,250" \
                                       --output-library-lrs galah_test_sample_4fs_lrs \
                                       --output-library-hrs galah_test_sample_4fs_hrs
 

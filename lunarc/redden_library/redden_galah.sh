@@ -2,7 +2,7 @@
 # requesting the number of nodes needed
 #
 # job time, change for what your job requires
-#SBATCH -t 24:00:00
+#SBATCH -t 100:00:00
 #
 # job name and output file names
 #SBATCH -J splitter
