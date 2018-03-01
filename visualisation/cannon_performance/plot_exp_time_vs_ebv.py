@@ -244,7 +244,7 @@ set xlabel "$E(B-V)$"
 set xrange [0.01:4]
 set log x
 set ylabel "Exposure time / min"
-set yrange [1:1000]
+set yrange [0.1:10]
 set log y
 
 set label 1 texify("{2}") at page 0.5, page {3}
