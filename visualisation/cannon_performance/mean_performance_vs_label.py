@@ -21,7 +21,7 @@ class PlotLabelPrecision:
     """
     Class for making a plot of the Cannon's performance.
 
-    :ivar latex_labels:
+    :ivar label_info:
         A tuple containing LaTeX labels to use on the figure axes.
 
     :ivar plot_counter:
@@ -34,7 +34,10 @@ class PlotLabelPrecision:
                  plot_width=18,
                  abscissa_label="SNR/A",
                  common_x_limits=None,
-                 output_figure_stem="/tmp/cannon_performance/"):
+                 output_figure_stem="/tmp/cannon_performance/",
+                 keep_eps=False,
+                 correlation_plots=False
+                 ):
         """
 
         :param label_names:
@@ -63,30 +66,58 @@ class PlotLabelPrecision:
 
         # Define all of the allowed labels we can plot precision for. For each label we define the LaTeX
         # title to put on the precision axis, as well the the limits of the axis and the target values to indicate.
-
-        # label_name : ( LaTeX title , minimum offset , maximum offset , 4MOST target accuracy )
-        self.latex_labels = {
-            "Teff": (r"$T_{\rm eff}$ $[{\rm K}]$", 0, 300, [100]),
-            "logg": (r"$\log{g}$ $[{\rm dex}]$", 0, 0.8, [0.3]),
-            "[Fe/H]": (r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[C/H]": (r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[N/H]": (r"$[{\rm N}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[O/H]": (r"$[{\rm O}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Na/H]": (r"$[{\rm Na}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Mg/H]": (r"$[{\rm Mg}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Al/H]": (r"$[{\rm Al}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Si/H]": (r"$[{\rm Si}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Ca/H]": (r"$[{\rm Ca}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Ti/H]": (r"$[{\rm Ti}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Mn/H]": (r"$[{\rm Mn}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Co/H]": (r"$[{\rm Co}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Ni/H]": (r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Ba/H]": (r"$[{\rm Ba}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.1, 0.2]),
-            "[Sr/H]": (r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Cr/H]": (r"$[{\rm Cr}/{\rm H}]$ $[{\rm dex}]$", 0, 0.75, [0.1, 0.2]),
-            "[Li/H]": (r"$[{\rm Li}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.2, 0.4]),
-            "[Eu/H]": (r"$[{\rm Eu}/{\rm H}]$ $[{\rm dex}]$", 0, 1.1, [0.2, 0.4]),
+        self.label_info = {
+            "Teff": {"latex": r"$T_{\rm eff}$ $[{\rm K}]$", "cannon_label": "Teff", "over_fe": False, "offset_min": 0,
+                     "offset_max": 300, "targets": [100]},
+            "logg": {"latex": r"$\log{g}$ $[{\rm dex}]$", "cannon_label": "logg", "over_fe": False, "offset_min": 0,
+                     "offset_max": 0.8, "targets": [0.3]},
+            "[Fe/H]": {"latex": r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Fe/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[C/H]": {"latex": r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[C/H]", "over_fe": False,
+                      "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
+            "[N/H]": {"latex": r"$[{\rm N}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[N/H]", "over_fe": False,
+                      "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
+            "[O/H]": {"latex": r"$[{\rm O}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[O/H]", "over_fe": False,
+                      "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
+            "[Na/H]": {"latex": r"$[{\rm Na}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Na/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Mg/H]": {"latex": r"$[{\rm Mg}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Mg/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Al/H]": {"latex": r"$[{\rm Al}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Al/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Si/H]": {"latex": r"$[{\rm Si}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Si/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Ca/H]": {"latex": r"$[{\rm Ca}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ca/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Ti/H]": {"latex": r"$[{\rm Ti}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ti/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Mn/H]": {"latex": r"$[{\rm Mn}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Mn/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Co/H]": {"latex": r"$[{\rm Co}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Co/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Ni/H]": {"latex": r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ni/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Ba/H]": {"latex": r"$[{\rm Ba}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ba/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
+            "[Sr/H]": {"latex": r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Sr/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Cr/H]": {"latex": r"$[{\rm Cr}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Cr/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
+            "[Li/H]": {"latex": r"$[{\rm Li}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Li/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 1.1, "targets": [0.2, 0.4]},
+            "[Eu/H]": {"latex": r"$[{\rm Eu}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Eu/H]", "over_fe": False,
+                       "offset_min": 0, "offset_max": 1.1, "targets": [0.2, 0.4]},
         }
+
+        # Allow abundance over Fe to also be plotted
+        for key in self.label_info.keys():
+            test = re.match("\[(.*)/H\]", key)
+            if test is not None:
+                info = self.label_info[key].copy()
+                new_key = "[{}/Fe]".format(test.group(1))
+                info["over_fe"] = True
+                info["latex"] = re.sub("rm H}", "rm Fe}", info["latex"])
+                self.label_info[new_key] = info
 
         # All of the horizontal axes we can plot precision against. The parameter "abscissa_label" should be one of the
         # keys to this dictionary.
@@ -98,6 +129,8 @@ class PlotLabelPrecision:
         }
 
         self.plot_width = plot_width
+        self.keep_eps = keep_eps
+        self.correlation_plots = correlation_plots
         self.datasets = []
         self.label_names = label_names
         self.abscissa_label = abscissa_label
@@ -110,19 +143,15 @@ class PlotLabelPrecision:
         self.plot_histograms = [[{} for j in range(number_data_sets)] for i in label_names]
         self.plot_cross_correlations = [{} for j in range(number_data_sets)]
 
-    def set_latex_label(self, label, latex, axis_min=0, axis_max=1.1):
-        self.latex_labels[label] = (latex, axis_min, axis_max)
-
-    def add_data_set(self, cannon_output, label_reference_values,
+    def add_data_set(self, cannon_stars, cannon_json, label_reference_values,
                      legend_label=None,
                      colour="red", line_type=1,
-                     pixels_per_angstrom=1.0,
                      metric=lambda x: np.sqrt(np.mean(np.square(x)))
                      ):
         """
         Add a data set to a set of precision plots.
 
-        :param cannon_output:
+        :param cannon_stars:
             The 'stars' structure from the JSON output from this run on the Cannon. Takes the form of a list of
             dictionaries containing the label values output by the Cannon in each test.
 
@@ -140,9 +169,6 @@ class PlotLabelPrecision:
         :param line_type:
             The Pyxplot line type to use for this data set. Should be specified as an integer.
 
-        :param pixels_per_angstrom:
-            The number of pixels per angstrom in the spectrum. Used to convert SNR/pixel into SNR/A.
-
         :param metric:
             A function used as a metric to convert a numpy array of absolute offsets into an average offset.
 
@@ -150,18 +176,23 @@ class PlotLabelPrecision:
             None
         """
 
+        # Convert SNR/pixel to SNR/A at 6000A
+        raster = np.array(cannon_json['wavelength_raster'])
+        raster_diff = np.diff(raster[raster > 6000])
+        pixels_per_angstrom = 1.0 / raster_diff[0]
+
         self.datasets.append(legend_label)
 
         # LaTeX strings to use to label each stellar label on graph axes
-        latex_labels = [self.latex_labels[ln] for ln in self.label_names]
+        labels_info = [self.label_info[ln] for ln in self.label_names]
 
         # Create a sorted list of all the abscissa values we've got
         abscissa_info = self.abscissa_labels[self.abscissa_label]
-        abscissa_values = [item[abscissa_info[0]] for item in cannon_output]
+        abscissa_values = [item[abscissa_info[0]] for item in cannon_stars]
         abscissa_values = sorted(set(abscissa_values))
 
         # Create a sorted list of all the stars we've got
-        star_names = [item['Starname'] for item in cannon_output]
+        star_names = [item['Starname'] for item in cannon_stars]
         star_names = sorted(set(star_names))
 
         # Construct the dictionary for storing the Cannon's mismatch to each stellar label
@@ -175,7 +206,7 @@ class PlotLabelPrecision:
         # Loop over stars in the Cannon output
         for star_name in star_names:
             # Loop over the Cannon's various attempts to match this star (e.g. at different abscissa values)
-            for star in cannon_output:
+            for star in cannon_stars:
                 if star['Starname'] == star_name:
                     # Loop over the labels the Cannon tried to match
                     for label_name in self.label_names:
@@ -186,7 +217,15 @@ class PlotLabelPrecision:
                             ref = np.nan
 
                         # Calculate the offset of the Cannon's output from the reference value
-                        label_offset[star[abscissa_info[0]]][label_name].append(star[label_name] - ref)
+                        label_info = self.label_info[label_name]
+                        cannon_label = label_info["cannon_label"]
+
+                        if label_info["over_fe"]:
+                            cannon_output_value = star[cannon_label] - star["[Fe/H]"]
+                        else:
+                            cannon_output_value = star[cannon_label]
+
+                        label_offset[star[abscissa_info[0]]][label_name].append(cannon_output_value - ref)
 
         self.data_set_counter += 1
 
@@ -200,7 +239,7 @@ class PlotLabelPrecision:
             keyword = snr_per_a if self.abscissa_label == "SNR/A" else xk
 
             y = []
-            for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
+            for i, (label_name, label_info) in enumerate(zip(self.label_names, labels_info)):
                 # List of offsets
                 diffs = label_offset[xk][label_name]
                 y.append(diffs)
@@ -218,13 +257,14 @@ class PlotLabelPrecision:
                        np.transpose(y))
 
             # Output scatter plots of label cross-correlations at this abscissa value
-            self.plot_cross_correlations[self.data_set_counter][keyword] = \
-                ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
-                 scale
-                 )
+            if self.correlation_plots:
+                self.plot_cross_correlations[self.data_set_counter][keyword] = \
+                    ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
+                     scale
+                     )
 
         # Extract list of label offsets for each label, and for each abscissa value to use for precision plot
-        for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
+        for i, (label_name, label_info) in enumerate(zip(self.label_names, labels_info)):
             scale = np.sqrt(pixels_per_angstrom)
 
             y = []
@@ -288,7 +328,7 @@ class PlotLabelPrecision:
         aspect = 1 / 1.618034  # Golden ratio
 
         # LaTeX strings to use to label each stellar label on graph axes
-        latex_labels = [self.latex_labels[ln] for ln in self.label_names]
+        labels_info = [self.label_info[ln] for ln in self.label_names]
 
         abscissa_info = self.abscissa_labels[self.abscissa_label]
 
@@ -328,12 +368,12 @@ class PlotLabelPrecision:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
 
                 plot_items = []
-                for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
+                for i, (label_name, label_info) in enumerate(zip(self.label_names, labels_info)):
                     if label_name.startswith("["):
                         item = self.plot_precision[i][j]
                         # Remove string "[dex]" from end of legend label
                         plot_items.append(
-                            "{} title \"{}\" w lp pt {}".format(item[0], latex_label[0][:-13], 16 + (i - 2)))
+                            "{} title \"{}\" w lp pt {}".format(item[0], label_info["latex"][:-13], 16 + (i - 2)))
 
                 # Add lines for target accuracy in this label
                 for target_value in (0.1, 0.2):
@@ -351,7 +391,7 @@ class PlotLabelPrecision:
             os.system("pyxplot {}.ppl".format(stem))
 
         # Create a new pyxplot script for precision plots
-        for i, (label_name, latex_label) in enumerate(zip(self.label_names, latex_labels)):
+        for i, (label_name, label_info) in enumerate(zip(self.label_names, labels_info)):
             stem = "{}precision_{:d}".format(self.output_figure_stem, i)
             with open("{}.ppl".format(stem), "w") as ppl:
                 ppl.write("""
@@ -363,18 +403,18 @@ class PlotLabelPrecision:
                 set fontsize 1.6
                 set label 1 "{2}" page 1, page {3}
                 
-                """.format(self.plot_width, aspect, latex_label[0], self.plot_width * aspect - 0.8))
+                """.format(self.plot_width, aspect, label_info["latex"], self.plot_width * aspect - 0.8))
 
                 if len(self.plot_precision[i]) > 1:
                     ppl.write("set key top right\n")
                 else:
                     ppl.write("set nokey\n")
 
-                ppl.write("set ylabel \"RMS offset in {}\"\n".format(latex_label[0]))
+                ppl.write("set ylabel \"RMS offset in {}\"\n".format(label_info["latex"]))
                 ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
                 # Set axis limits
-                ppl.write("set yrange [{}:{}]\n".format(latex_label[1], latex_label[2]))
+                ppl.write("set yrange [{}:{}]\n".format(label_info["offset_min"], label_info["offset_max"]))
 
                 if abscissa_info[2]:
                     ppl.write("set log x\n")
@@ -385,7 +425,7 @@ class PlotLabelPrecision:
                 plot_items = ["{} title \"{}\" {}".format(item[0], item[1], item[2]) for item in self.plot_precision[i]]
 
                 # Add lines for target accuracy in this label
-                for target_value in latex_label[3]:
+                for target_value in label_info["targets"]:
                     plot_items.append("{} with lines col grey(0.75) notitle".format(target_value))
 
                 ppl.write("plot {}\n".format(",".join(plot_items)))
@@ -414,14 +454,15 @@ class PlotLabelPrecision:
                     set fontsize 1.6
                     set label 1 "{2}; {3}" page 1, page {4}
                     
-                    """.format(self.plot_width, aspect, latex_label[0], self.datasets[data_set_counter],
+                    """.format(self.plot_width, aspect, label_info["latex"], self.datasets[data_set_counter],
                                self.plot_width * aspect - 0.5))
 
-                    ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
+                    ppl.write("set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
                     ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
                     # Set axis limits
-                    ppl.write("set yrange [{}:{}]\n".format(-2 * latex_label[2], 2 * latex_label[2]))
+                    ppl.write("set yrange [{}:{}]\n".format(-2 * label_info["offset_min"],
+                                                            2 * label_info["offset_max"]))
 
                     if abscissa_info[2]:
                         ppl.write("set log x\n")
@@ -459,13 +500,14 @@ class PlotLabelPrecision:
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
                     """.format(self.plot_width * 1.25, aspect,
-                               latex_label[2] / 60.,
-                               latex_label[0], self.datasets[data_set_counter],
+                               label_info["offset_max"] / 60.,
+                               label_info["latex"], self.datasets[data_set_counter],
                                self.plot_width * 1.25 * aspect - 0.8))
 
-                    ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
-                    ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(latex_label[0]))
-                    ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 1.2, latex_label[2] * 1.2))
+                    ppl.write("set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
+                    ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(label_info["latex"]))
+                    ppl.write("set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
+                                                            label_info["offset_max"] * 1.2))
 
                     ppl_items = []
                     k_max = float(len(data_set_items) - 1)
@@ -502,78 +544,84 @@ class PlotLabelPrecision:
                 eps_files["histograms"].append("{0}.eps".format(stem))
 
         # Create a new pyxplot script for correlation plots
-        for data_set_counter, data_set_items in enumerate(self.plot_cross_correlations):
-            for k, (abscissa_value, plot_item) in enumerate(sorted(data_set_items.iteritems())):
-                (data_filename, snr_scaling) = plot_item
-                stem = "{}correlation_{:d}_{:d}".format(self.output_figure_stem, k, data_set_counter)
-                with open("{}.ppl".format(stem), "w") as ppl:
-                    item_width = 4
+        if self.correlation_plots:
+            for data_set_counter, data_set_items in enumerate(self.plot_cross_correlations):
+                for k, (abscissa_value, plot_item) in enumerate(sorted(data_set_items.iteritems())):
+                    (data_filename, snr_scaling) = plot_item
+                    stem = "{}correlation_{:d}_{:d}".format(self.output_figure_stem, k, data_set_counter)
+                    with open("{}.ppl".format(stem), "w") as ppl:
+                        item_width = 4
 
-                    if self.abscissa_label == "SNR/A":
-                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                            format(abscissa_value, abscissa_value / snr_scaling)
-                    elif self.abscissa_label == "SNR/pixel":
-                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                            format(abscissa_value * snr_scaling, abscissa_value)
-                    else:
-                        caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
+                        if self.abscissa_label == "SNR/A":
+                            caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                                format(abscissa_value, abscissa_value / snr_scaling)
+                        elif self.abscissa_label == "SNR/pixel":
+                            caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                                format(abscissa_value * snr_scaling, abscissa_value)
+                        else:
+                            caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
 
-                    ppl.write("""
-                
-                    set width {0}
-                    set size ratio {1}
-                    set term dpi 100
-                    set nokey
-                    set fontsize 1.6
-                    set nodisplay
-                    set multiplot
-                    text "{2}" at {3}-2, {3}-6 val center hal right
-                    text "{4:s}" at {3}-2, {3}-7 val center hal right
+                        ppl.write("""
                     
-                    """.format(item_width, 1,
-                               self.datasets[data_set_counter],
-                               item_width * len(self.label_names),
-                               caption
-                               ))
+                        set width {0}
+                        set size ratio {1}
+                        set term dpi 100
+                        set nokey
+                        set fontsize 1.6
+                        set nodisplay
+                        set multiplot
+                        text "{2}" at {3}-2, {3}-6 val center hal right
+                        text "{4:s}" at {3}-2, {3}-7 val center hal right
+                        
+                        """.format(item_width, 1,
+                                   self.datasets[data_set_counter],
+                                   item_width * len(self.label_names),
+                                   caption
+                                   ))
 
-                    for i in range(len(self.label_names) - 1):
-                        for j in range(i + 1, len(self.label_names)):
-                            latex_label = self.latex_labels[self.label_names[j]]
-                            if i == 0:
-                                ppl.write("unset yformat\n")
-                                ppl.write("set ylabel \"$\Delta$ {}\"\n".format(latex_label[0]))
-                            else:
-                                ppl.write("set yformat '' ; set ylabel ''\n")
-                            ppl.write("set yrange [{}:{}]\n".format(-latex_label[2] * 1.2, latex_label[2] * 1.2))
+                        for i in range(len(self.label_names) - 1):
+                            for j in range(i + 1, len(self.label_names)):
+                                label_info = self.label_info[self.label_names[j]]
+                                if i == 0:
+                                    ppl.write("unset yformat\n")
+                                    ppl.write("set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
+                                else:
+                                    ppl.write("set yformat '' ; set ylabel ''\n")
+                                ppl.write("set yrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
+                                                                        label_info["offset_max"] * 1.2))
 
-                            latex_label = self.latex_labels[self.label_names[i]]
-                            if j == len(self.label_names) - 1:
-                                ppl.write("unset xformat\n")
-                                ppl.write("set xlabel \"$\Delta$ {}\"\n".format(latex_label[0]))
-                            else:
-                                ppl.write("set xformat '' ; set xlabel ''\n")
-                            ppl.write("set xrange [{}:{}]\n".format(-latex_label[2] * 1.2, latex_label[2] * 1.2))
+                                label_info = self.label_info[self.label_names[i]]
+                                if j == len(self.label_names) - 1:
+                                    ppl.write("unset xformat\n")
+                                    ppl.write("set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
+                                else:
+                                    ppl.write("set xformat '' ; set xlabel ''\n")
+                                ppl.write("set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
+                                                                        label_info["offset_max"] * 1.2))
 
-                            ppl.write("set origin {},{}\n".format(i * item_width,
-                                                                  (len(self.label_names) - 1 - j) * item_width))
+                                ppl.write("set origin {},{}\n".format(i * item_width,
+                                                                      (len(self.label_names) - 1 - j) * item_width))
 
-                            ppl.write("plot  \"{}\" using {}:{} w dots ps 2\n".
-                                      format(data_filename, i + 1, j + 1))
+                                ppl.write("plot  \"{}\" using {}:{} w dots ps 2\n".
+                                          format(data_filename, i + 1, j + 1))
 
-                    ppl.write("""
-                    
-                    set term eps ; set output '{0}.eps' ; set display ; refresh
-                    set term png ; set output '{0}.png' ; set display ; refresh
-                    set term pdf ; set output '{0}.pdf' ; set display ; refresh
-                    
-                    """.format(stem))
-                os.system("timeout 30s pyxplot {0}.ppl".format(stem))
+                        ppl.write("""
+                        
+                        set term eps ; set output '{0}.eps' ; set display ; refresh
+                        set term png ; set output '{0}.png' ; set display ; refresh
+                        set term pdf ; set output '{0}.pdf' ; set display ; refresh
+                        
+                        """.format(stem))
+                    os.system("timeout 30s pyxplot {0}.ppl".format(stem))
 
         for name, items in eps_files.iteritems():
             make_multiplot(eps_files=items,
                            output_filename="{}{}_multiplot".format(self.output_figure_stem, name),
                            aspect=6. / 8
                            )
+
+        if not self.keep_eps:
+            os.system("rm -f {}*.eps".format(self.output_figure_stem))
 
 
 def generate_set_of_plots(data_sets, abscissa_label, plot_width,
@@ -657,18 +705,25 @@ Create a set of plots of a number of Cannon runs.
             # Create dictionary of reference values
             reference_values = {}
             for label in label_names:
+                label_info = plotter.label_info[label]
+                cannon_label = label_info["cannon_label"]
                 if compare_against_reference_labels:
                     # Use values that were used to synthesise this spectrum
                     key = "target_{}".format(label)
                     if key in reference_run:
-                        reference_values[label] = reference_run["target_{}".format(label)]
+                        reference_values[label] = reference_run["target_{}".format(cannon_label)]
                     elif "target_[Fe/H]" in reference_run:
                         reference_values[label] = reference_run["target_[Fe/H]"]  # Assume scales with [Fe/H]
                     else:
                         reference_values[label] = np.nan
+                    if label_info["over_fe"]:
+                        reference_values[label] -= reference_run["target_[Fe/H]"]
                 else:
                     # Use the values produced by the Cannon at the highest SNR as the target values for each star
-                    reference_values[label] = reference_run[label]
+                    reference_values[label] = reference_run[cannon_label]
+                    if label_info["over_fe"]:
+                        reference_values[label] -= reference_run["[Fe/H]"]
+
             data_set['reference_values'][star_name] = reference_values
 
         # Select only those stars which meet filtering criteria
@@ -712,22 +767,17 @@ Create a set of plots of a number of Cannon runs.
             if meets_filters:
                 test_items_output.append(test_item)
 
-        # Convert SNR/pixel to SNR/A at 6000A
-        raster = np.array(data_set['cannon_output']['wavelength_raster'])
-        raster_diff = np.diff(raster[raster > 6000])
-        pixels_per_angstrom = 1.0 / raster_diff[0]
-
         # Add data set to plot
         legend_label = data_set['title']  # Read the title which was supplied on the command line for this dataset
         if run_title:
             legend_label += " ({})".format(run_title)  # Possibly append a run title to the end, if supplied
 
-        plotter.add_data_set(cannon_output=test_items_output,
+        plotter.add_data_set(cannon_stars=test_items_output,
+                             cannon_json=data_set['cannon_output'],
                              label_reference_values=data_set['reference_values'],
                              colour=data_set['colour'],
                              line_type=data_set['line_type'],
-                             legend_label=legend_label,
-                             pixels_per_angstrom=pixels_per_angstrom
+                             legend_label=legend_label
                              )
 
     plotter.make_plots()

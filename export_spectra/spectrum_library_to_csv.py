@@ -80,7 +80,7 @@ for i in range(len(library_ids)):
     metadata = input_library.get_metadata(ids=library_ids[i])[0]
 
     if i == 0:
-        line = "# " + " ".join(fields)
+        line = args.separator.join(fields)
         print line
 
     words = []
