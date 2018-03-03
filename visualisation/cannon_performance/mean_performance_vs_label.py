@@ -625,7 +625,8 @@ class PlotLabelPrecision:
 
 
 def generate_set_of_plots(data_sets, abscissa_label, plot_width,
-                          compare_against_reference_labels, output_figure_stem, run_title):
+                          compare_against_reference_labels, output_figure_stem, run_title,
+                          abundances_over_h=True):
     """
 Create a set of plots of a number of Cannon runs.
 
@@ -659,11 +660,22 @@ Create a set of plots of a number of Cannon runs.
     :param run_title:
     A suffix to put at the end of the label in the top-left corner of each plot
 
+    :param abundances_over_h:
+    Flag to select whether we plot abundances over H or Fe.
+
     :return:
     None
     """
     # Work out list of labels to plot, based on first data set we're provided with
     label_names = data_sets[0]['cannon_output']['labels']
+
+    # If requested, plot all abundances (apart from Fe) over Fe
+    if not abundances_over_h:
+        for j, label_name in enumerate(label_names):
+            test = re.match("\[(.*)/H\]", label_name)
+            if test is not None:
+                if test.group(1) != "Fe":
+                    label_names[j] = "[{}/Fe]".format(test.group(1))
 
     # Instantiate plotter
     plotter = PlotLabelPrecision(label_names=label_names,
@@ -805,17 +817,24 @@ if __name__ == "__main__":
     parser.add_argument('--output-file', default="/tmp/cannon_performance_plot", dest='output_file',
                         help="Data file to write output to.")
     parser.add_argument('--use-reference-labels',
-                        required=False,
                         action='store_true',
                         dest="use_reference_labels",
                         help="Compare the output of the Cannon against a set of reference label values.")
     parser.add_argument('--no-use-reference-labels',
-                        required=False,
                         action='store_false',
                         dest="use_reference_labels",
                         help="Compare the output of the Cannon against what it produced at the highest abscissa value "
                              "available.")
     parser.set_defaults(use_reference_labels=True)
+    parser.add_argument('--abundances-over-h',
+                        action='store_true',
+                        dest="abundances_over_h",
+                        help="Plot abundances over H.")
+    parser.add_argument('--abundances-over-fe',
+                        action='store_false',
+                        dest="abundances_over_h",
+                        help="Plot abundances over Fe.")
+    parser.set_defaults(abundances_over_h=True)
     args = parser.parse_args()
 
     # If titles, colours, etc, are not supplied for Cannon runs, we use the descriptions stored in the JSON files
@@ -873,6 +892,7 @@ if __name__ == "__main__":
                                })
 
     generate_set_of_plots(data_sets=cannon_outputs,
+                          abundances_over_h=args.abundances_over_h,
                           plot_width=float(args.width),
                           abscissa_label=args.abscissa_label,
                           compare_against_reference_labels=args.use_reference_labels,
