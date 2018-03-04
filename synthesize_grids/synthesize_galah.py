@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Take parameters of GALAH sample of stars proposed by Georges on 30 Oct 2017, and synthesize spectra using
+Take parameters of GALAH sample of stars emailed by Karin on 30 Oct 2017, and synthesize spectra using
 TurboSpectrum.
 """
 
@@ -46,7 +46,7 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output-library',
                     required=False,
-                    default="turbospec_galah_sample",
+                    default="turbospec_galah_sample_v2",
                     dest="library",
                     help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
 parser.add_argument('--workspace', dest='workspace', default="",
@@ -174,11 +174,13 @@ for star in range(len(galah_stars)):
     star_name = "star_{:08d}".format(star)
     unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
 
+    fe_abundance = float(galah_stars.Feh_sme[star])
+
     metadata = {
         "Starname": str(star_name),
         "uid": str(unique_id),
         "Teff": float(galah_stars.Teff_sme[star]),
-        "[Fe/H]": float(galah_stars.Feh_sme[star]),
+        "[Fe/H]": fe_abundance,
         "logg": float(galah_stars.Logg_sme[star])
     }
 
@@ -188,19 +190,12 @@ for star in range(len(galah_stars)):
         fits_field_name = "{}_abund_sme".format(element)
 
         # Normalise abundance of element to solar
-        abundance = galah_stars[fits_field_name][star]
+        abundance = galah_stars[fits_field_name][star] - fe_abundance
 
         if np.isfinite(abundance):
             free_abundances[element] = float(abundance)
             metadata["[{}/H]".format(element)] = float(abundance)
     star_list.append([metadata, free_abundances])
-
-# import json
-# print json.dumps(star_list)
-# import sys
-# sys.exit(0)
-
-# star_list = json.loads(open("synthesize_galah_data.json").read())
 
 # Create new SpectrumLibrary
 library_name = re.sub("/", "_", args.library)
