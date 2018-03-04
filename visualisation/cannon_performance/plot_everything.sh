@@ -74,7 +74,7 @@ python2.7 mean_performance_vs_label.py \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>-1" --dataset-label "Dwarfs; [Fe/H]$>-1$" --dataset-colour "red" --dataset-linetype 1 \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "green" --dataset-linetype 1 \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "orange" --dataset-linetype 1 \
-  --plot-abundances-over-${divisor} \
+  --abundances-over-${divisor} \
   --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonA_ahm2017_${mode}_${divisor}"
 
 python2.7 mean_performance_vs_label.py \
@@ -82,7 +82,7 @@ python2.7 mean_performance_vs_label.py \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
   --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
-  --plot-abundances-over-${divisor} \
+  --abundances-over-${divisor} \
   --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_ahm2017_${mode}_${divisor}"
 
 done
