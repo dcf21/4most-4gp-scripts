@@ -189,8 +189,8 @@ for star in range(len(galah_stars)):
     for element in element_list:
         fits_field_name = "{}_abund_sme".format(element)
 
-        # Normalise abundance of element to solar
-        abundance = galah_stars[fits_field_name][star] - fe_abundance
+        # Abundance is specified as [X/Fe]. Convert to [X/H]
+        abundance = galah_stars[fits_field_name][star] + fe_abundance
 
         if np.isfinite(abundance):
             free_abundances[element] = float(abundance)

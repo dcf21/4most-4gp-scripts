@@ -461,7 +461,7 @@ class PlotLabelPrecision:
                     ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
                     # Set axis limits
-                    ppl.write("set yrange [{}:{}]\n".format(-2 * label_info["offset_min"],
+                    ppl.write("set yrange [{}:{}]\n".format(-2 * label_info["offset_max"],
                                                             2 * label_info["offset_max"]))
 
                     if abscissa_info[2]:
@@ -631,7 +631,7 @@ def generate_set_of_plots(data_sets, abscissa_label, plot_width,
 Create a set of plots of a number of Cannon runs.
 
     :param data_sets:
-    A list of runs of the Cannon which are to be plotted. This should be a list of dictinaries. Each dictionary should
+    A list of runs of the Cannon which are to be plotted. This should be a list of dictionaries. Each dictionary should
     have the entries:
 
     cannon_output: The JSON output from the Cannon run.
@@ -667,7 +667,7 @@ Create a set of plots of a number of Cannon runs.
     None
     """
     # Work out list of labels to plot, based on first data set we're provided with
-    label_names = data_sets[0]['cannon_output']['labels']
+    label_names = list(data_sets[0]['cannon_output']['labels'])
 
     # If requested, plot all abundances (apart from Fe) over Fe
     if not abundances_over_h:
@@ -728,13 +728,17 @@ Create a set of plots of a number of Cannon runs.
                         reference_values[label] = reference_run["target_[Fe/H]"]  # Assume scales with [Fe/H]
                     else:
                         reference_values[label] = np.nan
+
+                    # If we are plotting abundance over Fe, then [X/Fe] = [X/H] / [Fe/H]
                     if label_info["over_fe"]:
-                        reference_values[label] -= reference_run["target_[Fe/H]"]
+                        reference_values[label] = reference_values[label] - reference_run["target_[Fe/H]"]
                 else:
                     # Use the values produced by the Cannon at the highest SNR as the target values for each star
                     reference_values[label] = reference_run[cannon_label]
+
+                    # If we are plotting abundance over Fe, then [X/Fe] = [X/H] / [Fe/H]
                     if label_info["over_fe"]:
-                        reference_values[label] -= reference_run["[Fe/H]"]
+                        reference_values[label] = reference_values[label] - reference_run["[Fe/H]"]
 
             data_set['reference_values'][star_name] = reference_values
 
