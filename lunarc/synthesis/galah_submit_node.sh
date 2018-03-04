@@ -6,7 +6,7 @@ cat $0
 export item=$1
 export WRK_NB=$1
 
-export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
+source activate myenv
 
 # create worker-private subdirectory in $SNIC_TMP
 # export WRK_DIR=$SNIC_TMP/WRK_${WRK_NB}
@@ -26,7 +26,7 @@ export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
 # run the program
 cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/synthesize_grids
 python synthesize_galah.py --every 80 --skip ${item} --create \
-                           --output-library turbospec_galah_${item} \
+                           --output-library turbospec_galah_v2_${item} \
                            --log-dir ../output_data/logs/galah_stars_${item}
 
 # rescue the results back to job directory

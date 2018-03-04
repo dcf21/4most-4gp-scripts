@@ -6,7 +6,7 @@ cat $0
 export item=$1
 export WRK_NB=$1
 
-export PYTHONPATH=$HOME/local/lib/python2.7/site-packages:${PYTHONPATH}
+source activate myenv
 
 # create worker-private subdirectory in $SNIC_TMP
 # export WRK_DIR=$SNIC_TMP/WRK_${WRK_NB}
