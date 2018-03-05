@@ -721,9 +721,9 @@ Create a set of plots of a number of Cannon runs.
                 cannon_label = label_info["cannon_label"]
                 if compare_against_reference_labels:
                     # Use values that were used to synthesise this spectrum
-                    key = "target_{}".format(label)
+                    key = "target_{}".format(cannon_label)
                     if key in reference_run:
-                        reference_values[label] = reference_run["target_{}".format(cannon_label)]
+                        reference_values[label] = reference_run[key]
                     elif "target_[Fe/H]" in reference_run:
                         reference_values[label] = reference_run["target_[Fe/H]"]  # Assume scales with [Fe/H]
                     else:
