@@ -7,9 +7,10 @@ Plot results of testing the Cannon against noisy test spectra, to see how well i
 
 import os
 from os import path as os_path
+import time
+import pwd
 import sys
 import re
-from operator import itemgetter
 import argparse
 import numpy as np
 import json
@@ -36,6 +37,7 @@ class PlotLabelPrecision:
                  common_x_limits=None,
                  output_figure_stem="/tmp/cannon_performance/",
                  keep_eps=False,
+                 date_stamp=True,
                  correlation_plots=False
                  ):
         """
@@ -58,6 +60,15 @@ class PlotLabelPrecision:
 
         :param output_figure_stem:
             The file path where we are to save plots, pyxplot scripts and data files.
+
+        :param keep_eps:
+            If false, we delete the EPS versions of all plots to reduce disk usage
+
+        :param date_stamp:
+            If true, put a small label on each plot saying who produced it, when
+
+        :param correlation_plots:
+            If true, produce charts of the correlations between the errors in each of the labels.
         """
 
         # Create directory to store output files in
@@ -136,6 +147,7 @@ class PlotLabelPrecision:
         self.abscissa_label = abscissa_label
         self.number_data_sets = number_data_sets
         self.common_x_limits = common_x_limits
+        self.date_stamp = date_stamp
         self.output_figure_stem = os_path.abspath(output_figure_stem) + "/"
         self.data_set_counter = -1
         self.plot_precision = [[] for i in label_names]
@@ -216,20 +228,23 @@ class PlotLabelPrecision:
                         except KeyError:
                             ref = np.nan
 
-                        # Calculate the offset of the Cannon's output from the reference value
+                        # Look up the name of Cannon label we're fitting, e.g. [Mg/H] for [Mg/Fe]
                         label_info = self.label_info[label_name]
                         cannon_label = label_info["cannon_label"]
 
+                        # Look up the Cannon's estimate of the value of this label
                         if label_info["over_fe"]:
                             cannon_output_value = star[cannon_label] - star["[Fe/H]"]
                         else:
                             cannon_output_value = star[cannon_label]
 
+                        # Calculate the offset of the Cannon's output from the reference value
                         label_offset[star[abscissa_info[0]]][label_name].append(cannon_output_value - ref)
 
         self.data_set_counter += 1
 
-        # Extract list of offsets for each label, and for each abscissa value, use to make histograms
+        # Construct a datafile listing all the offsets for each label, for each abscissa value
+        # This full list of data points is used to make histograms
         scale = np.sqrt(pixels_per_angstrom)
         for k, xk in enumerate(abscissa_values):
             snr_per_a = None
@@ -244,26 +259,24 @@ class PlotLabelPrecision:
                 diffs = label_offset[xk][label_name]
                 y.append(diffs)
 
+                # Filename for data file containing all offsets
+                data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(self.output_figure_stem,
+                                                                          self.data_set_counter,
+                                                                          keyword)
+
                 # Output histogram of label mismatches at this abscissa value
                 self.plot_histograms[i][self.data_set_counter][keyword] = [
-                    ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
-                     scale,
-                     i + 1  # Pyxplot counts columns starting from 1, not 0
-                     )
+                    (data_file, scale, i + 1)  # Pyxplot counts columns starting from 1, not 0
                 ]
 
             # Output data file of label mismatches at this abscissa value
-            np.savetxt("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
-                       np.transpose(y))
+            np.savetxt(data_file, np.transpose(y))
 
             # Output scatter plots of label cross-correlations at this abscissa value
             if self.correlation_plots:
-                self.plot_cross_correlations[self.data_set_counter][keyword] = \
-                    ("{}{:d}_{:06.1f}.dat".format(self.output_figure_stem, self.data_set_counter, keyword),
-                     scale
-                     )
+                self.plot_cross_correlations[self.data_set_counter][keyword] = (data_file, scale)
 
-        # Extract list of label offsets for each label, and for each abscissa value to use for precision plot
+        # Construct a data file listing the RMS and percentiles of the offset distribution for each label
         for i, (label_name, label_info) in enumerate(zip(self.label_names, labels_info)):
             scale = np.sqrt(pixels_per_angstrom)
 
@@ -289,22 +302,27 @@ class PlotLabelPrecision:
                 y[-1].extend(
                     [metric(diffs), percentile(5), percentile(25), percentile(50), percentile(75), percentile(95)])
 
-            # Output table of statistical measures of label-mismatch-distribution as a function of abscissa (1st col)
-            np.savetxt("{}{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter), y)
+            # Filename for data containing statistics on the RMS, and percentiles of the offset distributions
+            file_name = "{}data_offsets_rms_{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter)
+
+            # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
+            # 1st column is RMS. Subsequent columns are various percentiles (see above)
+            np.savetxt(file_name, y)
 
             self.plot_precision[i].append([
-                "\"{}{:d}_{:d}.dat\" using 1:2".format(self.output_figure_stem, i, self.data_set_counter),
+                "\"{}\" using 1:2".format(file_name),
                 legend_label,
                 "with lp pt 17 col {} lt {:d}".format(colour, int(line_type)),
             ])
 
             self.plot_box_whiskers[i][self.data_set_counter] = [
-                "\"{0}{1:d}_{2:d}.dat\" using 1:5:3:7 with yerrorrange col black".format(
-                    self.output_figure_stem, i, self.data_set_counter)
+                "\"{}\" using 1:5:3:7 with yerrorrange col black".format(file_name)
             ]
 
-            with open("{}{:d}_{:d}_cracktastic.dat".format(self.output_figure_stem, i, self.data_set_counter),
-                      "w") as f:
+            # Filename for data used to make box-and-whisker diagrams, with boxes explicitly defined
+            file_name = "{}data_whiskers_{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter)
+
+            with open(file_name, "w") as f:
                 for j, datum in enumerate(y):
                     if self.abscissa_label.startswith("SNR"):
                         w1 = 1.2
@@ -318,13 +336,13 @@ class PlotLabelPrecision:
                     f.write("{} {}\n\n\n".format((datum[0] + w1) * w2, datum[3]))
 
                     self.plot_box_whiskers[i][self.data_set_counter]. \
-                        insert(0,
-                               "\"{0}{1:d}_{2:d}_cracktastic.dat\" using 1:2 "
-                               "with filledregion fc red col black lw 0.5 index {3}".format(
-                                   self.output_figure_stem, i,
-                                   self.data_set_counter, j))
+                        insert(0, "\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".
+                               format(file_name, j))
 
     def make_plots(self):
+        user_name = pwd.getpwuid( os.getuid() ).pw_gecos.split(",")[0]
+        plot_creator = "{}, {}".format(user_name, time.strftime("%d %b %Y"))
+
         aspect = 1 / 1.618034  # Golden ratio
 
         # LaTeX strings to use to label each stellar label on graph axes
@@ -625,7 +643,7 @@ class PlotLabelPrecision:
 
 
 def generate_set_of_plots(data_sets, abscissa_label, plot_width,
-                          compare_against_reference_labels, output_figure_stem, run_title,
+                          compare_against_reference_labels, output_figure_stem, run_title, date_stamp=True,
                           abundances_over_h=True):
     """
 Create a set of plots of a number of Cannon runs.
@@ -660,6 +678,9 @@ Create a set of plots of a number of Cannon runs.
     :param run_title:
     A suffix to put at the end of the label in the top-left corner of each plot
 
+    :param date_stamp:
+    Put a date stamp listing who created each plot, when
+
     :param abundances_over_h:
     Flag to select whether we plot abundances over H or Fe.
 
@@ -682,7 +703,8 @@ Create a set of plots of a number of Cannon runs.
                                  abscissa_label=abscissa_label,
                                  plot_width=plot_width,
                                  number_data_sets=len(data_sets),
-                                 output_figure_stem=output_figure_stem)
+                                 output_figure_stem=output_figure_stem,
+                                 date_stamp=date_stamp)
 
     abscissa_info = plotter.abscissa_labels[abscissa_label]
     plotter.common_x_limits = abscissa_info[3]
@@ -693,26 +715,29 @@ Create a set of plots of a number of Cannon runs.
         # Fetch Cannon output
         test_items = data_set['cannon_output']['stars']
 
-        # Create a list of the names of all the stars
-        # (each star may appear multiple times in a single Cannon run at different SNRs etc)
-        star_names = [item['Starname'] for item in test_items]
-        star_names_distinct = set(star_names)
+        # Sort Cannon runs by star name
+        test_items_by_star = {}
+        for index, test_item in enumerate(test_items):
+            object_name = test_items[index]['Starname']
+            abscissa_value = test_item[abscissa_info[0]]
+            if object_name not in test_items_by_star:
+                test_items_by_star[object_name] = {}
+            if abscissa_value not in test_items_by_star[object_name]:
+                test_items_by_star[object_name][abscissa_value] = []
+            test_items_by_star[object_name][abscissa_value].append(index)
 
         # We now create a look-up table of the target / reference values for each label for each star
         data_set['reference_values'] = {}
 
         # Loop over all the stars the Cannon tried to fit
-        for star_name in star_names_distinct:
+        for star_name in test_items_by_star:
             # Create a list of all the available abscissa values for this star
-            abscissa_list = [(index, test_items[index][abscissa_info[0]])
-                             for index in range(len(test_items))
-                             if test_items[index]['Starname'] == star_name
-                             ]
-            # Sort the list into order of ascending SNR
-            abscissa_list.sort(key=itemgetter(1))
+            abscissa_values = test_items_by_star[star_name].keys()
+            abscissa_values.sort()
 
             # Fetch the metadata from the run at the highest abscissa value
-            reference_run = test_items[abscissa_list[-1][0]]
+            reference_run_index = test_items_by_star[star_name][abscissa_values[-1]][0]
+            reference_run = test_items[reference_run_index]
 
             # Create dictionary of reference values
             reference_values = {}
@@ -839,6 +864,15 @@ if __name__ == "__main__":
                         dest="abundances_over_h",
                         help="Plot abundances over Fe.")
     parser.set_defaults(abundances_over_h=True)
+    parser.add_argument('--show-date',
+                        action='store_true',
+                        dest="date_stamp",
+                        help="Put a date stamp on the plot.")
+    parser.add_argument('--hide-date',
+                        action='store_false',
+                        dest="date_stamp",
+                        help="Don't put a date stamp on the plot.")
+    parser.set_defaults(date_stamp=True)
     args = parser.parse_args()
 
     # If titles, colours, etc, are not supplied for Cannon runs, we use the descriptions stored in the JSON files
@@ -901,5 +935,6 @@ if __name__ == "__main__":
                           abscissa_label=args.abscissa_label,
                           compare_against_reference_labels=args.use_reference_labels,
                           output_figure_stem=args.output_file,
-                          run_title=""  # "External" if args.use_reference_labels else "Internal"
+                          run_title="",  # "External" if args.use_reference_labels else "Internal"
+                          date_stamp=args.date_stamp
                           )
