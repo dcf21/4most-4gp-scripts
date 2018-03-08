@@ -366,11 +366,18 @@ class PlotLabelPrecision:
                 set width {0}
                 set size ratio {1}
                 set term dpi 200
-                set nodisplay
+                set nodisplay ; set multiplot
                 set fontsize 1.6
                 set label 1 "{2}" page 1, page {3}
                 
                 """.format(self.plot_width, aspect, self.plot_precision[2][j][1], self.plot_width * aspect - 0.8))
+
+                if self.date_stamp:
+                    ppl.write("""
+                    set fontsize 0.8
+                    text "{}" at 0, {}
+                    set fontsize 1.6
+                    """.format(plot_creator, self.plot_width * aspect + 0.4))
 
                 ppl.write("set key top right ; set keycols 2\n")
                 ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
@@ -417,11 +424,18 @@ class PlotLabelPrecision:
                 set width {0}
                 set size ratio {1}
                 set term dpi 200
-                set nodisplay
+                set nodisplay ; set multiplot
                 set fontsize 1.6
                 set label 1 "{2}" page 1, page {3}
                 
                 """.format(self.plot_width, aspect, label_info["latex"], self.plot_width * aspect - 0.8))
+
+                if self.date_stamp:
+                    ppl.write("""
+                    set fontsize 0.8
+                    text "{}" at 0, {}
+                    set fontsize 1.6
+                    """.format(plot_creator, self.plot_width * aspect + 0.4))
 
                 if len(self.plot_precision[i]) > 1:
                     ppl.write("set key top right\n")
@@ -468,12 +482,19 @@ class PlotLabelPrecision:
                     set size ratio {1}
                     set term dpi 200
                     set nokey
-                    set nodisplay
+                    set nodisplay ; set multiplot
                     set fontsize 1.6
                     set label 1 "{2}; {3}" page 1, page {4}
                     
                     """.format(self.plot_width, aspect, label_info["latex"], self.datasets[data_set_counter],
-                               self.plot_width * aspect - 0.5))
+                               self.plot_width * aspect - 0.8))
+
+                    if self.date_stamp:
+                        ppl.write("""
+                        set fontsize 0.8
+                        text "{}" at 0, {}
+                        set fontsize 1.6
+                        """.format(plot_creator, self.plot_width * aspect + 0.4))
 
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
                     ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
@@ -510,8 +531,8 @@ class PlotLabelPrecision:
                     set size ratio {1}
                     set term dpi 200
                     set key ycentre right
-                    set nodisplay
-                    set fontsize 1.25
+                    set nodisplay ; set multiplot
+                    set fontsize 1.1
                     set binwidth {2}
                     set label 1 "{3}; {4}" page 1, page {5}
                     
@@ -521,6 +542,13 @@ class PlotLabelPrecision:
                                label_info["offset_max"] / 60.,
                                label_info["latex"], self.datasets[data_set_counter],
                                self.plot_width * 1.25 * aspect - 0.8))
+
+                    if self.date_stamp:
+                        ppl.write("""
+                        set fontsize 0.8
+                        text "{}" at 0, {}
+                        set fontsize 1.1
+                        """.format(plot_creator, self.plot_width * 1.25 * aspect + 0.4))
 
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(label_info["latex"]))
