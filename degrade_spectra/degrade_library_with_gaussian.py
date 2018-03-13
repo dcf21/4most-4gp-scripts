@@ -89,48 +89,11 @@ logger.info("Adding Gaussian noise to spectra with arguments <{}> <{}> <{}>".for
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 os.system("mkdir -p {}".format(workspace))
 
-
-# Helper for opening input SpectrumLibrary(s)
-def open_input_libraries(library_spec):
-    test = re.match("([^\[]*)\[(.*)\]$", library_spec)
-    constraints = {"continuum_normalised": 0}
-    if test is None:
-        library_name = library_spec
-    else:
-        library_name = test.group(1)
-        for constraint in test.group(2).split(","):
-            words_1 = constraint.split("=")
-            words_2 = constraint.split("<")
-            if len(words_1) == 2:
-                constraint_name = words_1[0]
-                try:
-                    constraint_value = float(words_1[1])
-                except ValueError:
-                    constraint_value = words_1[1]
-                constraints[constraint_name] = constraint_value
-            elif len(words_2) == 3:
-                constraint_name = words_2[1]
-                try:
-                    constraint_value_a = float(words_2[0])
-                    constraint_value_b = float(words_2[2])
-                except ValueError:
-                    constraint_value_a = words_2[0]
-                    constraint_value_b = words_2[2]
-                constraints[constraint_name] = (constraint_value_a, constraint_value_b)
-            else:
-                assert False, "Could not parse constraint <{}>".format(constraint)
-    library_path = os_path.join(workspace, library_name)
-    input_library = SpectrumLibrarySqlite(path=library_path, create=False)
-    library_items = input_library.search(**constraints)
-    return {
-        "library": input_library,
-        "items": library_items,
-        "constraints": constraints
-    }
-
-
 # Open input SpectrumLibrary
-spectra = open_input_libraries(args.input_library)
+spectra = SpectrumLibrarySqlite.open_and_search(library_spec=args.input_library,
+                                                workspace=workspace,
+                                                extra_constraints={"continuum_normalised": 0}
+                                                )
 input_library, input_spectra_ids, input_spectra_constraints = [spectra[i] for i in ("library", "items", "constraints")]
 
 # Create new SpectrumLibrary

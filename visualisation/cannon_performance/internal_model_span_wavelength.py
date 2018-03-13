@@ -20,6 +20,13 @@ from fourgp_cannon import CannonInstance
 
 from lib_multiplotter import make_multiplot
 
+
+def dict_merge(x, y):
+    z = x.copy()   # start with x's keys and values
+    z.update(y)    # modifies z with y's keys and values & returns None
+    return z
+
+
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--wavelength_min', required=True, dest='wavelength_min', type=float,
@@ -41,47 +48,6 @@ parser.add_argument('--cannon-output',
 parser.add_argument('--output-stub', default="/tmp/cannon_model_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
-
-
-# Helper for opening input SpectrumLibrary(s)
-def open_input_libraries(library_spec, extra_constraints):
-    test = re.match("([^\[]*)\[(.*)\]$", library_spec)
-    constraints = {}
-    if test is None:
-        library_name = library_spec
-    else:
-        library_name = test.group(1)
-        for constraint in test.group(2).split(","):
-            words_1 = constraint.split("=")
-            words_2 = constraint.split("<")
-            if len(words_1) == 2:
-                constraint_name = words_1[0]
-                try:
-                    constraint_value = float(words_1[1])
-                except ValueError:
-                    constraint_value = words_1[1]
-                constraints[constraint_name] = constraint_value
-            elif len(words_2) == 3:
-                constraint_name = words_2[1]
-                try:
-                    constraint_value_a = float(words_2[0])
-                    constraint_value_b = float(words_2[2])
-                except ValueError:
-                    constraint_value_a = words_2[0]
-                    constraint_value_b = words_2[2]
-                constraints[constraint_name] = (constraint_value_a, constraint_value_b)
-            else:
-                assert False, "Could not parse constraint <{}>".format(constraint)
-    constraints.update(extra_constraints)
-    constraints["continuum_normalised"] = 1  # All input spectra must be continuum normalised
-    library_path = os_path.join(workspace, library_name)
-    input_library = SpectrumLibrarySqlite(path=library_path, create=False)
-    library_items = input_library.search(**constraints)
-    return {
-        "library": input_library,
-        "items": library_items
-    }
-
 
 # Fixed labels are supplied in the form <name=value>
 label_constraints = {}
@@ -106,7 +72,12 @@ our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "..", "..", "workspace")
 
 # Open spectrum library we're going to plot
-input_library_info = open_input_libraries(args.library, label_constraints)
+input_library_info = SpectrumLibrarySqlite.open_and_search(
+    library_spec=args.library,
+    workspace=workspace,
+    extra_constraints=dict_merge({"continuum_normalised": 1}, label_constraints)
+)
+
 input_library, library_items = [input_library_info[i] for i in ("library", "items")]
 library_ids = [i["specId"] for i in library_items]
 library_spectra = input_library.open(ids=library_ids)
@@ -116,7 +87,12 @@ cannon_output = json.loads(open(args.cannon + ".json").read())
 description = cannon_output['description']
 
 # Open spectrum library we originally trained the Cannon on
-training_spectra_info = open_input_libraries(cannon_output["train_library"], {})
+training_spectra_info = SpectrumLibrarySqlite.open_and_search(
+    library_spec=cannon_output["train_library"],
+    workspace=workspace,
+    extra_constraints={"continuum_normalised": 1}
+)
+
 training_library, training_library_items = [training_spectra_info[i] for i in ("library", "items")]
 
 # Load training set
@@ -176,7 +152,7 @@ raster_indices_2 = np.where(raster_mask_2)[0]
 cannon_predictions = []
 for i in range(n_steps):
     label_values = label_fixed_values.copy()
-    value = value_min + i * (value_max - value_min) / (n_steps-1.)
+    value = value_min + i * (value_max - value_min) / (n_steps - 1.)
     label_values[args.label] = value
     label_vector = np.asarray([label_values[key] for key in cannon_output["labels"]])
     cannon_predicted_spectrum = cannon.predict(label_vector)[0]
@@ -191,17 +167,17 @@ with open("{}.dat".format(args.output_stub), "w") as f:
     for datum in stars:
         for i in range(len(raster_indices_1)):
             f.write("{} {} {} {}\n".format(library_spectra.wavelengths[raster_indices_1[i]],
-                                        datum["value"],
-                                        datum["flux"][i],
-                                        datum["flux_error"][i]))
+                                           datum["value"],
+                                           datum["flux"][i],
+                                           datum["flux_error"][i]))
         f.write("\n\n\n\n")
 
     for datum in cannon_predictions:
         for i in range(len(raster_indices_2)):
             f.write("{} {} {} {}\n".format(cannon.dispersion[raster_indices_2[i]],
-                                        datum["value"],
-                                        datum["flux"][i],
-                                        datum["flux_error"][i]))
+                                           datum["value"],
+                                           datum["flux"][i],
+                                           datum["flux_error"][i]))
         f.write("\n\n\n\n")
 
 # Create pyxplot script to produce this plot
@@ -233,7 +209,7 @@ plot """.format(width, aspect,
 plot_items = []
 for i, j in enumerate(stars):
     plot_items.append(""" "{0}.dat" using 1:3 index {1} title "Synthesised {2}={3:.2f}" with lines """. \
-        format(args.output_stub, i, args.label_axis_latex, j["value"]))
+                      format(args.output_stub, i, args.label_axis_latex, j["value"]))
 
 pyxplot_input += ", ".join(plot_items)
 
@@ -250,7 +226,7 @@ eps_list.append("{0}_1.eps".format(args.output_stub))
 plot_items = []
 for i, j in enumerate(cannon_predictions):
     plot_items.append(""" "{0}.dat" using 1:3 index {1} title "Cannon model {2}={3:.2f}" with lines """. \
-        format(args.output_stub, i+len(stars), args.label_axis_latex, j["value"]))
+                      format(args.output_stub, i + len(stars), args.label_axis_latex, j["value"]))
 
 pyxplot_input += ", ".join(plot_items)
 

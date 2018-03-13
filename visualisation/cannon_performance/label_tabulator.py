@@ -2,8 +2,19 @@
 # -*- coding: utf-8 -*-
 
 """
-Take an output file containing the label values produced by the Cannon. Tabulate the target and output stellar
-parameters next to each other in an ASCII data file.
+
+Take an output JSON file produced by the script <test_cannon/cannon_test.py>, which contains the label values estimated
+by the Cannon. From this, tabulate the target and output stellar parameters next to each other in an ASCII data file.
+
+A separate table is produced for each SNR that the Cannon tested.
+
+The list of labels to tabulate should be specified with the "--labels" command line option. If no list is supplied, then
+we tabulate all the labels.
+
+The output tables are stored by default in a set of data files in </tmp/cannon_estimates__???.dat> where ??? is an SNR.
+
+This file path can be changed with the --output-stub command line argument.
+
 """
 
 import argparse
@@ -21,8 +32,15 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
     # Start compiling a list of all the SNR values in the Cannon output
     snr_list = []
 
+    # Load Cannon JSON output
+    cannon_json = json.loads(open(cannon).read())
+
+    # If no list of labels supplied, then list everything
+    if not labels:
+        labels = cannon_json['labels']
+
     # Open Cannon output data file
-    for item in json.loads(open(cannon).read())["stars"]:
+    for item in cannon_json["stars"]:
         # Look up name of object and SNR of spectrum used
         object_name = item["Starname"]
         snr = float(item["SNR"])
@@ -79,6 +97,13 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
         })
 
         with open(filename, "w") as output:
+            # Write headings at the top of the file
+            words = ["Target_{}".format(i) for i in labels]
+            words.extend(["Cannon_output_{}".format(i) for i in labels])
+            words.extend(["Cannon_uncertainty_{}".format(i) for i in labels])
+            output.write("# {}\n".format(" ".join(words)))
+
+            # Loop over stars writing them into data file
             for object_name in object_names:
                 # Start line with the library parameter values
                 words = [str(i) for i in library_values[object_name]]
@@ -104,9 +129,9 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
 if __name__ == "__main__":
     # Read input parameters
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--label', required=True, action="append", dest='labels',
+    parser.add_argument('--label', action="append", dest='labels',
                         help="Labels we should output values for.")
-    parser.add_argument('--cannon_output',
+    parser.add_argument('--cannon-output',
                         required=True,
                         default="",
                         dest='cannon',

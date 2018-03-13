@@ -15,7 +15,6 @@ pass this code continuum normalised spectra if you want scientifically meaningfu
 
 import argparse
 from os import path as os_path
-import re
 import logging
 import json
 import time
@@ -106,7 +105,7 @@ elif args.continuum_normalisation == "polynomial":
     continuum_normalised_training = True
     continuum_normalised_testing = False
 else:
-    CannonClass = CannonInstance_2018_01_09  # FIXME Use old Cannon for now
+    CannonClass = CannonInstance_2018_01_09  # FIXME Use old Cannon for now, because the new Cannon produces worse fits
     continuum_normalised_training = True
     continuum_normalised_testing = True
 
@@ -117,53 +116,20 @@ test_labels = args.labels.split(",")
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
 
-
-# Helper for opening input SpectrumLibrary(s)
-def open_input_libraries(library_spec, need_continuum_normalised):
-    test = re.match("([^\[]*)\[(.*)\]$", library_spec)
-    constraints = {"continuum_normalised": need_continuum_normalised}
-    if test is None:
-        library_name = library_spec
-    else:
-        library_name = test.group(1)
-        for constraint in test.group(2).split(","):
-            words_1 = constraint.split("=")
-            words_2 = constraint.split("<")
-            if len(words_1) == 2:
-                constraint_name = words_1[0]
-                try:
-                    constraint_value = float(words_1[1])
-                except ValueError:
-                    constraint_value = words_1[1]
-                constraints[constraint_name] = constraint_value
-            elif len(words_2) == 3:
-                constraint_name = words_2[1]
-                try:
-                    constraint_value_a = float(words_2[0])
-                    constraint_value_b = float(words_2[2])
-                except ValueError:
-                    constraint_value_a = words_2[0]
-                    constraint_value_b = words_2[2]
-                constraints[constraint_name] = (constraint_value_a, constraint_value_b)
-            else:
-                assert False, "Could not parse constraint <{}>".format(constraint)
-    library_path = os_path.join(workspace, library_name)
-    input_library = SpectrumLibrarySqlite(path=library_path, create=False)
-    library_items = input_library.search(**constraints)
-    return {
-        "library": input_library,
-        "items": library_items
-    }
-
-
 # Open training set
-spectra = open_input_libraries(library_spec=args.train_library,
-                               need_continuum_normalised=continuum_normalised_training)
+spectra = SpectrumLibrarySqlite.open_and_search(
+    library_spec=args.train_library,
+    workspace=workspace,
+    extra_constraints={"continuum_normalised": continuum_normalised_training}
+)
 training_library, training_library_items = [spectra[i] for i in ("library", "items")]
 
 # Open test set
-spectra = open_input_libraries(library_spec=args.test_library,
-                               need_continuum_normalised=continuum_normalised_testing)
+spectra = SpectrumLibrarySqlite.open_and_search(
+    library_spec=args.test_library,
+    workspace=workspace,
+    extra_constraints={"continuum_normalised": continuum_normalised_testing}
+)
 test_library, test_library_items = [spectra[i] for i in ("library", "items")]
 
 # Load training set

@@ -10,7 +10,6 @@ import argparse
 import os
 from os import path as os_path
 import time
-import re
 import random
 import logging
 
@@ -76,41 +75,6 @@ workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "
 os.system("mkdir -p {}".format(workspace))
 
 
-# Helper for opening input SpectrumLibrary(s)
-def open_input_libraries(inputs):
-    if inputs is None:
-        return []
-    input_libraries = []
-    for library_spec in inputs:
-        test = re.match("(.*)\[(.*)\]", library_spec)
-        constraints = {}
-        if test is None:
-            library_name = library_spec
-        else:
-            library_name = test.group(1)
-            for constraint in test.group(2).split(","):
-                words = constraint.split("=")
-                assert len(words) == 2, "Could not parse constraint <{}>".format(constraint)
-                constraint_name = words[0]
-                constraint_value = words[1]
-                try:
-                    constraint_value = float(words[1])
-                except ValueError:
-                    pass
-                constraints[constraint_name] = constraint_value
-        constraints["continuum_normalised"] = 0  # All input spectra must not be continuum normalised
-        library_path = os_path.join(workspace, library_name)
-        input_library = SpectrumLibrarySqlite(path=library_path, create=False)
-        if len(input_library.search()) == 0:
-            continue
-        library_items = input_library.search(**constraints)
-        input_libraries.append({
-            "library": input_library,
-            "items": library_items
-        })
-    return input_libraries
-
-
 def make_weighted_choice(weights):
     weights_sum = sum(weights)
     selected_index = 0
@@ -124,10 +88,24 @@ def make_weighted_choice(weights):
 
 
 # Open input SpectrumLibrary(s)
-input_libraries = open_input_libraries(args.input_library)
+input_libraries = []
+
+if args.input_library is not None:
+    input_libraries = [SpectrumLibrarySqlite.open_and_search(library_spec=item,
+                                                             workspace=workspace,
+                                                             extra_constraints={"continuum_normalised": 0}
+                                                             )
+                       for item in args.input_library]
 
 # Open contaminating SpectrumLibrary(s)
-contamination_libraries = open_input_libraries(args.contamination_library)
+contamination_libraries = []
+if args.contamination_library is not None:
+    contamination_libraries = [SpectrumLibrarySqlite.open_and_search(library_spec=item,
+                                                                     workspace=workspace,
+                                                                     extra_constraints={"continuum_normalised": 0}
+                                                                     )
+                               for item in args.contamination_library]
+
 contamination_spectra = []
 for library in contamination_libraries:
     library_obj = library["library"]

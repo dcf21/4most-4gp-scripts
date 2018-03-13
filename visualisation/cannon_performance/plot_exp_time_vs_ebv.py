@@ -38,47 +38,6 @@ args = parser.parse_args()
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "..", "workspace")
 
-
-# Helper for opening input SpectrumLibrary(s)
-def open_input_libraries(library_spec, extra_constraints):
-    test = re.match("([^\[]*)\[(.*)\]$", library_spec)
-    constraints = {}
-    if test is None:
-        library_name = library_spec
-    else:
-        library_name = test.group(1)
-        for constraint in test.group(2).split(","):
-            words_1 = constraint.split("=")
-            words_2 = constraint.split("<")
-            if len(words_1) == 2:
-                constraint_name = words_1[0]
-                try:
-                    constraint_value = float(words_1[1])
-                except ValueError:
-                    constraint_value = words_1[1]
-                constraints[constraint_name] = constraint_value
-            elif len(words_2) == 3:
-                constraint_name = words_2[1]
-                try:
-                    constraint_value_a = float(words_2[0])
-                    constraint_value_b = float(words_2[2])
-                except ValueError:
-                    constraint_value_a = words_2[0]
-                    constraint_value_b = words_2[2]
-                constraints[constraint_name] = (constraint_value_a, constraint_value_b)
-            else:
-                assert False, "Could not parse constraint <{}>".format(constraint)
-    constraints.update(extra_constraints)
-    constraints["continuum_normalised"] = 1  # All input spectra must be continuum normalised
-    library_path = os_path.join(workspace, library_name)
-    input_library = SpectrumLibrarySqlite(path=library_path, create=False)
-    library_items = input_library.search(**constraints)
-    return {
-        "library": input_library,
-        "items": library_items
-    }
-
-
 # Read Cannon output
 if not os.path.exists(args.cannon):
     print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
@@ -118,7 +77,12 @@ raster_diff = np.diff(raster[raster > 6000])
 pixels_per_angstrom = 1.0 / raster_diff[0]
 
 # Open original spectrum library, so we can extract exposure time metadata
-input_library_info = open_input_libraries(cannon_output['test_library'], {})
+input_library_info = SpectrumLibrarySqlite.open_and_search(
+    library_spec=cannon_output["test_library"],
+    workspace=workspace,
+    extra_constraints={"continuum_normalised": 1}
+)
+
 input_library, library_items = [input_library_info[i] for i in ("library", "items")]
 
 # Loop over stars, reorganising data by star name and E(B-V)
