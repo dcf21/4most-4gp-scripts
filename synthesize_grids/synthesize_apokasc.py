@@ -6,133 +6,39 @@ Take stellar parameters of the APOKASC training set and test sets, and synthesiz
 """
 
 import os
-import re
 import time
 import hashlib
-import argparse
 import numpy as np
 from os import path as os_path
 import logging
 import json
 from astropy.table import Table
 
-from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
-from fourgp_telescope_data import FourMost
-from fourgp_specsynth import TurboSpectrum
+from fourgp_speclib import Spectrum
+from base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
 element_list = ("[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]",
                 "[Ca/H]", "[Ti/H]", "[Mn/H]", "[Co/H]", "[Ni/H]", "[Ba/H]", "[Sr/H]")
 
-
-# Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
-def astropy_row_to_dict(x):
-    return dict([(i, x[i]) for i in x.columns])
-
-
+# Start logging our progress
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
 logger.info("Synthesizing APOKASC grid of spectra")
 
-# Read input parameters
-our_path = os_path.split(os_path.abspath(__file__))[0]
-root_path = os_path.join(our_path, "..", "..")
-pid = os.getpid()
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--output-library',
-                    required=False,
-                    default="turbospec_apokasc_training_set",
-                    dest="library",
-                    help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
-parser.add_argument('--workspace', dest='workspace', default="",
-                    help="Directory where we expect to find spectrum libraries.")
-parser.add_argument('--create',
-                    required=False,
-                    action='store_true',
-                    dest="create",
-                    help="Create a clean SpectrumLibrary to feed synthesized spectra into")
-parser.add_argument('--no-create',
-                    required=False,
-                    action='store_false',
-                    dest="create",
-                    help="Do not create a clean SpectrumLibrary to feed synthesized spectra into")
-parser.set_defaults(create=True)
-parser.add_argument('--log-dir',
-                    required=False,
-                    default="/tmp/turbospec_apokasc_{}".format(pid),
-                    dest="log_to",
-                    help="Specify a log directory where we log our progress and configuration files.")
-parser.add_argument('--star-list',
-                    required=False,
-                    default="../../4MOST_testspectra/trainingset_param.tab",
-                    dest="star_list",
-                    help="Specify an ASCII table which lists the stellar parameters of the stars to be synthesized.")
-parser.add_argument('--line-lists-dir',
-                    required=False,
-                    default=root_path,
-                    dest="lines_dir",
-                    help="Specify a directory where line lists for TurboSpectrum can be found.")
-parser.add_argument('--binary-path',
-                    required=False,
-                    default=root_path,
-                    dest="binary_path",
-                    help="Specify a directory where Turbospectrum and Interpol packages are installed.")
-parser.add_argument('--every',
-                    required=False,
-                    default=1,
-                    type=int,
-                    dest="every",
-                    help="Only process every nth spectrum. "
-                         "This is useful when parallelising this script across multiple processes.")
-parser.add_argument('--skip',
-                    required=False,
-                    default=0,
-                    type=int,
-                    dest="skip",
-                    help="Skip n spectra before starting to process every nth. "
-                         "This is useful when parallelising this script across multiple processes.")
-parser.add_argument('--limit',
-                    required=False,
-                    default=0,
-                    type=int,
-                    dest="limit",
-                    help="Only process a maximum of n spectra.")
-args = parser.parse_args()
-
-logger.info("Synthesizing spectra with arguments <{}> <{}>".format(args.library, args.star_list))
-
-# Set path to workspace where we create libraries of spectra
-workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
-os.system("mkdir -p {}".format(workspace))
+# Instantiate base synthesizer
+synthesizer = Synthesizer(library_name="apokasc_training_set",
+                          logger=logger)
 
 # Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
-star_list = Table.read(args.star_list, format="ascii")
+star_list = Table.read("../../4MOST_testspectra/trainingset_param.tab", format="ascii")
+
+# Output data into sqlite3 db
+synthesizer.dump_stellar_parameters_to_sqlite()
 
 # Create new SpectrumLibrary
-library_name = re.sub("/", "_", args.library)
-library_path = os_path.join(workspace, library_name)
-library = SpectrumLibrarySqlite(path=library_path, create=args.create)
-
-# Invoke FourMost data class. Ensure that the spectra we produce are much higher resolution than 4MOST.
-# We down-sample them later to whatever resolution we actually want.
-FourMostData = FourMost()
-lambda_min = FourMostData.bands["LRS"]["lambda_min"]
-lambda_max = FourMostData.bands["LRS"]["lambda_max"]
-line_lists_path = FourMostData.bands["LRS"]["line_lists_edvardsson"]
-spectral_resolution = 50000
-
-# Invoke a TurboSpectrum synthesizer instance
-synthesizer = TurboSpectrum(
-    turbospec_path=os_path.join(args.binary_path, "turbospectrum-15.1/exec-gf-v15.1"),
-    interpol_path=os_path.join(args.binary_path, "interpol_marcs"),
-    line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
-    marcs_grid_path=os_path.join(args.binary_path, "fromBengt/marcs_grid"))
-counter_output = 0
-
-# Start making log output
-os.system("mkdir -p {}".format(args.log_to))
-logfile = os.path.join(args.log_to, "synthesis.log")
+synthesizer.create_spectrum_library()
 
 # Iterate over the spectra we're supposed to be synthesizing
 with open(logfile, "w") as result_log:

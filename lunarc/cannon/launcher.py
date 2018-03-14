@@ -38,9 +38,9 @@ slurm_script = """#!/bin/sh
 #SBATCH -t 48:00:00
 #
 # job name and output file names
-#SBATCH -J cannon_farm
-#SBATCH -o stdout_cannon_%j.out
-#SBATCH -e stderr_cannon_%j.out
+#SBATCH -J cannon_{4}
+#SBATCH -o stdout_cannon_{4}_%j.out
+#SBATCH -e stderr_cannon_{4}_%j.out
 cat $0
 
 module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
@@ -117,7 +117,7 @@ for job in args.jobs:
         slurm_tmp_filename = "tmp_{}.sh".format(run_id)
 
         with open(slurm_tmp_filename, "w") as f:
-            f.write(slurm_script.format(config_path, tmp_dir, rsync_commands, command))
+            f.write(slurm_script.format(config_path, tmp_dir, rsync_commands, command, os.path.split(destination)[1]))
 
         # os.system("sbatch {}".format(slurm_tmp_filename))
 

@@ -9,7 +9,6 @@ import os
 import re
 import time
 import hashlib
-import argparse
 import numpy as np
 from os import path as os_path
 import logging
@@ -17,9 +16,8 @@ import json
 import random
 from astropy.io import fits
 
-from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
-from fourgp_telescope_data import FourMost
-from fourgp_specsynth import TurboSpectrum
+from fourgp_speclib import Spectrum
+from base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
 # Elements with neutral abundances, e.g. LI1
@@ -30,90 +28,18 @@ element_list = (
 # Elements with ionised abundances, e.g. N2
 element_list_ionised = ("N", "Ba", "La", "Ce", "Pr", "Nd", "Sm", "Eu", "Gd", "Dy")
 
-
-# Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
-def astropy_row_to_dict(x):
-    return dict([(i, x[i]) for i in x.columns])
-
-
+# Start logging our progress
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
 logger.info("Synthesizing GES dwarf spectra")
 
-# Read input parameters
-our_path = os_path.split(os_path.abspath(__file__))[0]
-root_path = os_path.join(our_path, "..", "..")
-pid = os.getpid()
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--output-library',
-                    required=False,
-                    default="turbospec_ges_dwarf_perturbed",
-                    dest="library",
-                    help="Specify the name of the SpectrumLibrary we are to feed synthesized spectra into.")
-parser.add_argument('--workspace', dest='workspace', default="",
-                    help="Directory where we expect to find spectrum libraries.")
-parser.add_argument('--create',
-                    required=False,
-                    action='store_true',
-                    dest="create",
-                    help="Create a clean SpectrumLibrary to feed synthesized spectra into")
-parser.add_argument('--no-create',
-                    required=False,
-                    action='store_false',
-                    dest="create",
-                    help="Do not create a clean SpectrumLibrary to feed synthesized spectra into")
-parser.set_defaults(create=True)
-parser.add_argument('--log-dir',
-                    required=False,
-                    default="/tmp/turbospec_ges_dwarf_perturbed_{}".format(pid),
-                    dest="log_to",
-                    help="Specify a log directory where we log our progress and configuration files.")
-parser.add_argument('--star-list',
-                    required=False,
-                    default="../../downloads/GES_iDR5_WG15_Recommended.fits",
-                    dest="star_list",
-                    help="Specify an ASCII table which lists the stellar parameters of the stars to be synthesized.")
-parser.add_argument('--line-lists-dir',
-                    required=False,
-                    default=root_path,
-                    dest="lines_dir",
-                    help="Specify a directory where line lists for TurboSpectrum can be found.")
-parser.add_argument('--binary-path',
-                    required=False,
-                    default=root_path,
-                    dest="binary_path",
-                    help="Specify a directory where Turbospectrum and Interpol packages are installed.")
-parser.add_argument('--every',
-                    required=False,
-                    default=1,
-                    type=int,
-                    dest="every",
-                    help="Only process every nth spectrum. "
-                         "This is useful when parallelising this script across multiple processes.")
-parser.add_argument('--skip',
-                    required=False,
-                    default=0,
-                    type=int,
-                    dest="skip",
-                    help="Skip n spectra before starting to process every nth. "
-                         "This is useful when parallelising this script across multiple processes.")
-parser.add_argument('--limit',
-                    required=False,
-                    default=0,
-                    type=int,
-                    dest="limit",
-                    help="Only process a maximum of n spectra.")
-args = parser.parse_args()
-
-logger.info("Synthesizing perturbed GES dwarfs with arguments <{}> <{}>".format(args.library, args.star_list))
-
-# Set path to workspace where we create libraries of spectra
-workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
-os.system("mkdir -p {}".format(workspace))
+# Instantiate base synthesizer
+synthesizer = Synthesizer(library_name="ges_dwarf_perturbed",
+                          logger=logger)
 
 # Table supplies list of abundances for GES stars
-f = fits.open(args.star_list)
+f = fits.open("../../downloads/GES_iDR5_WG15_Recommended.fits")
 ges = f[1].data
 ges_fields = ges.names
 
