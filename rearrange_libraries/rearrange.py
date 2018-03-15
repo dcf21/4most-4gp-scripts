@@ -28,21 +28,27 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--input-library',
                     action="append",
                     dest="input_library",
-                    help="Specify the name of the SpectrumLibrary we are to read input spectra from.")
+                    help="The name of the SpectrumLibrary we are to read input spectra from. Stars may be filtered by "
+                         "parameters by placing a comma-separated list of constraints in [] brackets after the name of "
+                         "the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a "
+                         "range.")
 parser.add_argument('--output-library',
                     action="append",
                     dest="output_library",
-                    help="Specify the name of the SpectrumLibrary we are to feed output into.")
+                    help="The name of the SpectrumLibrary we are to feed output into.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--contamination-library',
                     action="append",
                     dest="contamination_library",
-                    help="Contaminate output spectra with a randomly chosen spectrum from this library")
+                    help="Contaminate output spectra with a randomly chosen spectrum from this library. Stars may be "
+                         "filtered by parameters by placing a comma-separated list of constraints in [] brackets after "
+                         "the name of the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to "
+                         "specify a range.")
 parser.add_argument('--contamination-fraction',
                     action="append",
                     dest="contamination_fraction",
-                    help="Specify a fraction of photons which should come from contaminating sources.")
+                    help="The fraction of photons which should come from contaminating sources.")
 parser.add_argument('--output-fraction',
                     action="append",
                     dest="output_fraction",

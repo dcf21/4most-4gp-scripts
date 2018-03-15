@@ -8,7 +8,7 @@ set of stars.
 In theory, this code can be used on either continuum-normalised spectra, or non-continuum-normalised spectra. It uses
 the metadata field "continuum_normalised" as a flag to determine which kind of spectrum has been supplied.
 
-Note, however, that the continuum normalisation code is currently very dodgy, so in practice you should always
+Note, however, that the continuum normalisation code is currently largely untested, so in practice you should always
 pass this code continuum normalised spectra if you want scientifically meaningful results.
 
 """
@@ -34,9 +34,13 @@ logger = logging.getLogger(__name__)
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--test', required=True, dest='test_library',
-                    help="Library of spectra to test the trained Cannon on.")
+                    help="Library of spectra to test the trained Cannon on. Stars may be filtered by parameters by "
+                         "placing a comma-separated list of constraints in [] brackets after the name of the library. "
+                         "Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a range.")
 parser.add_argument('--train', required=True, dest='train_library',
-                    help="Library of labelled spectra to train the Cannon on.")
+                    help="Library of labelled spectra to train the Cannon on. Stars may be filtered by parameters by "
+                         "placing a comma-separated list of constraints in [] brackets after the name of the library. "
+                         "Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a range.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--continuum-normalisation', default="none", dest='continuum_normalisation',
@@ -46,14 +50,13 @@ parser.add_argument('--reload-cannon', required=False, dest='reload_cannon', def
 parser.add_argument('--description', dest='description',
                     help="A description of this fitting run.")
 parser.add_argument('--labels', dest='labels',
-                    default="Teff,logg,[Fe/H],[C/H],[N/H],[O/H],[Na/H],[Mg/H],[Al/H],[Si/H],[Ca/H],[Ti/H],"
-                            "[Mn/H],[Co/H],[Ni/H],[Ba/H],[Sr/H]",
+                    default="Teff,logg,[Fe/H]",
                     help="List of the labels the Cannon is to learn to estimate.")
 parser.add_argument('--censor-scheme', default="1", dest='censor_scheme',
                     help="Censoring scheme version to use (1, 2 or 3).")
 parser.add_argument('--censor', default="", dest='censor_line_list',
                     help="Optional list of line positions for the Cannon to fit, ignoring continuum between.")
-parser.add_argument('--tolerance', default=1e-4, dest='tolerance', type=float,
+parser.add_argument('--tolerance', default=None, dest='tolerance', type=float,
                     help="The parameter xtol which is passed to the scipy optimisation routines as xtol to determine "
                          "whether they have converged.")
 parser.add_argument('--output-file', default="./test_cannon.out", dest='output_file',

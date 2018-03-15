@@ -14,7 +14,9 @@ from fourgp_speclib import SpectrumLibrarySqlite
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--library', required=True, dest='library',
-                    help="Spectrum library we should export, with additional constraints if wanted.")
+                    help="Spectrum library we should export. Stars may be filtered by parameters by placing a "
+                         "comma-separated list of constraints in [] brackets after the name of the library. Use the "
+                         "syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a range.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 args = parser.parse_args()

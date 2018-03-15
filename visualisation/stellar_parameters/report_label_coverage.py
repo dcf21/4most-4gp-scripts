@@ -20,7 +20,10 @@ logger = logging.getLogger(__name__)
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--test', required=True, dest='test_library',
-                    help="Library of spectra over which to check label coverage.")
+                    help="Library of spectra over which to check label coverage. Stars may be filtered by parameters "
+                         "by placing a comma-separated list of constraints in [] brackets after the name of the "
+                         "library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a "
+                         "range.")
 parser.add_argument('--label', dest='label',
                     default="[Fe/H]",
                     help="Label to check coverage of.")

@@ -24,7 +24,7 @@ into the `workspace` directory.
 To run the Cannon on these spectra, you should do the following:
 
 ```
-cd 4most-4gp-scripts/test_cannon_degraded_spec
+cd 4most-4gp-scripts/test_cannon
  
 mkdir -p ../output_data/cannon
  

@@ -6,18 +6,9 @@ Take parameters of GALAH sample of stars emailed by Karin on 30 Oct 2017, and sy
 TurboSpectrum.
 """
 
-import os
-import re
-import time
-import hashlib
 import numpy as np
-from os import path as os_path
 import logging
-import json
-import sqlite3
 from astropy.io import fits
-
-from fourgp_speclib import Spectrum
 from base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
@@ -34,7 +25,8 @@ logger.info("Synthesizing GALAH sample spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="galah_sample_v2",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 # Table supplies list of abundances for GES stars
 f = fits.open("../../downloads/GALAH_trainingset_4MOST_errors.fits")
@@ -80,26 +72,30 @@ for star_index in range(len(galah_stars)):
 
     # Pass list of the abundances of individual elements to TurboSpectrum
     free_abundances = star_list_item["free_abundances"]
+    metadata = star_list_item["extra_metadata"]
     for element in element_list:
-        fits_field_name = "{}_abund_sme".format(element)
+        if (not synthesizer.args.elements) or (element in synthesizer.args.elements.split(",")):
+            fits_field_name = "{}_abund_sme".format(element)
 
-        # Abundance is specified as [X/Fe]. Convert to [X/H]
-        abundance = galah_stars[fits_field_name][star_index] + fe_abundance
+            # Abundance is specified as [X/Fe]. Convert to [X/H]
+            abundance = galah_stars[fits_field_name][star_index] + fe_abundance
 
-        if np.isfinite(abundance):
-            free_abundances[element] = float(abundance)
+            if np.isfinite(abundance):
+                free_abundances[element] = float(abundance)
+                metadata["flag_{}".format(element)] = galah_stars["flag_{}_abund_sme".format(element)][star_index]
 
     # Propagate all input fields from the FITS file into <input_data>
     input_data = star_list_item["input_data"]
     for col_name in galah_fields:
         value = galah_stars[col_name][star_index]
 
-        if ges.dtype[col_name].type is np.string_:
+        if galah_stars.dtype[col_name].type is np.string_:
             typed_value = str(value)
         else:
             typed_value = float(value)
 
         input_data[col_name] = typed_value
+    star_list.append(star_list_item)
 
 # Pass list of stars to synthesizer
 synthesizer.set_star_list(star_list)

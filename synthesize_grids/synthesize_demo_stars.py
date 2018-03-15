@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Synthesize a handful of test stars using TurboSpectrum.
+Synthesize a handful of demo stars, e.g. the Sun, using TurboSpectrum.
 """
 
 import logging
@@ -16,7 +16,8 @@ logger.info("Synthesizing spectra for some simple test stars")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="demo_stars",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 star_list = [
     {'name': "Sun", 'Teff': 5771.8, 'logg': 4.44, '[Fe/H]': 0, 'extra_metadata': {'set_id': 1}},

@@ -34,7 +34,10 @@ parser.add_argument('--wavelength_min', required=True, dest='wavelength_min', ty
 parser.add_argument('--wavelength_max', required=True, dest='wavelength_max', type=float,
                     help="The wavelength span for which we should plot the Cannon's internal model.")
 parser.add_argument('--library', required=True, dest='library',
-                    help="Spectrum library we should plot over Cannon's internal model.")
+                    help="Spectrum library for which we should plot the Cannon's internal model. Stars may be filtered "
+                         "by parameters by placing a comma-separated list of constraints in [] brackets after the name "
+                         "of the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify "
+                         "a range.")
 parser.add_argument('--label', required=True, dest='label',
                     help="The label we should vary.")
 parser.add_argument('--label-axis-latex', required=True, dest='label_axis_latex',

@@ -22,7 +22,8 @@ logger.info("Synthesizing APOKASC grid of spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="apokasc_training_set",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 # Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
 stellar_data = Table.read("../../4MOST_testspectra/trainingset_param.tab", format="ascii")
@@ -48,8 +49,9 @@ for star in stellar_data:
     free_abundances = star_data["input_data"]
     for element in element_list:
         if element in metadata:
-            chemical_symbol = element.split("/")[0][1:]
-            free_abundances[chemical_symbol] = metadata[element]
+            if (not synthesizer.args.elements) or (element in synthesizer.args.elements.split(",")):
+                chemical_symbol = element.split("/")[0][1:]
+                free_abundances[chemical_symbol] = metadata[element]
 
     # If Sr and Ba are not already set, use Galactic trends
     if ('Sr' in free_abundances) and ('Ba' in free_abundances):

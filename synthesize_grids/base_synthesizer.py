@@ -22,18 +22,18 @@ from fourgp_specsynth import TurboSpectrum
 
 class Synthesizer:
 
-    # Convenience function, coz it would've been too helpful for astropy to actually provide dictionary access to rows
+    # Convenience function: it would've been too helpful for astropy to actually provide dictionary access to rows
     @staticmethod
     def astropy_row_to_dict(x):
         return dict([(i, x[i]) for i in x.columns])
 
     # Read input parameters
-    def __init__(self, library_name, logger):
+    def __init__(self, library_name, logger, docstring):
         self.logger = logger
         self.our_path = os_path.split(os_path.abspath(__file__))[0]
         self.root_path = os_path.join(self.our_path, "..", "..")
         self.pid = os.getpid()
-        parser = argparse.ArgumentParser(description=__doc__)
+        parser = argparse.ArgumentParser(description=docstring)
         parser.add_argument('--output-library',
                             required=False,
                             default="turbospec_{}".format(library_name),
@@ -100,7 +100,7 @@ class Synthesizer:
                             help="Only process a maximum of n spectra.")
         self.args = parser.parse_args()
 
-        self.logger.info("Synthesizing {} to <{}>".format(library_name, args.library))
+        self.logger.info("Synthesizing {} to <{}>".format(library_name, self.args.library))
 
         # Set path to workspace where we create libraries of spectra
         self.workspace = self.args.workspace if self.args.workspace else os_path.join(self.our_path, "..", "workspace")
@@ -142,22 +142,23 @@ class Synthesizer:
 
             columns = []
             for col_name, col_value in self.star_list[0]['input_data'].iteritems():
-                col_type = type(col_value)
-                columns.append("{} {}".format(col_name, "TEXT" if col_type.type is np.string_ else "REAL"))
+                col_type_str = isinstance(col_value, basestring)
+                columns.append("{} {}".format(col_name, "TEXT" if col_type_str else "REAL"))
             c.execute("CREATE TABLE stars (uid INTEGER PRIMARY KEY, {});".format(",".join(columns)))
 
-            for i, item in self.star_list:
+            for i, item in enumerate(self.star_list):
                 print "Writing sqlite parameter dump: %5d / %5d" % (i, len(self.star_list))
                 c.execute("INSERT INTO stars (name) VALUES (?);", (item['input_data']['name'],))
+                uid = c.lastrowid
                 for col_name in item['input_data']:
                     if col_name == "name":
                         continue
                     arguments = (
                         str(item['input_data'][col_name]) if isinstance(item['input_data'][col_name], basestring)
                         else float(item['input_data'][col_name]),
-                        item['input_data']['name']
+                        uid
                     )
-                    c.execute("UPDATE stars SET %s=? WHERE CNAME=?;" % col_name, arguments)
+                    c.execute("UPDATE stars SET %s=? WHERE uid=?;" % col_name, arguments)
             conn.commit()
             conn.close()
 
@@ -279,5 +280,6 @@ class Synthesizer:
                 result_log.flush()
 
     def clean_up(self):
+        self.logger.info("Synthesized {:d} spectra.".format(self.counter_output))
         # Close TurboSpectrum synthesizer instance
         self.synthesizer.close()

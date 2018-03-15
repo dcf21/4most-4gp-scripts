@@ -30,17 +30,20 @@ parser.add_argument('--input-library',
                     required=False,
                     default="turbospec_apokasc_training_set",
                     dest="input_library",
-                    help="Specify the name of the SpectrumLibrary we are to read input spectra from.")
+                    help="The name of the SpectrumLibrary we are to read input spectra from. Stars may be filtered by "
+                         "parameters by placing a comma-separated list of constraints in [] brackets after the name of "
+                         "the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a "
+                         "range.")
 parser.add_argument('--output-library-lrs',
                     required=False,
                     default="4fs_apokasc_training_set_lrs",
                     dest="output_library_lrs",
-                    help="Specify the name of the SpectrumLibrary we are to feed synthesized LRS spectra into.")
+                    help="The name of the SpectrumLibrary we are to feed synthesized LRS spectra into.")
 parser.add_argument('--output-library-hrs',
                     required=False,
                     default="4fs_apokasc_training_set_hrs",
                     dest="output_library_hrs",
-                    help="Specify the name of the SpectrumLibrary we are to feed synthesized HRS spectra into.")
+                    help="The name of the SpectrumLibrary we are to feed synthesized HRS spectra into.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--snr-definition',

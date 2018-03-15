@@ -28,7 +28,8 @@ logger.info("Synthesizing GES dwarf spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="ges_dwarf_sample",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 # Table supplies list of abundances for GES stars
 f = fits.open("../../downloads/GES_iDR5_WG15_Recommended.fits")
@@ -62,7 +63,7 @@ for star_index in range(len(stellar_data)):
     free_abundances = star_list_item["free_abundances"]
     for elements, ionisation_state in ((element_list, 1), (element_list_ionised, 2)):
         for element in elements:
-            if synthesizer.args.elements and (element in synthesizer.args.elements.split(",")):
+            if (not synthesizer.args.elements) or (element in synthesizer.args.elements.split(",")):
                 fits_field_name = "{}{}".format(element.upper(), ionisation_state)
 
                 # Normalise abundance of element to solar
@@ -97,6 +98,7 @@ for star_index in range(len(stellar_data)):
             typed_value = float(value)
 
         input_data[col_name] = typed_value
+    star_list.append(star_list_item)
 
 # Pass list of stars to synthesizer
 synthesizer.set_star_list(star_list)

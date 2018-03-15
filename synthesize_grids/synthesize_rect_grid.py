@@ -19,7 +19,8 @@ logger.info("Synthesizing rectangular grid of spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="rect_grid",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 # Define limits and step size of rectangular grid
 labels_to_vary = [
@@ -35,14 +36,14 @@ label_combinations = itertools.product(*label_values)
 # Turn into a list of stellar parameters
 star_list = []
 for grid_point in label_combinations:
-        star_name = "rect_grid"
-        item = {}
-        for index, label in enumerate(labels_to_vary):
-            x = float(grid_point[index]) + 1e-4
-            item[label['name']] = x
-            star_name += "_{:.1f}".format(x)
-        item["name"] = str(star_name)
-        star_list.append(item)
+    star_name = "rect_grid"
+    item = {}
+    for index, label in enumerate(labels_to_vary):
+        x = float(grid_point[index]) + 1e-4
+        item[label['name']] = x
+        star_name += "_{:.1f}".format(x)
+    item["name"] = str(star_name)
+    star_list.append(item)
 
 # Pass list of stars to synthesizer
 synthesizer.set_star_list(star_list)

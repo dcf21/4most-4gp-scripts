@@ -16,7 +16,8 @@ logger.info("Synthesizing fourteam spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="fourteam2_sample",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 # Open list of stars
 star_list = [

@@ -20,7 +20,8 @@ logger.info("Synthesizing MARCS grid of spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="marcs_grid",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 
 def fetch_marcs_grid(marcs_grid_path):
@@ -82,7 +83,9 @@ def fetch_marcs_grid(marcs_grid_path):
 
 
 # Fetch details of the MARCS grid the synthesizer is using
-parameter_values = fetch_marcs_grid(synthesizer.args.marcs_path)
+marcs_grid_path = os_path.join(synthesizer.args.binary_path, "fromBengt/marcs_grid")
+parameter_values = fetch_marcs_grid(marcs_grid_path=marcs_grid_path)
+
 for key, value in parameter_values.iteritems():
     logger.info("We have {:6d} values for parameter <{}>: {}".format(len(value), key, value))
 
@@ -94,17 +97,13 @@ for i1, t_eff in enumerate(parameter_values['temperature']):
             # Create name for star based on its grid position
             star_name = "marcs_{:02d}_{:02d}_{:02d}".format(i1, i2, i3)
 
-            # Apply a small perturbation because the MARCs model interpolator seems to prefer it that way
-            t_eff = min(t_eff + 10, 7990)
-            log_g = min(log_g + 0.01, 5.49)
-            fe_h = min(fe_h + 0.01, 0.99)
-
             # Add star to the list to be synthesized
+            # Apply a small perturbation because the MARCs model interpolator prefers it that way
             star_list.append(
                 {'name': star_name,
-                 'Teff': t_eff,
-                 '[Fe/H]': fe_h,
-                 'logg': log_g
+                 'Teff': min(t_eff + 10, 7990),
+                 '[Fe/H]': min(fe_h + 0.01, 0.99),
+                 'logg': min(log_g + 0.01, 5.49)
                  })
 
 # Pass list of stars to synthesizer

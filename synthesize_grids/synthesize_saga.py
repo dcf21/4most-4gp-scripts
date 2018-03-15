@@ -28,7 +28,8 @@ logger.info("Synthesizing SAGA spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="saga_sample",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 
 def valid_float(n):
@@ -74,15 +75,16 @@ for star in stars:
     # Pass list of the abundances of individual elements to TurboSpectrum
     free_abundances = {}
     for element in element_list:
-        for ionisation_state in [" II", " I", ""]:
-            field_name = "{}{}".format(element, ionisation_state)
+        if (not synthesizer.args.elements) or (element in synthesizer.args.elements.split(",")):
+            for ionisation_state in [" II", " I", ""]:
+                field_name = "{}{}".format(element, ionisation_state)
 
-            if field_name in star:
-                abundance = valid_float(star[field_name])
+                if field_name in star:
+                    abundance = valid_float(star[field_name])
 
-                if (abundance is not None) and np.isfinite(abundance):
-                    free_abundances[element] = abundance
-    item['free_abundance'] = free_abundances
+                    if (abundance is not None) and np.isfinite(abundance):
+                        free_abundances[element] = abundance
+    item['free_abundances'] = free_abundances
     star_list.append(item)
 
 # Pass list of stars to synthesizer

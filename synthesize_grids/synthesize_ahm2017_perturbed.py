@@ -29,7 +29,8 @@ logger.info("Synthesizing AHM2017 spectra")
 
 # Instantiate base synthesizer
 synthesizer = Synthesizer(library_name="ahm2017_perturbed",
-                          logger=logger)
+                          logger=logger,
+                          docstring=__doc__)
 
 # Table supplies list of abundances for GES stars
 f = fits.open("../../downloads/GES_iDR5_WG15_Recommended.fits")
@@ -109,7 +110,7 @@ for bin in bins:
             free_abundances = test_star["free_abundances"]
             for elements, ionisation_state in ((element_list, 1), (element_list_ionised, 2)):
                 for element in elements:
-                    if synthesizer.args.elements and (element in synthesizer.args.elements.split(",")):
+                    if (not synthesizer.args.elements) or (element in synthesizer.args.elements.split(",")):
                         fits_field_name = "{}{}".format(element.upper(), ionisation_state)
 
                         # Normalise abundance of element to solar
