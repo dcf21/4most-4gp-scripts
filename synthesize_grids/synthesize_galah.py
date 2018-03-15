@@ -63,162 +63,55 @@ galah_fields = galah_stars.names
  'flag_Zn_abund_sme', 'Zr_abund_sme', 'e_Zr_abund_sme', 'flag_Zr_abund_sme']
 """
 
-# Output data into sqlite3 db
-synthesizer.dump_stellar_parameters_to_sqlite()
-
-
-
-
-
-
-if args.sqlite_out:
-    os.system("rm -f {}".format(args.sqlite_out))
-    conn = sqlite3.connect(args.sqlite_out)
-    c = conn.cursor()
-    columns = []
-    for col_name in galah_fields:
-        col_type = galah_stars.dtype[col_name]
-        columns.append("{} {}".format(col_name, "TEXT" if col_type.type is np.string_ else "REAL"))
-    c.execute(
-        "CREATE TABLE stars (uid INTEGER PRIMARY KEY, name VARCHAR(32) UNIQUE NOT NULL, {});".format(",".join(columns)))
-
-    for i in range(len(galah_stars)):
-        star_name = "star_{:08d}".format(i)
-        print "%5d / %5d" % (i, len(galah_stars))
-        c.execute("INSERT INTO stars (name) VALUES (?);", (star_name,))
-        for col_name in galah_fields:
-            arguments = (
-                str(galah_stars[col_name][i]) if galah_stars.dtype[col_name].type is np.string_ else float(
-                    galah_stars[col_name][i]),
-                star_name
-            )
-            c.execute("UPDATE stars SET %s=? WHERE name=?;" % col_name, arguments)
-    conn.commit()
-    conn.close()
-
-# Iterate over the spectra we're supposed to be synthesizing
+# Loop over stars extracting stellar parameters from FITS file
 star_list = []
-for star in range(len(galah_stars)):
-    star_name = "star_{:08d}".format(star)
-    unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+for star_index in range(len(galah_stars)):
+    fe_abundance = float(galah_stars.Feh_sme[star_index])
 
-    fe_abundance = float(galah_stars.Feh_sme[star])
-
-    metadata = {
-        "Starname": str(star_name),
-        "uid": str(unique_id),
-        "Teff": float(galah_stars.Teff_sme[star]),
+    star_list_item = {
+        "name": "star_{:08d}".format(star_index),
+        "Teff": float(galah_stars.Teff_sme[star_index]),
         "[Fe/H]": fe_abundance,
-        "logg": float(galah_stars.Logg_sme[star])
+        "logg": float(galah_stars.Logg_sme[star_index]),
+        "extra_metadata": {},
+        "free_abundances": {},
+        "input_data": {}
     }
 
     # Pass list of the abundances of individual elements to TurboSpectrum
-    free_abundances = {}
+    free_abundances = star_list_item["free_abundances"]
     for element in element_list:
         fits_field_name = "{}_abund_sme".format(element)
 
         # Abundance is specified as [X/Fe]. Convert to [X/H]
-        abundance = galah_stars[fits_field_name][star] + fe_abundance
+        abundance = galah_stars[fits_field_name][star_index] + fe_abundance
 
         if np.isfinite(abundance):
             free_abundances[element] = float(abundance)
-            metadata["[{}/H]".format(element)] = float(abundance)
-    star_list.append([metadata, free_abundances])
+
+    # Propagate all input fields from the FITS file into <input_data>
+    input_data = star_list_item["input_data"]
+    for col_name in galah_fields:
+        value = galah_stars[col_name][star_index]
+
+        if ges.dtype[col_name].type is np.string_:
+            typed_value = str(value)
+        else:
+            typed_value = float(value)
+
+        input_data[col_name] = typed_value
+
+# Pass list of stars to synthesizer
+synthesizer.set_star_list(star_list)
+
+# Output data into sqlite3 db
+synthesizer.dump_stellar_parameters_to_sqlite()
 
 # Create new SpectrumLibrary
-library_name = re.sub("/", "_", args.library)
-library_path = os_path.join(workspace, library_name)
-library = SpectrumLibrarySqlite(path=library_path, create=args.create)
-
-# Invoke FourMost data class. Ensure that the spectra we produce are much higher resolution than 4MOST.
-# We down-sample them later to whatever resolution we actually want.
-FourMostData = FourMost()
-lambda_min = FourMostData.bands["LRS"]["lambda_min"]
-lambda_max = FourMostData.bands["LRS"]["lambda_max"]
-line_lists_path = FourMostData.bands["LRS"]["line_lists_edvardsson"]
-spectral_resolution = 50000
-
-# Invoke a TurboSpectrum synthesizer instance
-synthesizer = TurboSpectrum(
-    turbospec_path=os_path.join(args.binary_path, "turbospectrum-15.1/exec-gf-v15.1"),
-    interpol_path=os_path.join(args.binary_path, "interpol_marcs"),
-    line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
-    marcs_grid_path=os_path.join(args.binary_path, "fromBengt/marcs_grid"))
-
-# Start making log output
-os.system("mkdir -p {}".format(args.log_to))
-logfile = os.path.join(args.log_to, "synthesis.log")
+synthesizer.create_spectrum_library()
 
 # Iterate over the spectra we're supposed to be synthesizing
-counter_output = 0
-with open(logfile, "w") as result_log:
-    for (metadata, free_abundances) in star_list:
-        star_name = metadata["Starname"]
-
-        # User can specify that we should only do every nth spectrum, if we're running in parallel
-        counter_output += 1
-        if (args.limit > 0) and (counter_output > args.limit):
-            break
-        if (counter_output - args.skip) % args.every != 0:
-            continue
-
-        # Configure Turbospectrum with the stellar parameters of the next star
-        synthesizer.configure(lambda_min=lambda_min,
-                              lambda_max=lambda_max,
-                              lambda_delta=float(lambda_min) / spectral_resolution,
-                              line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
-                              stellar_mass=1,
-                              t_eff=float(metadata["Teff"]),
-                              metallicity=float(metadata["[Fe/H]"]),
-                              log_g=float(metadata["logg"])
-                              )
-
-        # Set free abundances
-        synthesizer.configure(free_abundances=free_abundances)
-
-        # Make spectrum
-        time_start = time.time()
-        turbospectrum_out = synthesizer.synthesise()
-        time_end = time.time()
-
-        # Log synthesizer status
-        logfile_this = os.path.join(args.log_to, "{}.log".format(star_name))
-        open(logfile_this, "w").write(json.dumps(turbospectrum_out))
-
-        # Check for errors
-        errors = turbospectrum_out['errors']
-        if errors:
-            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                                star_name, errors))
-            result_log.flush()
-            continue
-
-        # Fetch filename of the spectrum we just generated
-        filepath = os_path.join(turbospectrum_out["output_file"])
-
-        # Insert spectrum into SpectrumLibrary
-        try:
-            filename = "spectrum_{:08d}".format(counter_output)
-
-            # First import continuum-normalised spectrum, which is in columns 1 and 2
-            metadata['continuum_normalised'] = 1
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 1), binary=False)
-            library.insert(spectra=spectrum, filenames=filename)
-
-            # Then import version with continuum, which is in columns 1 and 3
-            metadata['continuum_normalised'] = 0
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
-            library.insert(spectra=spectrum, filenames=filename)
-        except (ValueError, IndexError):
-            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                                star_name, "Could not read bsyn output"))
-            result_log.flush()
-            continue
-
-        # Update log file to show our progress
-        result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                            star_name, "OK"))
-        result_log.flush()
+synthesizer.do_synthesis()
 
 # Close TurboSpectrum synthesizer instance
-synthesizer.close()
+synthesizer.clean_up()

@@ -140,7 +140,6 @@ class Synthesizer:
             conn = sqlite3.connect(self.args.sqlite_out)
             c = conn.cursor()
 
-
             columns = []
             for col_name, col_value in self.star_list[0]['input_data'].iteritems():
                 col_type = type(col_value)
@@ -229,6 +228,7 @@ class Synthesizer:
                     t_eff=float(star['Teff']),
                     metallicity=float(star['[Fe/H]']),
                     log_g=float(star['logg']),
+                    stellar_mass=1 if "stellar_mass" not in star else star["stellar_mass"],
                     free_abundances=free_abundances
                 )
 

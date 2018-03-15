@@ -5,16 +5,9 @@
 Take stellar parameters of the APOKASC training set and test sets, and synthesize spectrum using TurboSpectrum.
 """
 
-import os
-import time
-import hashlib
 import numpy as np
-from os import path as os_path
 import logging
-import json
 from astropy.table import Table
-
-from fourgp_speclib import Spectrum
 from base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
@@ -32,7 +25,44 @@ synthesizer = Synthesizer(library_name="apokasc_training_set",
                           logger=logger)
 
 # Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
-star_list = Table.read("../../4MOST_testspectra/trainingset_param.tab", format="ascii")
+stellar_data = Table.read("../../4MOST_testspectra/trainingset_param.tab", format="ascii")
+
+# Iterate over the spectra we're supposed to be synthesizing
+star_list = []
+for star in stellar_data:
+    # Look up stellar parameters of the star we're about to synthesize
+    metadata = synthesizer.astropy_row_to_dict(star)
+
+    star_data = {
+        "name": metadata["Starname"],
+        "stellar_mass": metadata['Mass'] if 'Mass' in metadata else 1,
+        "Teff": metadata['Teff'],
+        "logg": metadata['logg'],
+        "[Fe/H]": metadata['[Fe/H]'],
+        "extra_metadata": {},
+        "free_abundances": {},
+        "input_data": {}
+    }
+
+    # Pass list of the abundances of individual elements to TurboSpectrum
+    free_abundances = star_data["input_data"]
+    for element in element_list:
+        if element in metadata:
+            chemical_symbol = element.split("/")[0][1:]
+            free_abundances[chemical_symbol] = metadata[element]
+
+    # If Sr and Ba are not already set, use Galactic trends
+    if ('Sr' in free_abundances) and ('Ba' in free_abundances):
+        if not (np.isfinite(free_abundances['Sr']) and np.isfinite(free_abundances['Ba'])):
+            sr_dispersion = 0.2
+            ba_dispersion = 0.15
+            free_abundances['Sr'] = (np.random.normal(0, sr_dispersion) +
+                                     (-0.1 + -0.52 * metadata['[Fe/H]']) + metadata['[Fe/H]'])
+            free_abundances['Ba'] = np.random.normal(0, ba_dispersion) + metadata['[Fe/H]']
+    star_list.append(star_data)
+
+# Pass list of stars to synthesizer
+synthesizer.set_star_list(star_list)
 
 # Output data into sqlite3 db
 synthesizer.dump_stellar_parameters_to_sqlite()
@@ -41,97 +71,7 @@ synthesizer.dump_stellar_parameters_to_sqlite()
 synthesizer.create_spectrum_library()
 
 # Iterate over the spectra we're supposed to be synthesizing
-with open(logfile, "w") as result_log:
-    for star in star_list:
-        # User can specify that we should only do every nth spectrum, if we're running in parallel
-        counter_output += 1
-        if (args.limit > 0) and (counter_output > args.limit):
-            break
-        if (counter_output - args.skip) % args.every != 0:
-            continue
-
-        # Look up stellar parameters of the star we're about to synthesize
-        metadata = astropy_row_to_dict(star)
-        star_name = metadata["Starname"]
-        unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
-        metadata['uid'] = str(unique_id)
-        stellar_mass = 1  # If mass of star is not specified, default to 1 solar mass
-        if 'Mass' in metadata:
-            stellar_mass = metadata['Mass']
-
-        # Configure Turbospectrum with the stellar parameters of the next star
-        synthesizer.configure(lambda_min=lambda_min,
-                              lambda_max=lambda_max,
-                              lambda_delta=float(lambda_min) / spectral_resolution,
-                              line_list_paths=[os_path.join(args.lines_dir, line_lists_path)],
-                              stellar_mass=stellar_mass,
-                              t_eff=metadata['Teff'],
-                              metallicity=metadata['[Fe/H]'],
-                              log_g=metadata['logg']
-                              )
-
-        # Pass list of the abundances of individual elements to TurboSpectrum
-        free_abundances = {}
-        for element in element_list:
-            if element in metadata:
-                chemical_symbol = element.split("/")[0][1:]
-                free_abundances[chemical_symbol] = metadata[element]
-
-        # If Sr and Ba are not already set, use Galactic trends
-        if ('Sr' in free_abundances) and ('Ba' in free_abundances):
-            if not (np.isfinite(free_abundances['Sr']) and np.isfinite(free_abundances['Ba'])):
-                sr_dispersion = 0.2
-                ba_dispersion = 0.15
-                free_abundances['Sr'] = np.random.normal(0, sr_dispersion) + \
-                                        (-0.1 + -0.52 * metadata['[Fe/H]']) + metadata['[Fe/H]']
-                free_abundances['Ba'] = np.random.normal(0, ba_dispersion) + metadata['[Fe/H]']
-
-        # Set free abundances
-        synthesizer.configure(free_abundances=free_abundances)
-
-        # Make spectrum
-        time_start = time.time()
-        turbospectrum_out = synthesizer.synthesise()
-        time_end = time.time()
-
-        # Log synthesizer status
-        logfile_this = os.path.join(args.log_to, "{}.log".format(star_name))
-        open(logfile_this, "w").write(json.dumps(turbospectrum_out))
-
-        # Check for errors
-        errors = turbospectrum_out['errors']
-        if errors:
-            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                                star_name, errors))
-            result_log.flush()
-            continue
-
-        # Fetch filename of the spectrum we just generated
-        filepath = os_path.join(turbospectrum_out["output_file"])
-
-        # Insert spectrum into SpectrumLibrary
-        try:
-            filename = "spectrum_{:08d}".format(counter_output)
-
-            # First import continuum-normalised spectrum, which is in columns 1 and 2
-            metadata['continuum_normalised'] = 1
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 1), binary=False)
-            library.insert(spectra=spectrum, filenames=filename)
-
-            # Then import version with continuum, which is in columns 1 and 3
-            metadata['continuum_normalised'] = 0
-            spectrum = Spectrum.from_file(filename=filepath, metadata=metadata, columns=(0, 2), binary=False)
-            library.insert(spectra=spectrum, filenames=filename)
-        except (ValueError, IndexError):
-            result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                                star_name, "Could not read bsyn output"))
-            result_log.flush()
-            continue
-
-        # Update log file to show our progress
-        result_log.write("[{}] {:6.0f} sec {}: {}\n".format(time.asctime(), time_end - time_start,
-                                                            star_name, "OK"))
-        result_log.flush()
+synthesizer.do_synthesis()
 
 # Close TurboSpectrum synthesizer instance
-synthesizer.close()
+synthesizer.clean_up()
