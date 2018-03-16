@@ -3,6 +3,7 @@
 #
 # job time, change for what your job requires
 #SBATCH -t 24:00:00
+#SBATCH --exclusive
 #
 # job name and output file names
 #SBATCH -J redden_ahm2017
