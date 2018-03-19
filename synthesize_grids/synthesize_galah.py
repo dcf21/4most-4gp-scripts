@@ -82,7 +82,7 @@ for star_index in range(len(galah_stars)):
 
             if np.isfinite(abundance):
                 free_abundances[element] = float(abundance)
-                metadata["flag_{}".format(element)] = galah_stars["flag_{}_abund_sme".format(element)][star_index]
+                metadata["flag_{}".format(element)] = float(galah_stars["flag_{}_abund_sme".format(element)][star_index])
 
     # Propagate all input fields from the FITS file into <input_data>
     input_data = star_list_item["input_data"]
