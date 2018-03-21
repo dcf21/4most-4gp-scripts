@@ -3,7 +3,6 @@
 #
 # job time, change for what your job requires
 #SBATCH -t 48:00:00
-#SBATCH --exclusive
 #
 # job name and output file names
 #SBATCH -J 4fs_galah_test_mini
