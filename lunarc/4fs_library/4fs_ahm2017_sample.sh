@@ -3,7 +3,6 @@
 #
 # job time, change for what your job requires
 #SBATCH -t 96:00:00
-#SBATCH --exclusive
 #
 # job name and output file names
 #SBATCH -J 4fs_ahm2017_sample
