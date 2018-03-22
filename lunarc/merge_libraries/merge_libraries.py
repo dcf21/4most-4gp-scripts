@@ -26,17 +26,19 @@ parser.add_argument('--input-library',
                     required=True,
                     dest="input_library",
                     help="Specify the name of the SpectrumLibrary we are to read input spectra from.")
+parser.add_argument('--workspace', dest='workspace', default="",
+                    help="Directory where we expect to find spectrum libraries.")
 args = parser.parse_args()
 
 logger.info("Running library merger on spectra with arguments <{}>".format(args.input_library))
 
 # Set path to workspace where we create libraries of spectra
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "..", "workspace")
 
 input_libraries = glob.glob("{}/{}_*".format(workspace,args.input_library))
 input_libraries.sort()
 
-command_line = "cd ../rearrange_libraries ; python rearrange.py "
+command_line = "cd ../../rearrange_libraries ; python rearrange.py --workspace \"{}\" ".format(args.workspace)
 
 for item in input_libraries:
     command_line += " --input-library {}".format(os.path.split(item)[1])
