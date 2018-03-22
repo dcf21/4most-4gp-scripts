@@ -179,7 +179,8 @@ with open(args.log_to, "w") as result_log:
                 input_spectrum = input_spectrum_array.extract_item(0)
 
                 # Look up the name of the star we've just loaded
-                object_name = input_spectrum.metadata['Starname']
+                spectrum_matching_field = 'uid' if 'uid' in input_spectrum.metadata else 'Starname'
+                object_name = input_spectrum.metadata[spectrum_matching_field]
 
                 # Write log message
                 result_log.write("\n[{}] {}".format(time.asctime(), object_name))
@@ -187,7 +188,7 @@ with open(args.log_to, "w") as result_log:
 
                 # Search for the continuum-normalised version of this same object
                 search_constraints = {
-                    "Starname": object_name,
+                    spectrum_matching_field: object_name,
                     "continuum_normalised": 1
                 }
                 if "SNR" in input_spectrum.metadata:
