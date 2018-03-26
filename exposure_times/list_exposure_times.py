@@ -14,6 +14,7 @@ import argparse
 import logging
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
+from fourgp_fourfs import FourFS
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
 
@@ -48,6 +49,20 @@ library = SpectrumLibrarySqlite(path=library_path, create=True)
 templates = glob.glob(args.input)
 templates.sort()
 
+# For calculating exposure times, assume a magnitude of 13
+magnitude = 13
+
+# Instantiate 4FS wrapper
+etc_wrapper = FourFS(
+    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
+    magnitude=magnitude,
+    magnitude_unreddened=not args.magnitudes_reddened,
+    photometric_band=args.photometric_band,
+    hrs_use_snr_definitions="GalDiskHR_B",
+    snr_list=(165,),
+    snr_per_pixel=args.per_pixel
+)
+
 for template_index, template in enumerate(templates):
     name = "template_%08d".format(template_index)
 
@@ -70,8 +85,15 @@ for template_index, template in enumerate(templates):
     # Work out magnitude
     r_mag = spectrum.photometry("SDSS_r")
 
+    # Pass template to 4FS
+    degraded_spectra = etc_wrapper.process_spectra(
+        spectra_list=((spectrum, None),)
+    )
+
+    exposure_time = degraded_spectra["spectrum"].metadata["exposure"]  # minutes
+
     # Print output
-    print "{:100s} {:6.3f}".format(template, r_mag)
+    print "{:100s} {:6.3f} {:6.3f}".format(template, r_mag, exposure_time)
 
     # Insert spectrum object into spectrum library
     library.insert(spectra=spectrum, filenames=os_path.split(template)[1])
