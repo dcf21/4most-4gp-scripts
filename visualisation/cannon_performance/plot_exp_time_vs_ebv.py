@@ -107,9 +107,6 @@ input_library, library_items = [input_library_info[i] for i in ("library", "item
 # Loop over stars, reorganising data by star name and E(B-V)
 data = {}
 for star_index, star in enumerate(cannon_output['stars']):
-    if (star_index % 10) != 0:
-        continue
-
     if (star_index % 1000) == 0:
         logger.info("Reading stellar parameters: {:7d}/{:7d}".format(star_index, len(cannon_output['stars'])))
 
@@ -183,7 +180,7 @@ for star_index, star_name in enumerate(star_names):
                         observation[target_key] = observation["target_[Fe/H]"]
                     offset = observation[label_name] - observation[target_key]
                     if target_over_fe:
-                        offset -= observation["[Fe/H]"] - observation["target_[Fe/H]"]
+                        offset = offset - (observation["[Fe/H]"] - observation["target_[Fe/H]"])
                     offsets.append(pow(offset, 2))
                     exposure_times.append(exposure_time)
 
