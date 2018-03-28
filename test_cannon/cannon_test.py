@@ -22,10 +22,9 @@ import numpy as np
 
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import \
-    CannonInstance, \
     CannonInstance_2018_01_09, \
-    CannonInstanceWithRunningMeanNormalisation, \
-    CannonInstanceWithContinuumNormalisation
+    CannonInstanceWithRunningMeanNormalisation_2018_01_09, \
+    CannonInstanceWithContinuumNormalisation_2018_01_09
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -100,11 +99,11 @@ logger.info("Testing Cannon with arguments <{}> <{}> <{}> <{}>".format(args.test
 assert args.continuum_normalisation in ["none", "running_mean", "polynomial"]
 
 if args.continuum_normalisation == "running_mean":
-    CannonClass = CannonInstanceWithRunningMeanNormalisation
+    CannonClass = CannonInstanceWithRunningMeanNormalisation_2018_01_09
     continuum_normalised_training = False
     continuum_normalised_testing = False
 elif args.continuum_normalisation == "polynomial":
-    CannonClass = CannonInstanceWithContinuumNormalisation
+    CannonClass = CannonInstanceWithContinuumNormalisation_2018_01_09
     continuum_normalised_training = True
     continuum_normalised_testing = False
 else:
