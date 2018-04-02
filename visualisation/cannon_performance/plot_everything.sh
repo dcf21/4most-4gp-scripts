@@ -23,7 +23,6 @@ do
           --cannon-output "../../output_data/cannon/cannon_${run}_censored3_${mode}_10label.json" --dataset-label "Censoring scheme 3" --dataset-colour "purple" \
           --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_censoring_schemes_${run}_${mode}" &
     done
-
     wait
 done
 
@@ -38,8 +37,8 @@ do
           --cannon-output "../../output_data/cannon/cannon_${run}_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained on full sample" --dataset-colour "red" \
           --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_low_z_${run}_${mode}" &
     done
+    wait
 done
-wait
 
 # comparisonA -- Plot the performance of the Cannon for different types of stars -- giants and dwarfs, metal rich and metal poor
 for mode in lrs hrs
@@ -62,8 +61,8 @@ do
               --abundances-over-${divisor} \
               --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonA_${sample}_${mode}_${divisor}" &
         done
+        wait
     done
-    wait
 done
 
 # comparisonB -- Plot the performance of the Cannon when fitting 3 or 10 parameters
@@ -82,8 +81,8 @@ do
               --abundances-over-${divisor} \
               --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_${sample}_${mode}_${divisor}" &
         done
+        wait
     done
-    wait
 done
 
 # Now plot performance vs SNR for every Cannon run we have
@@ -139,6 +138,7 @@ do
           --cannon-output "${cannon_output}" \
           --accuracy-unit "${accuracy_unit}" \
           --output-stub "../../output_plots/cannon_performance/required_snrB/${cannon_run}_${path_safe_label}" &
+        wait
 
         # label_offsets/A_*
         # Scatter plots of the absolute offsets in each label, in the Teff / log(g) plane
