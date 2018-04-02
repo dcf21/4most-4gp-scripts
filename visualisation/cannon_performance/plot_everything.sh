@@ -11,18 +11,17 @@ mkdir -p ../../output_plots/cannon_performance/required_snrB
 mkdir -p ../../output_plots/cannon_performance/label_offsets
 
 # comparison_censoring_schemes_*
-# Create plots of the relative performance of the 4 censoring schemes, trained and tested on UVES
-# We do this for the standard 10 labels, plus 12 label combinations with Li + Ba and with C + O
+# Create plots of the relative performance of the 4 censoring schemes, trained and tested on UVES or GALAH
 for mode in lrs hrs
 do
-    for run in "" "_LiBa" "_CO"
+    for run in "ahm2017_perturbed" "galah"
     do
         python2.7 mean_performance_vs_label.py \
-          --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label${run}.json" --dataset-label "No censoring" --dataset-colour "green" \
-          --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored_${mode}_10label${run}.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
-          --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored2_${mode}_10label${run}.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
-          --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_censored3_${mode}_10label${run}.json" --dataset-label "Censoring scheme 3" --dataset-colour "purple" \
-          --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_censoring_schemes_${mode}${run}" &
+          --cannon-output "../../output_data/cannon/cannon_${run}_${mode}_10label.json" --dataset-label "No censoring" --dataset-colour "green" \
+          --cannon-output "../../output_data/cannon/cannon_${run}_censored_${mode}_10label.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
+          --cannon-output "../../output_data/cannon/cannon_${run}_censored2_${mode}_10label.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
+          --cannon-output "../../output_data/cannon/cannon_${run}_censored3_${mode}_10label.json" --dataset-label "Censoring scheme 3" --dataset-colour "purple" \
+          --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_censoring_schemes_${run}_${mode}" &
     done
 
     wait
@@ -32,33 +31,36 @@ done
 # Create a plot of the performance of the Cannon, when trained and tested on the [Fe/H] < -1 and [Fe/H] > 1 regimes separately
 for mode in lrs hrs
 do
-    python2.7 mean_performance_vs_label.py \
-      --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_fehcut2_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained \$z<-1\$ only (UVES)" --dataset-colour "green" \
-      --cannon-output "../../output_data/cannon/cannon_ahm2017_perturbed_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained on full UVES sample" --dataset-colour "red" \
-      --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_low_z_${mode}" &
+    for run in "ahm2017_perturbed" "galah"
+    do
+        python2.7 mean_performance_vs_label.py \
+          --cannon-output "../../output_data/cannon/cannon_${run}_fehcut2_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained \$z<-1\$ only" --dataset-colour "green" \
+          --cannon-output "../../output_data/cannon/cannon_${run}_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained on full sample" --dataset-colour "red" \
+          --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_low_z_${run}_${mode}" &
+    done
 done
 wait
 
 # comparisonA -- Plot the performance of the Cannon for different types of stars -- giants and dwarfs, metal rich and metal poor
 for mode in lrs hrs
 do
-    # Plot comparisons for both reversed and non-reversed versions of ahm2017
-    for sample in perturbed reversed
+    # Plot for both AHM2017 and GALAH datasets
+    for sample in "ahm2017_perturbed" "galah"
     do
         # Plot performance for abundances over both H and Fe
         for divisor in "h" "fe"
         do
             python2.7 mean_performance_vs_label.py \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;0<[Fe/H]<1" --dataset-label "Giants; [Fe/H]\$>0\$" --dataset-colour "purple" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;0<[Fe/H]<1" --dataset-label "Dwarfs; [Fe/H]\$>0\$" --dataset-colour "pink" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-0.5<[Fe/H]<0" --dataset-label "Giants; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "blue" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-0.5<[Fe/H]<0" --dataset-label "Dwarfs; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "red" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-1<[Fe/H]<-0.5" --dataset-label "Giants; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "cyan" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-1<[Fe/H]<-0.5" --dataset-label "Dwarfs; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "orange" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-2<[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "green" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-2<[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "brown" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;0<[Fe/H]<1" --dataset-label "Giants; [Fe/H]\$>0\$" --dataset-colour "purple" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;0<[Fe/H]<1" --dataset-label "Dwarfs; [Fe/H]\$>0\$" --dataset-colour "pink" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-0.5<[Fe/H]<0" --dataset-label "Giants; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "blue" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-0.5<[Fe/H]<0" --dataset-label "Dwarfs; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "red" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-1<[Fe/H]<-0.5" --dataset-label "Giants; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "cyan" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-1<[Fe/H]<-0.5" --dataset-label "Dwarfs; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "orange" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-2<[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "green" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-2<[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "brown" --dataset-linetype 1 \
               --abundances-over-${divisor} \
-              --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonA_ahm2017_${sample}_${mode}_${divisor}" &
+              --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonA_${sample}_${mode}_${divisor}" &
         done
     done
     wait
@@ -67,18 +69,18 @@ done
 # comparisonB -- Plot the performance of the Cannon when fitting 3 or 10 parameters
 for mode in lrs hrs
 do
-    # Plot comparisons for both reversed and non-reversed versions of ahm2017
-    for sample in perturbed reversed
+    # Plot for both AHM2017 and GALAH datasets
+    for sample in "ahm2017_perturbed" "galah"
     do
         for divisor in "h" "fe"
         do
             python2.7 mean_performance_vs_label.py \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_3label.json" --dataset-label "3 parameter; censored" --dataset-colour "blue" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_${mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_ahm2017_${sample}_${mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_3label.json" --dataset-label "3 parameter; censored" --dataset-colour "blue" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
               --abundances-over-${divisor} \
-              --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_ahm2017_${sample}_${mode}_${divisor}" &
+              --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_${sample}_${mode}_${divisor}" &
         done
     done
     wait
@@ -164,3 +166,4 @@ do
        wait
     done
 done
+
