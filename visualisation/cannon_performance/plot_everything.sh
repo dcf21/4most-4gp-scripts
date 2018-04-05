@@ -50,14 +50,15 @@ do
         for divisor in "h" "fe"
         do
             python2.7 mean_performance_vs_label.py \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;0<[Fe/H]<1" --dataset-label "Giants; [Fe/H]\$>0\$" --dataset-colour "purple" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;0<[Fe/H]<1" --dataset-label "Dwarfs; [Fe/H]\$>0\$" --dataset-colour "pink" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-0.5<[Fe/H]<0" --dataset-label "Giants; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "blue" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-0.5<[Fe/H]<0" --dataset-label "Dwarfs; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "red" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-1<[Fe/H]<-0.5" --dataset-label "Giants; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "cyan" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-1<[Fe/H]<-0.5" --dataset-label "Dwarfs; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "orange" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;-2<[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "green" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;-2<[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "brown" --dataset-linetype 1 \
+              --plot-width 25 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>0;[Fe/H]<1" --dataset-label "Giants; [Fe/H]\$>0\$" --dataset-colour "purple" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>0;[Fe/H]<1" --dataset-label "Dwarfs; [Fe/H]\$>0\$" --dataset-colour "pink" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>-0.5;[Fe/H]<0" --dataset-label "Giants; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "blue" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>-0.5;[Fe/H]<0" --dataset-label "Dwarfs; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "red" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>-1;[Fe/H]<-0.5" --dataset-label "Giants; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "cyan" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>-1;[Fe/H]<-0.5" --dataset-label "Dwarfs; \$-1<\$[Fe/H]$<-0.5$" --dataset-colour "orange" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>-2;[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "green" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>-2;[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "brown" --dataset-linetype 1 \
               --abundances-over-${divisor} \
               --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonA_${sample}_${mode}_${divisor}" &
         done

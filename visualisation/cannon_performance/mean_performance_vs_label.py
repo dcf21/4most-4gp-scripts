@@ -680,11 +680,12 @@ Create a set of plots of a number of Cannon runs.
     A list of runs of the Cannon which are to be plotted. This should be a list of dictionaries. Each dictionary should
     have the entries:
 
-    cannon_output: The JSON output from the Cannon run.
+    cannon_output: The filename of the JSON output file from the Cannon.
     title: Legend caption to use for each Cannon run.
     filters: A string containing semicolon-separated set of constraints on stars we are to include.
     colour: The colour to plot the dataset in.
     line_type: The Pyxplot line type to use for this Cannon run.
+
 
     :param abscissa_label:
     The name of the label we are to plot on the horizontal axis. This should be 'SNR/A', 'SNR/pixel', 'ebv'. See
@@ -716,7 +717,9 @@ Create a set of plots of a number of Cannon runs.
     None
     """
     # Work out list of labels to plot, based on first data set we're provided with
-    label_names = list(data_sets[0]['cannon_output']['labels'])
+    data_set_0 = json.loads(open(data_sets[0]['cannon_output']).read())
+    label_names = list(data_set_0['labels'])
+    del data_set_0
 
     # If requested, plot all abundances (apart from Fe) over Fe
     if not abundances_over_h:
@@ -740,8 +743,14 @@ Create a set of plots of a number of Cannon runs.
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
 
+        data = json.loads(open(data_set['cannon_output']).read())
+
+        # If no label has been specified for this Cannon run, use the description field from the JSON output
+        if data_set['title'] is None:
+            data_set['title'] = data['description']
+
         # Fetch Cannon output
-        test_items = data_set['cannon_output']['stars']
+        test_items = data['stars']
 
         # Sort Cannon runs by star name
         test_items_by_star = {}
@@ -842,12 +851,13 @@ Create a set of plots of a number of Cannon runs.
             legend_label += " ({})".format(run_title)  # Possibly append a run title to the end, if supplied
 
         plotter.add_data_set(cannon_stars=test_items_output,
-                             cannon_json=data_set['cannon_output'],
+                             cannon_json=data,
                              label_reference_values=data_set['reference_values'],
                              colour=data_set['colour'],
                              line_type=data_set['line_type'],
                              legend_label=legend_label
                              )
+        del data
 
     plotter.make_plots()
 
@@ -943,14 +953,8 @@ if __name__ == "__main__":
             print "mean_performance_vs_label.py could not proceed: Cannon run <{}> not found".format(cannon_output)
             sys.exit()
 
-        data = json.loads(open(cannon_output).read())
-
-        # If no label has been specified for this Cannon run, use the description field from the JSON output
-        if data_set_label is None:
-            data_set_label = data['description']
-
         # Append to list of Cannon data sets
-        cannon_outputs.append({'cannon_output': data,
+        cannon_outputs.append({'cannon_output': cannon_output,
                                'title': data_set_label,
                                'filters': data_set_filter,
                                'colour': data_set_colour,
