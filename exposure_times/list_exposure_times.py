@@ -17,6 +17,7 @@ from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 from fourgp_fourfs import FourFS
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
+root_path = os_path.join(our_path, "..", "..")
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -30,6 +31,16 @@ parser.add_argument('--library',
                     help="The spectrum library to import the templates into.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
+parser.add_argument('--binary-path',
+                    required=False,
+                    default=root_path,
+                    dest="binary_path",
+                    help="Specify a directory where 4FS package is installed.")
+parser.add_argument('--photometric-band',
+                    required=False,
+                    default="SDSS_r",
+                    dest="photometric_band",
+                    help="The name of the photometric band in which the magnitudes in --mag-list are specified.")
 args = parser.parse_args()
 
 # Start logger
@@ -56,17 +67,18 @@ magnitude = 13
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
     magnitude=magnitude,
-    magnitude_unreddened=not args.magnitudes_reddened,
+    magnitude_unreddened=True,
     photometric_band=args.photometric_band,
-    hrs_use_snr_definitions="GalDiskHR_B",
+    hrs_use_snr_definitions=None,
     snr_list=(165,),
-    snr_per_pixel=args.per_pixel
+    snr_per_pixel=True
 )
 
 for template_index, template in enumerate(templates):
     name = "template_%08d".format(template_index)
 
     # Open fits spectrum
+    print template
     f = fits.open(template)
     data = f[1].data
 
