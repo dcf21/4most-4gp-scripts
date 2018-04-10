@@ -67,7 +67,7 @@ magnitude = 13
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
     magnitude=magnitude,
-    magnitude_unreddened=True,
+    magnitude_unreddened=False,
     photometric_band=args.photometric_band,
     hrs_use_snr_definitions=None,
     snr_list=(165,),
@@ -75,22 +75,25 @@ etc_wrapper = FourFS(
 )
 
 for template_index, template in enumerate(templates):
-    name = "template_%08d".format(template_index)
+    name = "template_{:08d}".format(template_index)
 
     # Open fits spectrum
-    print template
-    f = fits.open(template)
-    data = f[1].data
+    #f = fits.open(template)
+    #data = f[1].data
+    #wavelengths = data['LAMBDA']
+    #fluxes = data['FLUX']
 
-    wavelengths = data['LAMBDA']
-    fluxes = data['FLUX']
+    # Open ASCII spectrum
+    f = np.loadtxt(template).T
+    wavelengths = f[0]
+    fluxes = f[1]
 
     # Create 4GP spectrum object
     spectrum = Spectrum(wavelengths=wavelengths,
                         values=fluxes,
                         value_errors=np.zeros_like(wavelengths),
                         metadata={
-                            "name": name,
+                            "Starname": name,
                             "imported_from": template
                         })
 
@@ -102,7 +105,8 @@ for template_index, template in enumerate(templates):
         spectra_list=((spectrum, None),)
     )
 
-    exposure_time = degraded_spectra["spectrum"].metadata["exposure"]  # minutes
+    index = degraded_spectra["HRS"].keys()[0]
+    exposure_time = degraded_spectra["HRS"][index][165]["spectrum"].metadata["exposure"]  # minutes
 
     # Print output
     print "{:100s} {:6.3f} {:6.3f}".format(template, r_mag, exposure_time)

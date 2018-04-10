@@ -28,7 +28,7 @@ for star_index, line in enumerate(f):
     words = line.split()
     fe_h = float(words[2])
     star_list_item = {
-        "name": "star_%05d".format(star_index),
+        "name": "star_{:05d}".format(star_index),
         "Teff": float(words[0]),
         "[Fe/H]": fe_h,
         "logg": float(words[1]),
