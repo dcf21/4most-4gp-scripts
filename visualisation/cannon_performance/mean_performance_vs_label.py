@@ -368,7 +368,6 @@ class PlotLabelPrecision:
                 set size ratio {1}
                 set term dpi 200
                 set nodisplay ; set multiplot
-                set fontsize 0.8 # 1.6
                 set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 1, page {3}
                 
                 """.format(self.plot_width, aspect,
@@ -381,9 +380,9 @@ class PlotLabelPrecision:
                     ppl.write("""
                     set fontsize 0.8
                     text "{}" at 0, {}
-                    set fontsize 1.6
                     """.format(plot_creator, self.plot_width * aspect + 0.4))
 
+                ppl.write("set fontsize 1.0\n")  # 1.6
                 ppl.write("set key top right ; set keycols 2\n")
                 ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
                 ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
@@ -430,7 +429,6 @@ class PlotLabelPrecision:
                 set size ratio {1}
                 set term dpi 200
                 set nodisplay ; set multiplot
-                set fontsize 0.8 # 1.6
                 set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 1, page {3}
                 
                 """.format(self.plot_width, aspect,
@@ -443,7 +441,6 @@ class PlotLabelPrecision:
                     ppl.write("""
                     set fontsize 0.8
                     text "{}" at 0, {}
-                    set fontsize 1.6
                     """.format(plot_creator, self.plot_width * aspect + 0.4))
 
                 if len(self.plot_precision[i]) > 1:
@@ -451,6 +448,7 @@ class PlotLabelPrecision:
                 else:
                     ppl.write("set nokey\n")
 
+                ppl.write("set fontsize 1.0\n")  # 1.6
                 ppl.write("set ylabel \"RMS offset in {}\"\n".format(label_info["latex"]))
                 ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
