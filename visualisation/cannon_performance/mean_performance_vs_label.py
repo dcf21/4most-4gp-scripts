@@ -313,6 +313,7 @@ class PlotLabelPrecision:
                 "\"{}\" using 1:2".format(file_name),
                 legend_label,
                 "with lp pt 17 col {} lt {:d}".format(colour, int(line_type)),
+                len(star_names),
             ])
 
             self.plot_box_whiskers[i][self.data_set_counter] = [
@@ -367,10 +368,14 @@ class PlotLabelPrecision:
                 set size ratio {1}
                 set term dpi 200
                 set nodisplay ; set multiplot
-                set fontsize 1.6
-                set label 1 "{2}" page 1, page {3}
+                set fontsize 0.8 # 1.6
+                set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 1, page {3}
                 
-                """.format(self.plot_width, aspect, self.plot_precision[2][j][1], self.plot_width * aspect - 0.8))
+                """.format(self.plot_width, aspect,
+                           self.plot_precision[2][j][1],
+                           self.plot_width * aspect - 0.8,
+                           self.plot_precision[2][j][3],
+                           self.plot_width*0.5))
 
                 if self.date_stamp:
                     ppl.write("""
@@ -425,10 +430,14 @@ class PlotLabelPrecision:
                 set size ratio {1}
                 set term dpi 200
                 set nodisplay ; set multiplot
-                set fontsize 1.6
-                set label 1 "{2}" page 1, page {3}
+                set fontsize 0.8 # 1.6
+                set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 1, page {3}
                 
-                """.format(self.plot_width, aspect, label_info["latex"], self.plot_width * aspect - 0.8))
+                """.format(self.plot_width, aspect,
+                           label_info["latex"],
+                           self.plot_width * aspect - 0.8,
+                           self.plot_precision[i][0][3],
+                           self.plot_width*0.5))
 
                 if self.date_stamp:
                     ppl.write("""
