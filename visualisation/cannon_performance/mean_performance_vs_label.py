@@ -429,12 +429,11 @@ class PlotLabelPrecision:
                 set size ratio {1}
                 set term dpi 200
                 set nodisplay ; set multiplot
-                set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 1, page {3}
+                set label 1 "\\parbox{{{4}cm}}{{ {2} }}" page 1, page {3}
                 
                 """.format(self.plot_width, aspect,
                            label_info["latex"],
                            self.plot_width * aspect - 0.8,
-                           self.plot_precision[i][0][3],
                            self.plot_width*0.5))
 
                 if self.date_stamp:
@@ -461,7 +460,7 @@ class PlotLabelPrecision:
                 if self.common_x_limits is not None:
                     ppl.write("set xrange [{}:{}]\n".format(self.common_x_limits[0], self.common_x_limits[1]))
 
-                plot_items = ["{} title \"{}\" {}".format(item[0], item[1], item[2]) for item in self.plot_precision[i]]
+                plot_items = ["{0} title \"{1} ({3} stars)\" {2}".format(*item) for item in self.plot_precision[i]]
 
                 # Add lines for target accuracy in this label
                 for target_value in label_info["targets"]:
