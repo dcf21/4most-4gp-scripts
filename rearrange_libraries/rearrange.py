@@ -31,24 +31,29 @@ parser.add_argument('--input-library',
                     help="The name of the SpectrumLibrary we are to read input spectra from. Stars may be filtered by "
                          "parameters by placing a comma-separated list of constraints in [] brackets after the name of "
                          "the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a "
-                         "range.")
+                         "range. Multiple inputs can be specified on one command line to merge libraries.")
 parser.add_argument('--output-library',
                     action="append",
                     dest="output_library",
-                    help="The name of the SpectrumLibrary we are to feed output into.")
+                    help="The name of the SpectrumLibrary we are to feed output into. Multiple output destinations "
+                         "can be specified on one command line, in which case the --output-fraction setting should "
+                         "be used to randomly direct spectra into the various destinations with specified "
+                         "probabilities.")
 parser.add_argument('--workspace', dest='workspace', default="",
-                    help="Directory where we expect to find spectrum libraries.")
+                    help="Directory where we expect to find (and create) spectrum libraries.")
 parser.add_argument('--contamination-library',
                     action="append",
                     dest="contamination_library",
                     help="Contaminate output spectra with a randomly chosen spectrum from this library. Stars may be "
                          "filtered by parameters by placing a comma-separated list of constraints in [] brackets after "
                          "the name of the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to "
-                         "specify a range.")
+                         "specify a range. Multiple contamination libraries can be specified.")
 parser.add_argument('--contamination-fraction',
                     action="append",
                     dest="contamination_fraction",
-                    help="The fraction of photons which should come from contaminating sources.")
+                    help="The fraction of photons which should come from contaminating sources. Multiple values can "
+                         "be specified on one command line, in which case each input spectrum turns into multiple "
+                         "output spectra, contaminated with each contamination fraction in turn.")
 parser.add_argument('--output-fraction',
                     action="append",
                     dest="output_fraction",
@@ -82,6 +87,15 @@ os.system("mkdir -p {}".format(workspace))
 
 
 def make_weighted_choice(weights):
+    """
+    Utility function to make weighted random choices. Pass a list of floats representing the weights of a series of
+    options. Get back the index of the option that was selected.
+
+    :param weights:
+    list of floats, representing the weights of the options
+    :return:
+    int. index selected.
+    """
     weights_sum = sum(weights)
     selected_index = 0
     output_select = random.uniform(a=0, b=weights_sum)
@@ -103,6 +117,9 @@ if args.input_library is not None:
                                                              )
                        for item in args.input_library]
 
+logger.info("Opening {:d} input libraries. These contain {:s} spectra.".
+            format(len(input_libraries), [len(x) for x in input_libraries]))
+
 # Open contaminating SpectrumLibrary(s)
 contamination_libraries = []
 if args.contamination_library is not None:
@@ -119,11 +136,11 @@ for library in contamination_libraries:
         contamination_spectrum = library_obj.open(ids=item['specId']).extract_item(0)
 
         # Look up the name of the star we've just loaded
-        object_name = contamination_spectrum.metadata['Starname']
+        object_uid = contamination_spectrum.metadata['Starname']
 
         # Search for the continuum-normalised version of this same object
         search_constraints = {
-            "Starname": object_name,
+            "Starname": object_uid,
             "continuum_normalised": 1
         }
         if "SNR" in contamination_spectrum.metadata:
@@ -141,6 +158,8 @@ for library in contamination_libraries:
         contamination_spectra.append(
             [contamination_spectrum, contamination_spectrum_continuum_normalised]
         )
+
+logger.info("We have {:d} contamination spectra.".format(len(contamination_spectra)))
 
 # Create new SpectrumLibrary(s)
 output_libraries = []
@@ -166,29 +185,32 @@ assert len(output_fractions) == len(output_libraries), "Must have an output frac
 # Keep a record of which stars are being sent to which output
 output_destinations = {}
 
-# Loop over spectra to process
+# Process each spectrum in turn
 with open(args.log_to, "w") as result_log:
+    # Loop over all the contamination fractions we're applying
     for contamination_fraction in contamination_fractions:
+        # Loop over spectra to process
         for input_library in input_libraries:
             library_obj = input_library["library"]
             for input_spectrum_id in input_library["items"]:
                 logger.info("Working on <{}>".format(input_spectrum_id['filename']))
 
-                # Open Spectrum data from disk
+                # Open input spectrum data from disk
                 input_spectrum_array = library_obj.open(ids=input_spectrum_id['specId'])
                 input_spectrum = input_spectrum_array.extract_item(0)
 
                 # Look up the name of the star we've just loaded
                 spectrum_matching_field = 'uid' if 'uid' in input_spectrum.metadata else 'Starname'
-                object_name = input_spectrum.metadata[spectrum_matching_field]
+                object_uid = input_spectrum.metadata[spectrum_matching_field]
+                object_name = input_spectrum.metadata['Starname']
 
                 # Write log message
-                result_log.write("\n[{}] {}".format(time.asctime(), object_name))
+                result_log.write("\n[{}] {}".format(time.asctime(), object_uid))
                 result_log.flush()
 
                 # Search for the continuum-normalised version of this same object
                 search_constraints = {
-                    spectrum_matching_field: object_name,
+                    spectrum_matching_field: object_uid,
                     "continuum_normalised": 1
                 }
                 if "SNR" in input_spectrum.metadata:
@@ -205,9 +227,11 @@ with open(args.log_to, "w") as result_log:
 
                 # Contaminate this spectrum if requested
                 if contamination_fraction > 0:
+                    # Pick a random spectrum to contaminate with
                     contamination_spectrum, contamination_spectrum_continuum_normalised = \
                         random.choice(contamination_spectra)
 
+                    # Work out the integrated flux in the input and contaminating spectra
                     input_integral = input_spectrum.integral()
                     contamination_integral = contamination_spectrum.integral()
 
@@ -222,15 +246,25 @@ with open(args.log_to, "w") as result_log:
                                                                                       interpolate_errors=False,
                                                                                       interpolate_mask=False)
 
-                    input_spectrum.values = \
-                        (input_spectrum.values * (1 - contamination_fraction) +
-                         contamination_resampled.values * contamination_fraction *
-                         input_integral / contamination_integral)
+                    # Renormalise contaminating spectrum to same integrated flux as input spectrum
+                    contamination_resampled.values *= input_integral / contamination_integral
 
+                    # Fraction of flux in each pixel coming from input spectrum versus contaminating spectrum
+                    pixel_weights = (input_spectrum.values * (1 - contamination_fraction)) / \
+                                    (contamination_resampled.values * contamination_fraction)
+
+                    # Pollute flux normalised spectrum
+                    input_spectrum.values = (input_spectrum.values * (1 - contamination_fraction) +
+                         contamination_resampled.values * contamination_fraction)
+
+                    # Pollute continuum normalised spectrum
                     input_spectrum_continuum_normalised.values = \
-                        (input_spectrum_continuum_normalised.values * (1 - contamination_fraction) +
-                         contamination_cn_resampled.values * contamination_fraction *
-                         input_integral / contamination_integral)
+                        (input_spectrum_continuum_normalised.values * pixel_weights +
+                         contamination_cn_resampled.values * (1-pixel_weights))
+
+                    # Add metadata describing pollution fraction
+                    input_spectrum.metadata["contamination_fraction"] = contamination_fraction
+                    input_spectrum_continuum_normalised["contamination_fraction"] = contamination_fraction
 
                 # Select which output library to send this spectrum to
                 # Be sure to send all spectra relating to any particular star to the same destination

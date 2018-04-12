@@ -17,11 +17,16 @@ This file path can be changed with the --output-stub command line argument.
 
 """
 
+import os
+from os import path as os_path
 import argparse
 import json
 
 
 def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
+    # Make sure output directory exists
+    os.system("mkdir -p {}".format(os_path.split(output_stub)[0]))
+
     # library_values[Starname] = [list of label values]
     # cannon_values[Starname][SNR] = [list of label values]
     # cannon_errors[Starname][SNR] = [list of label uncertainties, as estimated by the Cannon]

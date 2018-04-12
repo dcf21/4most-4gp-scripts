@@ -126,7 +126,7 @@ do
           --colour-range-min 30 --colour-range-max 120 \
           --cannon-output "${cannon_output}" \
           --accuracy-unit "${accuracy_unit}" \
-          --output-stub "../../output_plots/cannon_performance/required_snrA/${cannon_run}_${path_safe_label}" &
+          --output-stub "../../output_plots/cannon_performance/required_snrA/${cannon_run}/${path_safe_label}" &
 
         # required_snrB
         # Scatter plots of required SNR in the metallicity / log(g) plane
@@ -138,7 +138,7 @@ do
           --colour-range-min 30 --colour-range-max 120 \
           --cannon-output "${cannon_output}" \
           --accuracy-unit "${accuracy_unit}" \
-          --output-stub "../../output_plots/cannon_performance/required_snrB/${cannon_run}_${path_safe_label}" &
+          --output-stub "../../output_plots/cannon_performance/required_snrB/${cannon_run}/${path_safe_label}" &
         wait
 
         # label_offsets/A_*
@@ -150,7 +150,7 @@ do
           --colour-range-min " -$(python2.7 -c "print ${target_accuracy}*3")" \
           --colour-range-max " $(python2.7 -c "print ${target_accuracy}*3")" \
           --cannon-output "${cannon_output}" \
-          --output-stub "../../output_plots/cannon_performance/label_offsets/A_${cannon_run}_${path_safe_label}" &
+          --output-stub "../../output_plots/cannon_performance/label_offsets/${cannon_run}/A_${path_safe_label}" &
 
         # label_offsets/B_*
         # Scatter plots of the absolute offsets in each label, in the [Fe/H] / log(g) plane
@@ -161,7 +161,7 @@ do
           --colour-range-min " -$(python2.7 -c "print ${target_accuracy}*3")" \
           --colour-range-max " $(python2.7 -c "print ${target_accuracy}*3")" \
           --cannon-output "${cannon_output}" \
-          --output-stub "../../output_plots/cannon_performance/label_offsets/B_${cannon_run}_${path_safe_label}" &
+          --output-stub "../../output_plots/cannon_performance/label_offsets/${cannon_run}B_${path_safe_label}" &
 
        # Wait for this batch of plots to finish
        wait

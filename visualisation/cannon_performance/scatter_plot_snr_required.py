@@ -7,6 +7,7 @@ and the colour of the points representing the SNR needed to attain some required
 """
 
 import os
+from os import path as os_path
 import sys
 import argparse
 import re
@@ -113,6 +114,9 @@ for star_name in star_names:
             snr_required_per_a = snr_required_per_pixel * sqrt(pixels_per_angstrom)
             break
         output.append(label_values[star_name] + [snr_required_per_a])
+
+# Make sure that output directory exists
+os.system("mkdir -p {}".format(os_path.split(args.output_stub)[0]))
 
 # Write values to data files
 filename = "{}.dat".format(args.output_stub)

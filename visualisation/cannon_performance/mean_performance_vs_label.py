@@ -203,6 +203,15 @@ class PlotLabelPrecision:
         abscissa_values = [item[abscissa_info[0]] for item in cannon_stars]
         abscissa_values = sorted(set(abscissa_values))
 
+        # If all abscissa values are off the range of the x axis, rescale axis
+        if self.common_x_limits is not None:
+            if abscissa_values[0] > self.common_x_limits[1]:
+                self.common_x_limits[1] = abscissa_values[0]
+                print "Rescaling x-axis to include {.1f}".format(abscissa_values[0])
+            if abscissa_values[-1] < self.common_x_limits[0]:
+                self.common_x_limits[0] = abscissa_values[-1]
+                print "Rescaling x-axis to include {.1f}".format(abscissa_values[-1])
+
         # Create a sorted list of all the stars we've got
         star_names = [item['Starname'] for item in cannon_stars]
         star_names = sorted(set(star_names))
@@ -270,7 +279,10 @@ class PlotLabelPrecision:
                 ]
 
             # Output data file of label mismatches at this abscissa value
-            np.savetxt(data_file, np.transpose(y))
+            np.savetxt(fname=data_file, X=np.transpose(y), header="""
+# Each row represents a star
+# {0}
+            """.format("     ".join(["offset_{}".format(x) for x in self.label_names])))
 
             # Output scatter plots of label cross-correlations at this abscissa value
             if self.correlation_plots:
@@ -307,7 +319,9 @@ class PlotLabelPrecision:
 
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # 1st column is RMS. Subsequent columns are various percentiles (see above)
-            np.savetxt(file_name, y)
+            np.savetxt(fname=file_name, X=y, header="""
+# Abscissa_(probably_SNR)     RMS_offset     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile
+            """)
 
             self.plot_precision[i].append([
                 "\"{}\" using 1:2".format(file_name),
@@ -324,6 +338,10 @@ class PlotLabelPrecision:
             file_name = "{}data_whiskers_{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter)
 
             with open(file_name, "w") as f:
+                f.write("""
+# Each block within this file represents a rectangular region to shade on a box-and-whisker plot
+# x y                
+                """)
                 for j, datum in enumerate(y):
                     if self.abscissa_label.startswith("SNR"):
                         w1 = 1.2
@@ -489,19 +507,18 @@ class PlotLabelPrecision:
                     set term dpi 200
                     set nokey
                     set nodisplay ; set multiplot
-                    set fontsize 1.6
-                    set label 1 "{2}; {3}" page 1, page {4}
+                    set label 1 "\\parbox{{{5}cm}}{{ {2}; {3} }}" page 1, page {4}
                     
                     """.format(self.plot_width, aspect, label_info["latex"], self.datasets[data_set_counter],
-                               self.plot_width * aspect - 0.8))
+                               self.plot_width * aspect - 0.8, self.plot_width*0.5))
 
                     if self.date_stamp:
                         ppl.write("""
                         set fontsize 0.8
                         text "{}" at 0, {}
-                        set fontsize 1.6
                         """.format(plot_creator, self.plot_width * aspect + 0.4))
 
+                    ppl.write("set fontsize 1.0\n")  # 1.6
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
                     ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
@@ -538,24 +555,24 @@ class PlotLabelPrecision:
                     set term dpi 200
                     set key ycentre right
                     set nodisplay ; set multiplot
-                    set fontsize 1.1
                     set binwidth {2}
-                    set label 1 "{3}; {4}" page 1, page {5}
+                    set label 1 "\\parbox{{{6}cm}}{{ {3}; {4} }}" page 1, page {5}
                     
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
                     """.format(self.plot_width * 1.25, aspect,
                                label_info["offset_max"] / 60.,
                                label_info["latex"], self.datasets[data_set_counter],
-                               self.plot_width * 1.25 * aspect - 0.8))
+                               self.plot_width * 1.25 * aspect - 0.8,
+                               self.plot_width*0.5))
 
                     if self.date_stamp:
                         ppl.write("""
                         set fontsize 0.8
                         text "{}" at 0, {}
-                        set fontsize 1.1
                         """.format(plot_creator, self.plot_width * 1.25 * aspect + 0.4))
 
+                    ppl.write("set fontsize 1.0\n")  # 1.1
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(label_info["latex"]))
                     ppl.write("set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
