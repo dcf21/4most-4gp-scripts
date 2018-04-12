@@ -31,7 +31,7 @@ workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "
 # Open spectrum library we're going to plot
 input_library_info = SpectrumLibrarySqlite.open_and_search(library_spec=args.library,
                                                            workspace=workspace,
-                                                           extra_constraints={"continuum_normalised": 1}
+                                                           extra_constraints={}
                                                            )
 input_library, library_items = [input_library_info[i] for i in ("library", "items")]
 library_ids = [i["specId"] for i in library_items]
@@ -52,9 +52,10 @@ for i in range(len(library_spectra)):
         metadata["e_bv"] = 0
 
     spectrum = library_spectra.extract_item(i)
-    filename_stub = os_path.join(args.output_stub, "{0}_{1:06.4f}_{2:06.1f}".format(metadata["Starname"],
-                                                                                    metadata["e_bv"],
-                                                                                    metadata["SNR"]))
+    filename_stub = os_path.join(args.output_stub, "{0}_{1}_{2:06.4f}_{3:06.1f}".format(metadata["Starname"],
+                                                                                        metadata["continuum_normalised"],
+                                                                                        metadata["e_bv"],
+                                                                                        metadata["SNR"]))
 
     # Write metadata
     with open("{}.txt".format(filename_stub), "w") as f:
@@ -64,3 +65,4 @@ for i in range(len(library_spectra)):
     # Write spectrum
     with open("{}.spec".format(filename_stub), "w") as f:
         np.savetxt(f, np.asarray(zip(spectrum.wavelengths, spectrum.values, spectrum.value_errors)))
+

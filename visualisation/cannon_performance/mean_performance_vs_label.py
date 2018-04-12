@@ -279,10 +279,10 @@ class PlotLabelPrecision:
                 ]
 
             # Output data file of label mismatches at this abscissa value
-            np.savetxt(fname=data_file, X=np.transpose(y), header="""
-# Each row represents a star
-# {0}
-            """.format("     ".join(["offset_{}".format(x) for x in self.label_names])))
+            np.savetxt(fname=data_file, X=np.transpose(y), header=
+"# Each row represents a star\n"
+"# {0}\n\n".format("     ".join(["offset_{}".format(x) for x in self.label_names]))
+            )
 
             # Output scatter plots of label cross-correlations at this abscissa value
             if self.correlation_plots:
@@ -319,9 +319,9 @@ class PlotLabelPrecision:
 
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # 1st column is RMS. Subsequent columns are various percentiles (see above)
-            np.savetxt(fname=file_name, X=y, header="""
-# Abscissa_(probably_SNR)     RMS_offset     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile
-            """)
+            np.savetxt(fname=file_name, X=y, header=
+"# Abscissa_(probably_SNR)     RMS_offset     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile\n\n"
+            )
 
             self.plot_precision[i].append([
                 "\"{}\" using 1:2".format(file_name),
@@ -338,10 +338,10 @@ class PlotLabelPrecision:
             file_name = "{}data_whiskers_{:d}_{:d}.dat".format(self.output_figure_stem, i, self.data_set_counter)
 
             with open(file_name, "w") as f:
-                f.write("""
-# Each block within this file represents a rectangular region to shade on a box-and-whisker plot
-# x y                
-                """)
+                f.write(
+"# Each block within this file represents a rectangular region to shade on a box-and-whisker plot\n"
+"# x y\n\n"
+                )
                 for j, datum in enumerate(y):
                     if self.abscissa_label.startswith("SNR"):
                         w1 = 1.2

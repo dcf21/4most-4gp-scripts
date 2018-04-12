@@ -118,7 +118,7 @@ if args.input_library is not None:
                        for item in args.input_library]
 
 logger.info("Opening {:d} input libraries. These contain {:s} spectra.".
-            format(len(input_libraries), [len(x) for x in input_libraries]))
+            format(len(input_libraries), [len(x['items']) for x in input_libraries]))
 
 # Open contaminating SpectrumLibrary(s)
 contamination_libraries = []
@@ -249,13 +249,15 @@ with open(args.log_to, "w") as result_log:
                     # Renormalise contaminating spectrum to same integrated flux as input spectrum
                     contamination_resampled.values *= input_integral / contamination_integral
 
+                    # Flux components from input spectrum, and from contamination source
+                    flux_from_input = input_spectrum.values * (1 - contamination_fraction)
+                    flux_from_contamination = contamination_resampled.values * contamination_fraction
+
                     # Fraction of flux in each pixel coming from input spectrum versus contaminating spectrum
-                    pixel_weights = (input_spectrum.values * (1 - contamination_fraction)) / \
-                                    (contamination_resampled.values * contamination_fraction)
+                    pixel_weights = flux_from_input / (flux_from_input + flux_from_contamination)
 
                     # Pollute flux normalised spectrum
-                    input_spectrum.values = (input_spectrum.values * (1 - contamination_fraction) +
-                         contamination_resampled.values * contamination_fraction)
+                    input_spectrum.values = flux_from_input + flux_from_contamination
 
                     # Pollute continuum normalised spectrum
                     input_spectrum_continuum_normalised.values = \
@@ -263,8 +265,8 @@ with open(args.log_to, "w") as result_log:
                          contamination_cn_resampled.values * (1-pixel_weights))
 
                     # Add metadata describing pollution fraction
+                    input_spectrum_continuum_normalised.metadata["contamination_fraction"] = \
                     input_spectrum.metadata["contamination_fraction"] = contamination_fraction
-                    input_spectrum_continuum_normalised["contamination_fraction"] = contamination_fraction
 
                 # Select which output library to send this spectrum to
                 # Be sure to send all spectra relating to any particular star to the same destination
