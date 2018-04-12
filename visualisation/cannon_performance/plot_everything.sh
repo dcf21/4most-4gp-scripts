@@ -161,7 +161,7 @@ do
           --colour-range-min " -$(python2.7 -c "print ${target_accuracy}*3")" \
           --colour-range-max " $(python2.7 -c "print ${target_accuracy}*3")" \
           --cannon-output "${cannon_output}" \
-          --output-stub "../../output_plots/cannon_performance/label_offsets/${cannon_run}B_${path_safe_label}" &
+          --output-stub "../../output_plots/cannon_performance/label_offsets/${cannon_run}/B_${path_safe_label}" &
 
        # Wait for this batch of plots to finish
        wait
