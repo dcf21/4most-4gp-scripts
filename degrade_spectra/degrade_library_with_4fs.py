@@ -274,7 +274,7 @@ for mode in ({"name": "LRS", "library": args.output_library_lrs, "active": args.
              {"name": "HRS", "library": args.output_library_hrs, "active": args.run_hrs}):
     if mode['active']:
         if args.db_in_tmp:
-            del output_libraries[mode]
+            del output_libraries[mode['name']]
             library_name = re.sub("/", "_", mode['library'])
             library_path = os_path.join(workspace, library_name)
             os.system("mv /tmp/tmp_{}.db {}".format(library_name, os_path.join(library_path, "index.db")))
