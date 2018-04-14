@@ -3,8 +3,12 @@
 # Activate python virtual environment
 source ../../virtualenv/bin/activate
 
+# Produce reddened versions of the demostration stars
 python2.7 redden_library.py --input-library demo_stars \
-                            --output-library demo_stars_reddened \
+                            --output-library demo_stars_reddened
+
+# ------------------
+# Redden the AHM2017 sample
 
 python2.7 redden_library.py --input-library turbospec_ahm2017_perturbed \
                             --output-library reddened_ahm2017_perturbed
@@ -15,6 +19,18 @@ python2.7 degrade_library_with_4fs.py --input-library reddened_ahm2017_perturbed
                                       --output-library-hrs 4fs_reddened_ahm2017_perturbed_hrs
 
 # ------------------
+# Redden the GALAH sample
+
+python2.7 redden_library.py --input-library galah_test_sample_turbospec \
+                            --output-library galah_test_sample_reddened
+
+python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_reddened \
+                                      --snr-list 50 \
+                                      --output-library-lrs galah_test_sample_reddened_4fs_lrs \
+                                      --output-library-hrs galah_test_sample_reddened_4fs_hrs
+
+# ------------------
+# Redden the 4TEAM sample
 
 python2.7 redden_library.py --input-library turbospec_fourteam_sample \
                             --output-library reddened_fourteam_sample
@@ -44,6 +60,7 @@ python2.7 degrade_library_with_4fs.py --input-library reddened_fourteam_sample \
                                       --output-library-hrs 4fs_reddened_fourteam_sample_hrs
 
 # ------------------
+# Redden the 4TEAM2 sample
 
 python2.7 redden_library.py --input-library turbospec_fourteam2_sample \
                             --output-library reddened_fourteam2_sample
@@ -59,5 +76,3 @@ python2.7 degrade_library_with_4fs.py --input-library reddened_fourteam2_sample 
                                       --snr-definitions-hrs "A5354_5361" \
                                       --output-library-lrs 4fs_reddened_fourteam2_sample_lrs \
                                       --output-library-hrs 4fs_reddened_fourteam2_sample_hrs
-
-

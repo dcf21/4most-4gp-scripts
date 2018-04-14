@@ -61,7 +61,7 @@ parser.add_argument('--snr-per-angstrom',
 parser.set_defaults(per_pixel=True)
 parser.add_argument('--snr-list',
                     required=False,
-                    default="10,20,50,80,100,130,180,250,500",
+                    default="10,12,14,16,18,20,23,26,30,35,40,45,50,80,100,130,180,250",
                     dest="snr_list",
                     help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
 parser.add_argument('--mag-list',
