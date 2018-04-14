@@ -17,7 +17,7 @@ python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_turbospe
                                       --mag-list 15 \
                                       --photometric-band "GROUND_JOHNSON_V" \
                                       --snr-definitions-hrs "GalDiskHR_536NM" \
-                                      --output-library-lrs galah_test_sample_4fs_s4grn_lrs \
+                                      --no-run-lrs \
                                       --output-library-hrs galah_test_sample_4fs_s4grn_hrs
 
 python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_turbospec \
@@ -25,7 +25,7 @@ python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_turbospe
                                       --mag-list 15 \
                                       --photometric-band "GROUND_JOHNSON_V" \
                                       --snr-definitions-hrs "GalDiskHR_620NM" \
-                                      --output-library-lrs galah_test_sample_4fs_s4red_lrs \
+                                      --no-run-lrs \
                                       --output-library-hrs galah_test_sample_4fs_s4red_hrs
 
 
