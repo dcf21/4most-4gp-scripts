@@ -126,6 +126,16 @@ parser.add_argument('--no-create',
                     dest="create",
                     help="Do not create a clean SpectrumLibrary to feed synthesized spectra into")
 parser.set_defaults(create=True)
+parser.add_argument('--db-in-tmp',
+                    action='store_true',
+                    dest="db_in_tmp",
+                    help="Symlink database into /tmp while we're putting data into it (for performance). "
+                         "Not recommended.")
+parser.add_argument('--no-db-in-tmp',
+                    action='store_false',
+                    dest="db_in_tmp",
+                    help="Do not symlink database into /tmp while we're putting data into it. Recommended")
+parser.set_defaults(db_in_tmp=False)
 parser.add_argument('--log-file',
                     required=False,
                     default="/tmp/fourfs_apokasc_{}.log".format(pid),
@@ -148,7 +158,7 @@ spectra = SpectrumLibrarySqlite.open_and_search(library_spec=args.input_library,
                                                 )
 input_library, input_spectra_ids, input_spectra_constraints = [spectra[i] for i in ("library", "items", "constraints")]
 
-# Create new SpectrumLibrary
+# Create new SpectrumLibrary(s)
 output_libraries = {}
 
 for mode in ({"name": "LRS", "library": args.output_library_lrs, "active": args.run_lrs},
@@ -156,7 +166,14 @@ for mode in ({"name": "LRS", "library": args.output_library_lrs, "active": args.
     if mode['active']:
         library_name = re.sub("/", "_", mode['library'])
         library_path = os_path.join(workspace, library_name)
-        output_libraries[mode['name']] = SpectrumLibrarySqlite(path=library_path, create=args.create)
+        output_library = SpectrumLibrarySqlite(path=library_path, create=args.create)
+        # We may want to symlink the sqlite3 database file into /tmp for performance reasons...
+        if args.db_in_tmp:
+            del output_library
+            os.system("mv {} /tmp/tmp_{}.db").format(os_path.join(library_name, "index.db"), library_name)
+            os.system("ln -s /tmp/tmp_{}.db {}").format(library_name, os_path.join(library_name, "index.db"))
+            output_library = SpectrumLibrarySqlite(path=library_path, create=False)
+        output_libraries[mode['name']] = output_library
 
 # Definitions of SNR
 if (args.snr_definitions is None) or (len(args.snr_definitions) < 1):
@@ -251,3 +268,11 @@ with open(args.log_to, "w") as result_log:
 
         # Clean up 4FS
         etc_wrapper.close()
+
+# If we put database in /tmp while adding entries to it, now return it to original location
+for mode in ({"name": "LRS", "library": args.output_library_lrs, "active": args.run_lrs},
+             {"name": "HRS", "library": args.output_library_hrs, "active": args.run_hrs}):
+    if mode['active']:
+        if args.db_in_tmp:
+            del output_libraries[mode]
+            os.system("mv /tmp/tmp_{}.db {}").format(library_name, os_path.join(library_name, "index.db"))
