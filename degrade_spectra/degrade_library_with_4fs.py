@@ -94,6 +94,24 @@ parser.add_argument('--snr-definitions-hrs',
                     default="",
                     dest="snr_definitions_hrs",
                     help="Specify the SNR definitions to use for the R, G and B bands of 4MOST HRS.")
+parser.add_argument('--run-hrs',
+                    action='store_true',
+                    dest="run_hrs",
+                    help="Set 4FS to produce output for 4MOST HRS")
+parser.add_argument('--no-run-hrs',
+                    action='store_false',
+                    dest="run_hrs",
+                    help="Set 4FS not to produce output for 4MOST HRS")
+parser.set_defaults(run_hrs=True)
+parser.add_argument('--run-lrs',
+                    action='store_true',
+                    dest="run_lrs",
+                    help="Set 4FS to produce output for 4MOST LRS")
+parser.add_argument('--no-run-lrs',
+                    action='store_false',
+                    dest="run_lrs",
+                    help="Set 4FS not to produce output for 4MOST LRS")
+parser.set_defaults(run_lrs=True)
 parser.add_argument('--binary-path',
                     required=False,
                     default=root_path,
@@ -133,11 +151,12 @@ input_library, input_spectra_ids, input_spectra_constraints = [spectra[i] for i 
 # Create new SpectrumLibrary
 output_libraries = {}
 
-for mode in ({"name": "LRS", "library": args.output_library_lrs},
-             {"name": "HRS", "library": args.output_library_hrs}):
-    library_name = re.sub("/", "_", mode['library'])
-    library_path = os_path.join(workspace, library_name)
-    output_libraries[mode['name']] = SpectrumLibrarySqlite(path=library_path, create=args.create)
+for mode in ({"name": "LRS", "library": args.output_library_lrs, "active": args.run_lrs},
+             {"name": "HRS", "library": args.output_library_hrs, "active": args.run_hrs}):
+    if mode['active']:
+        library_name = re.sub("/", "_", mode['library'])
+        library_path = os_path.join(workspace, library_name)
+        output_libraries[mode['name']] = SpectrumLibrarySqlite(path=library_path, create=args.create)
 
 # Definitions of SNR
 if (args.snr_definitions is None) or (len(args.snr_definitions) < 1):
@@ -179,6 +198,8 @@ with open(args.log_to, "w") as result_log:
             magnitude=magnitude,
             magnitude_unreddened=not args.magnitudes_reddened,
             photometric_band=args.photometric_band,
+            run_lrs=args.run_lrs,
+            run_hrs=args.run_hrs,
             lrs_use_snr_definitions=snr_definitions_lrs,
             hrs_use_snr_definitions=snr_definitions_hrs,
             snr_list=snr_list,
