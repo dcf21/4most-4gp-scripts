@@ -170,8 +170,8 @@ for mode in ({"name": "LRS", "library": args.output_library_lrs, "active": args.
         # We may want to symlink the sqlite3 database file into /tmp for performance reasons...
         if args.db_in_tmp:
             del output_library
-            os.system("mv {} /tmp/tmp_{}.db").format(os_path.join(library_path, "index.db"), library_name)
-            os.system("ln -s /tmp/tmp_{}.db {}").format(library_name, os_path.join(library_path, "index.db"))
+            os.system("mv {} /tmp/tmp_{}.db".format(os_path.join(library_path, "index.db"), library_name))
+            os.system("ln -s /tmp/tmp_{}.db {}".format(library_name, os_path.join(library_path, "index.db")))
             output_library = SpectrumLibrarySqlite(path=library_path, create=False)
         output_libraries[mode['name']] = output_library
 
