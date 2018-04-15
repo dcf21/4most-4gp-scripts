@@ -26,15 +26,10 @@ python2.7 redden_library.py --input-library galah_test_sample_turbospec \
 
 python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_reddened \
                                       --snr-list 50 \
-                                      --output-library-lrs galah_test_sample_reddened_4fs_lrs \
-                                      --output-library-hrs galah_test_sample_reddened_4fs_hrs
-
-python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_reddened \
-                                      --snr-list 50 \
                                       --mag-list 15 \
                                       --photometric-band "GROUND_JOHNSON_V" \
-                                      --output-library-lrs galah_test_sample_reddened_4fs_lrs \
-                                      --output-library-hrs galah_test_sample_reddened_4fs_hrs
+                                      --output-library-lrs galah_test_sample_reddened_4fs_snr50_lrs \
+                                      --output-library-hrs galah_test_sample_reddened_4fs_snr50_hrs
 
 python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_reddened \
                                       --snr-list 50 \
@@ -42,7 +37,7 @@ python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_reddened
                                       --photometric-band "GROUND_JOHNSON_V" \
                                       --snr-definitions-hrs "GalDiskHR_536NM" \
                                       --no-run-lrs \
-                                      --output-library-hrs galah_test_sample_reddened_4fs_s4grn_hrs
+                                      --output-library-hrs galah_test_sample_reddened_4fs_snr50_s4grn_hrs
 
 python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_reddened \
                                       --snr-list 50 \
@@ -50,7 +45,7 @@ python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_reddened
                                       --photometric-band "GROUND_JOHNSON_V" \
                                       --snr-definitions-hrs "GalDiskHR_620NM" \
                                       --no-run-lrs \
-                                      --output-library-hrs galah_test_sample_reddened_4fs_s4red_hrs
+                                      --output-library-hrs galah_test_sample_reddened_4fs_snr50_s4red_hrs
 
 # ------------------
 # Redden the 4TEAM sample
