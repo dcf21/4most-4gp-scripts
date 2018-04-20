@@ -11,7 +11,7 @@ import re
 
 destinations = []
 
-for line in open("examples.sh"):
+for line in open("examples_galah_20180416.sh"):
     line = line.strip()
     test = re.match("--output-file \"(.*)\"", line)
     if test is not None:
