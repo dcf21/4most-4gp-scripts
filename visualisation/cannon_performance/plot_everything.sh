@@ -139,7 +139,6 @@ do
           --cannon-output "${cannon_output}" \
           --accuracy-unit "${accuracy_unit}" \
           --output-stub "../../output_plots/cannon_performance/required_snrB/${cannon_run}/${path_safe_label}" &
-        wait
 
         # label_offsets/A_*
         # Scatter plots of the absolute offsets in each label, in the Teff / log(g) plane

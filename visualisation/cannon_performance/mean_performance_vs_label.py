@@ -400,7 +400,7 @@ class PlotLabelPrecision:
                     text "{}" at 0, {}
                     """.format(plot_creator, self.plot_width * aspect + 0.4))
 
-                ppl.write("set fontsize 1.0\n")  # 1.6
+                ppl.write("set fontsize 1.3\n")  # 1.6
                 ppl.write("set key top right ; set keycols 2\n")
                 ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
                 ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
@@ -465,7 +465,7 @@ class PlotLabelPrecision:
                 else:
                     ppl.write("set nokey\n")
 
-                ppl.write("set fontsize 1.0\n")  # 1.6
+                ppl.write("set fontsize 1.3\n")  # 1.6
                 ppl.write("set ylabel \"RMS offset in {}\"\n".format(label_info["latex"]))
                 ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
@@ -518,7 +518,7 @@ class PlotLabelPrecision:
                         text "{}" at 0, {}
                         """.format(plot_creator, self.plot_width * aspect + 0.4))
 
-                    ppl.write("set fontsize 1.0\n")  # 1.6
+                    ppl.write("set fontsize 1.3\n")  # 1.6
                     ppl.write("set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
                     ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
@@ -572,7 +572,7 @@ class PlotLabelPrecision:
                         text "{}" at 0, {}
                         """.format(plot_creator, self.plot_width * 1.25 * aspect + 0.4))
 
-                    ppl.write("set fontsize 1.0\n")  # 1.1
+                    ppl.write("set fontsize 1.3\n")  # 1.1
                     ppl.write("set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
                     ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(label_info["latex"]))
                     ppl.write("set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
