@@ -301,6 +301,7 @@ for index in range(N):
     snr_per = spectrum.metadata["SNR_per"] if "SNR_per" in spectrum.metadata else "pixel"
     snr_definition = spectrum.metadata["snr_definition"] if "snr_definition" in spectrum.metadata else ""
     ebv = spectrum.metadata["e_bv"] if "e_bv" in spectrum.metadata else 0
+    withrv = spectrum.metadata["rv"] if "rv" in spectrum.metadata else 0
     uid = spectrum.metadata["uid"] if "uid" in spectrum.metadata else ""
 
     # From the label covariance matrix extract the standard deviation in each label value
@@ -324,6 +325,7 @@ for index in range(N):
                    "SNR_per": snr_per,
                    "snr_definition": snr_definition,
                    "e_bv": ebv,
+                   "rv": withrv,
                    "uid": uid,
                    "time": time_taken[index]
                    })
