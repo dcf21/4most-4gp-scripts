@@ -7,6 +7,7 @@ Take a SpectrumLibrary and tabulate the average exposure time at each SNR within
 
 import argparse
 import os
+import time
 from os import path as os_path
 import pwd
 import numpy as np
@@ -15,9 +16,9 @@ from fourgp_speclib import SpectrumLibrarySqlite
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--library', required=True, action="append", dest='libraries',
+parser.add_argument('--library', required=True, dest='library',
                     help="Library of spectra we should output stellar labels for.")
-parser.add_argument('--wavelength', required=True, dest='wavelengths',
+parser.add_argument('--wavelength', required=True, dest='wavelength',
                     help="Wavelength to use for converting SNR/pixel to SNR/A")
 parser.add_argument('--output-file', default="/tmp/exposure_times_vs_snr.dat", dest='output_file',
                     help="Data file to write output to.")
@@ -37,23 +38,24 @@ pixels_per_angstrom = None
 
 # Open output data file
 with open(args.output_file, "w") as output:
-    # Open spectrum libraries in turn
-    for library in args.libraries:
-        library_path = os_path.join(workspace, library)
-        library_object = SpectrumLibrarySqlite(path=library_path, create=False)
 
-        # Loop over objects in each spectrum library
-        constraints = {"continuum_normalised": 1}
+        # Open spectrum library
+        spectra = SpectrumLibrarySqlite.open_and_search(
+          library_spec=args.library,
+          workspace=workspace,
+          extra_constraints={"continuum_normalised": 1}
+         )
+        library_object, library_items = [spectra[i] for i in ("library", "items")]
 
         # Loop over objects in SpectrumLibrary
-        for item in library_object.search(**constraints):
+        for item in library_items:
 
             # Convert SNR/pixel to SNR/A
             if raster is None:
-                if args.wavelength > 0:
+                if float(args.wavelength) > 0:
                     spectrum = library_object.open(ids=item['specId']).extract_item(0)
                     raster = spectrum.wavelengths
-                    raster_diff = np.diff(raster[raster > args.wavelength])
+                    raster_diff = np.diff(raster[raster > float(args.wavelength)])
                     pixels_per_angstrom = 1.0 / raster_diff[0]
                 else:
                     pixels_per_angstrom = 1
@@ -97,12 +99,12 @@ with open("{}.ppl".format(stem), "w") as ppl:
     set size ratio {1}
     set term dpi 200
     set nodisplay ; set multiplot
-    set label 1 texify("{2} ({3} stars)") page 1, page {4}
+    set label 1 texifyText("{2} ({3} stars)") page {4}, page 1
     
     """.format(plot_width, aspect,
-               args.libraries[0],
+               args.library,
                len(exposures_by_snr[unique_snrs_sorted[0]]),
-               plot_width * aspect - 0.8))
+               plot_width * 0.2))
 
     if date_stamp:
         ppl.write("""
@@ -111,15 +113,15 @@ with open("{}.ppl".format(stem), "w") as ppl:
         """.format(plot_creator, plot_width * aspect + 0.4))
 
     ppl.write("set fontsize 1.3\n")  # 1.6
-    ppl.write("set key top right ; set keycols 2\n")
+    ppl.write("set nokey\n")
     ppl.write("set ylabel \"Exposure time [min]\"\n")
-    ppl.write("set xlabel \"SNR/$\AA$\"\n")
+    ppl.write("set xlabel \"SNR/\AA\"\n")
 
     # Set axis limits
-    ppl.write("set yrange [1:600] ; set log y\n")
+    ppl.write("set yrange [1:2000] ; set log y\n")
     ppl.write("set xrange [0:250]\n")
 
-    ppl.write("plot '{}' using yerrorbars using 2:3:4\n".format(args.output_file))
+    ppl.write("plot '{}' with yerrorbars using 2:3:4\n".format(args.output_file))
 
     ppl.write("""
     
