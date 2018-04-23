@@ -136,7 +136,8 @@ class PlotLabelPrecision:
             # label name, latex label, log axes, axis range
             "SNR/A": ["SNR", "$S/N$ $[{\\rm \\AA}^{-1}]$", False, (0, 250)],
             "SNR/pixel": ["SNR", "$S/N$ $[{\\rm pixel}^{-1}]$", False, (0, 250)],
-            "ebv": ["e_bv", "$E(B-V)$", True, (0.01, 4)]
+            "ebv": ["e_bv", "$E(B-V)$", True, (0.01, 4)],
+            "rv": ["rv", "RV [m/s]", True, (800, 60e3)]
         }
 
         self.plot_width = plot_width
