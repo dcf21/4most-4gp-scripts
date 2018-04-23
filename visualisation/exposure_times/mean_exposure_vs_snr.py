@@ -57,4 +57,5 @@ unique_snrs_sorted.sort()
 with open(args.output_file,"w") as f:
     f.write("# SNR/pixel Exposure time\n")
     for snr in unique_snrs_sorted:
-        f.write("{.3f}  {.3f}\n".format(snr, np.mean(exposures_by_snr[snr])))
+        f.write("{0:.3f}  {1:.3f}\n".format(snr, np.mean(exposures_by_snr[snr])))
+
