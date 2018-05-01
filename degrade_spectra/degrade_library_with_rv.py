@@ -43,7 +43,7 @@ parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--rv-list',
                     required=False,
-                    default="1,2,5,8,10,20,50",
+                    default="0.1,1,2,5,8,10,20,50",
                     dest="rv_list",
                     help="Specify a comma-separated list of the RVs (km/s) that we should add to spectra.")
 parser.add_argument('--create',
