@@ -60,8 +60,8 @@ library = SpectrumLibrarySqlite(path=library_path, create=True)
 templates = glob.glob(args.input)
 templates.sort()
 
-# For calculating exposure times, assume a magnitude of 13
-magnitude = 13
+# For calculating exposure times, assume a magnitude of 15
+magnitude = 15
 
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
@@ -69,24 +69,25 @@ etc_wrapper = FourFS(
     magnitude=magnitude,
     magnitude_unreddened=False,
     photometric_band=args.photometric_band,
-    hrs_use_snr_definitions=None,
-    snr_list=(165,),
-    snr_per_pixel=True
+    hrs_use_snr_definitions=["GalDiskHR_545NM","GalDiskHR_545NM","GalDiskHR_545NM"],
+    run_hrs=True, run_lrs=False,
+    snr_list=(100,),
+    snr_per_pixel=False
 )
 
 for template_index, template in enumerate(templates):
     name = "template_{:08d}".format(template_index)
 
     # Open fits spectrum
-    #f = fits.open(template)
-    #data = f[1].data
-    #wavelengths = data['LAMBDA']
-    #fluxes = data['FLUX']
+    f = fits.open(template)
+    data = f[1].data
+    wavelengths = data['LAMBDA']
+    fluxes = data['FLUX']
 
     # Open ASCII spectrum
-    f = np.loadtxt(template).T
-    wavelengths = f[0]
-    fluxes = f[1]
+    #f = np.loadtxt(template).T
+    #wavelengths = f[0]
+    #fluxes = f[1]
 
     # Create 4GP spectrum object
     spectrum = Spectrum(wavelengths=wavelengths,
@@ -106,10 +107,11 @@ for template_index, template in enumerate(templates):
     )
 
     index = degraded_spectra["HRS"].keys()[0]
-    exposure_time = degraded_spectra["HRS"][index][165]["spectrum"].metadata["exposure"]  # minutes
+    exposure_time = degraded_spectra["HRS"][index][100]["spectrum"].metadata["exposure"]  # minutes
 
     # Print output
     print "{:100s} {:6.3f} {:6.3f}".format(template, r_mag, exposure_time)
 
     # Insert spectrum object into spectrum library
     library.insert(spectra=spectrum, filenames=os_path.split(template)[1])
+
