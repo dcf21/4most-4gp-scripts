@@ -2,19 +2,16 @@
 # -*- coding: utf-8 -*-
 
 """
-Take a bunch of FITS template spectra, and list their intrinsic magnitudes (as saved in the FITS file), and the
-exposure times needed to observe them if they were at some particular reference magnitude.
+Take a bunch of template spectra in a SpectrumLibrary, and list the exposure times needed to observe them if they
+were at some particular reference magnitude.
 """
 
-import os
 from os import path as os_path
-import glob
 import numpy as np
-from astropy.io import fits
 import argparse
 import logging
 
-from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
+from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_fourfs import FourFS
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -22,14 +19,10 @@ root_path = os_path.join(our_path, "..", "..")
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--input',
-                    required=True,
-                    dest="input",
-                    help="A filename wildcard where we can find the template spectra to operate on.")
 parser.add_argument('--library',
+                    required=True,
                     dest="library",
-                    default="louise_templates",
-                    help="The spectrum library to import the templates into.")
+                    help="The spectrum library where we can find the template spectra to operate on.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--binary-path',
@@ -39,7 +32,7 @@ parser.add_argument('--binary-path',
                     help="Specify a directory where 4FS package is installed.")
 parser.add_argument('--snr-list',
                     required=False,
-                    default="100",
+                    default="10,12,14,16,18,20,23,26,30,35,40,45,50,80,100,130,180,250",
                     dest="snr_list",
                     help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
 parser.add_argument('--snr-definitions-lrs',
@@ -90,14 +83,6 @@ logger.info("Calculating magnitudes and exposure times for templates")
 
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
-os.system("mkdir -p {}".format(workspace))
-
-# Turn set of templates into a SpectrumLibrary with path specified above
-library_path = os_path.join(workspace, args.library)
-library = SpectrumLibrarySqlite(path=library_path, create=True)
-
-templates = glob.glob(args.input)
-templates.sort()
 
 # For calculating exposure times, assume a specified magnitude
 magnitude = float(args.magnitude)
@@ -123,7 +108,6 @@ else:
 snr_list = [float(item.strip()) for item in args.snr_list.split(",")]
 
 # Instantiate 4FS wrapper
-# NB: Here we are requiring SNR/pixel=100 in GalDiskHR_545NM
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
     magnitude=magnitude,
@@ -137,36 +121,46 @@ etc_wrapper = FourFS(
     snr_per_pixel=False
 )
 
-for template_index, template in enumerate(templates):
-    name = "template_{:08d}".format(template_index)
+# Open input SpectrumLibrary
+spectra = SpectrumLibrarySqlite.open_and_search(library_spec=args.library,
+                                                workspace=workspace,
+                                                extra_constraints={"continuum_normalised": 0}
+                                                )
+input_library, input_spectra_ids, input_spectra_constraints = [spectra[i] for i in ("library", "items", "constraints")]
 
-    # Open fits spectrum
-    f = fits.open(template)
-    data = f[1].data
-    wavelengths = data['LAMBDA']
-    fluxes = data['FLUX']
+# Initialise output data structure
+output = {}  # output["HRS"][snr] = list of exposure times in seconds
 
-    # Open ASCII spectrum
-    # f = np.loadtxt(template).T
-    # wavelengths = f[0]
-    # fluxes = f[1]
+# Loop over spectra to process
+for input_spectrum_id in input_spectra_ids:
+    logger.info("Working on <{}>".format(input_spectrum_id['filename']))
 
-    # Create 4GP spectrum object
-    spectrum = Spectrum(wavelengths=wavelengths,
-                        values=fluxes,
-                        value_errors=np.zeros_like(wavelengths),
-                        metadata={
-                            "Starname": name,
-                            "imported_from": template
-                        })
+    # Open Spectrum data from disk
+    input_spectrum_array = input_library.open(ids=input_spectrum_id['specId'])
+    input_spectrum = input_spectrum_array.extract_item(0)
 
-    # Work out magnitude
-    mag_intrinsic = spectrum.photometry(args.photometric_band)
+    # Look up the name of the star we've just loaded
+    spectrum_matching_field = 'uid' if 'uid' in input_spectrum.metadata else 'Starname'
+    object_name = input_spectrum.metadata[spectrum_matching_field]
+
+    # Search for the continuum-normalised version of this same object
+    search_criteria = input_spectra_constraints.copy()
+    search_criteria[spectrum_matching_field] = object_name
+    search_criteria['continuum_normalised'] = 1
+    continuum_normalised_spectrum_id = input_library.search(**search_criteria)
+
+    # Check that continuum-normalised spectrum exists
+    assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
+
+    # Load the continuum-normalised version
+    input_spectrum_continuum_normalised_arr = input_library.open(
+        ids=continuum_normalised_spectrum_id[0]['specId'])
+    input_spectrum_continuum_normalised = input_spectrum_continuum_normalised_arr.extract_item(0)
 
     # Pass template to 4FS
     degraded_spectra = etc_wrapper.process_spectra(
-        spectra_list=((spectrum, None),)
-    ))
+        spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
+    )
 
     # Process degraded spectra
     for mode in degraded_spectra:
@@ -174,8 +168,17 @@ for template_index, template in enumerate(templates):
             for snr in degraded_spectra[mode][index]:
                 exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]  # seconds
 
-                # Print output
-                print "{:100s} {:6s} {:6.1f} {:6.3f} {:6.3f}".format(template, mode, snr, mag_intrinsic, exposure_time)
+                if mode not in output:
+                    output[mode] = {}
+                if snr not in output[mode]:
+                    output[mode][snr] = []
+                output[mode][snr].append(exposure_time)
 
-    # Insert spectrum object into spectrum library
-    library.insert(spectra=spectrum, filenames=os_path.split(template)[1])
+# Print output
+for mode in output:
+    snr_values = output[mode].keys()
+    snr_values.sort()
+    for snr in snr_values:
+        exposure_time_mean = np.mean(output[mode][snr])
+        exposure_time_sd = np.std(output[mode][snr])
+        print "{:6s} {:6.1f} {:6.3f} {:6.3f}".format(mode, snr, exposure_time_mean, exposure_time_sd)

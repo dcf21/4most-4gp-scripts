@@ -6,13 +6,11 @@ Take a bunch of template spectra in a SpectrumLibrary, and list the exposure tim
 were at some particular reference magnitude.
 """
 
-import os
 from os import path as os_path
-import numpy as np
 import argparse
 import logging
 
-from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
+from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_fourfs import FourFS
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -31,6 +29,39 @@ parser.add_argument('--binary-path',
                     default=root_path,
                     dest="binary_path",
                     help="Specify a directory where 4FS package is installed.")
+parser.add_argument('--snr-list',
+                    required=False,
+                    default="100",
+                    dest="snr_list",
+                    help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
+parser.add_argument('--snr-definitions-lrs',
+                    required=False,
+                    default="",
+                    dest="snr_definitions_lrs",
+                    help="Specify the SNR definitions to use for the R, G and B bands of 4MOST LRS.")
+parser.add_argument('--snr-definitions-hrs',
+                    required=False,
+                    default="GalDiskHR_545NM",
+                    dest="snr_definitions_hrs",
+                    help="Specify the SNR definitions to use for the R, G and B bands of 4MOST HRS.")
+parser.add_argument('--run-hrs',
+                    action='store_true',
+                    dest="run_hrs",
+                    help="Set 4FS to produce output for 4MOST HRS")
+parser.add_argument('--no-run-hrs',
+                    action='store_false',
+                    dest="run_hrs",
+                    help="Set 4FS not to produce output for 4MOST HRS")
+parser.set_defaults(run_hrs=True)
+parser.add_argument('--run-lrs',
+                    action='store_true',
+                    dest="run_lrs",
+                    help="Set 4FS to produce output for 4MOST LRS")
+parser.add_argument('--no-run-lrs',
+                    action='store_false',
+                    dest="run_lrs",
+                    help="Set 4FS not to produce output for 4MOST LRS")
+parser.set_defaults(run_lrs=False)
 parser.add_argument('--photometric-band',
                     required=False,
                     default="SDSS_r",
@@ -55,15 +86,37 @@ workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "
 # For calculating exposure times, assume a specified magnitude
 magnitude = float(args.magnitude)
 
+# Definitions of SNR
+if len(args.snr_definitions_lrs) < 1:
+    snr_definitions_lrs = None
+else:
+    snr_definitions_lrs = args.snr_definitions_lrs.split(",")
+    if len(snr_definitions_lrs) == 1:
+        snr_definitions_lrs *= 3
+    assert len(snr_definitions_lrs) == 3
+
+if len(args.snr_definitions_hrs) < 1:
+    snr_definitions_hrs = None
+else:
+    snr_definitions_hrs = args.snr_definitions_hrs.split(",")
+    if len(snr_definitions_hrs) == 1:
+        snr_definitions_hrs *= 3
+    assert len(snr_definitions_hrs) == 3
+
+# List of SNRs we are to degrade spectra to
+snr_list = [float(item.strip()) for item in args.snr_list.split(",")]
+
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
     magnitude=magnitude,
     magnitude_unreddened=False,
     photometric_band=args.photometric_band,
-    hrs_use_snr_definitions=["GalDiskHR_545NM", "GalDiskHR_545NM", "GalDiskHR_545NM"],
-    run_hrs=True, run_lrs=False,
-    snr_list=(100,),
+    run_lrs=args.run_lrs,
+    run_hrs=args.run_hrs,
+    lrs_use_snr_definitions=snr_definitions_lrs,
+    hrs_use_snr_definitions=snr_definitions_hrs,
+    snr_list=snr_list,
     snr_per_pixel=False
 )
 
@@ -108,8 +161,12 @@ for input_spectrum_id in input_spectra_ids:
         spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
     )
 
-    index = degraded_spectra["HRS"].keys()[0]
-    exposure_time = degraded_spectra["HRS"][index][100]["spectrum"].metadata["exposure"]  # seconds
+    # Process degraded spectra
+    for mode in degraded_spectra:
+        for index in degraded_spectra[mode]:
+            for snr in degraded_spectra[mode][index]:
+                exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]  # seconds
 
-    # Print output
-    print "{:100s} {:6.3f} {:6.3f}".format(object_name, mag_intrinsic, exposure_time)
+                # Print output
+                print "{:100s} {:6s} {:6.1f} {:6.3f} {:6.3f}".format(object_name, mode, snr,
+                                                                     mag_intrinsic, exposure_time)
