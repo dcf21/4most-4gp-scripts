@@ -9,6 +9,8 @@ mkdir -p ../../output_plots/cannon_performance/performance_vs_label
 # Loop over all the Cannon runs we have
 for run in \
 ../../output_data/cannon/cannon_galah_withrv_censored_snr50_hrs_10label.json \
+../../output_data/cannon/cannon_galah_withrv_censored_snr50_lrs_10label.json \
+../../output_data/cannon/cannon_galah_withrv_censored_snr50_hrs_10label.json \
 ../../output_data/cannon/cannon_galah_withrv_censored_snr50_lrs_10label.json
 
 do
@@ -46,3 +48,4 @@ do
     done
     wait
 done
+

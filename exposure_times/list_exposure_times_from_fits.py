@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Take a bunch of FITS template spectra, and list their SDSS-r magnitudes, and the exposure times needed to observe them.
+Take a bunch of FITS template spectra, and list their intrinsic magnitudes (as saved in the FITS file), and the
+exposure times needed to observe them if they were at some particular reference magnitude.
 """
 
 import os
@@ -40,7 +41,12 @@ parser.add_argument('--photometric-band',
                     required=False,
                     default="SDSS_r",
                     dest="photometric_band",
-                    help="The name of the photometric band in which the magnitudes in --mag-list are specified.")
+                    help="The name of the photometric band in which the magnitude is specified.")
+parser.add_argument('--magnitude',
+                    required=False,
+                    default="15",
+                    dest="magnitude",
+                    help="The magnitude to assume when calculating exposure times for each object.")
 args = parser.parse_args()
 
 # Start logger
@@ -60,16 +66,17 @@ library = SpectrumLibrarySqlite(path=library_path, create=True)
 templates = glob.glob(args.input)
 templates.sort()
 
-# For calculating exposure times, assume a magnitude of 15
-magnitude = 15
+# For calculating exposure times, assume a specified magnitude
+magnitude = float(args.magnitude)
 
 # Instantiate 4FS wrapper
+# NB: Here we are requiring SNR/pixel=100 in GalDiskHR_545NM
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
     magnitude=magnitude,
     magnitude_unreddened=False,
     photometric_band=args.photometric_band,
-    hrs_use_snr_definitions=["GalDiskHR_545NM","GalDiskHR_545NM","GalDiskHR_545NM"],
+    hrs_use_snr_definitions=["GalDiskHR_545NM", "GalDiskHR_545NM", "GalDiskHR_545NM"],
     run_hrs=True, run_lrs=False,
     snr_list=(100,),
     snr_per_pixel=False
@@ -85,9 +92,9 @@ for template_index, template in enumerate(templates):
     fluxes = data['FLUX']
 
     # Open ASCII spectrum
-    #f = np.loadtxt(template).T
-    #wavelengths = f[0]
-    #fluxes = f[1]
+    # f = np.loadtxt(template).T
+    # wavelengths = f[0]
+    # fluxes = f[1]
 
     # Create 4GP spectrum object
     spectrum = Spectrum(wavelengths=wavelengths,
@@ -99,7 +106,7 @@ for template_index, template in enumerate(templates):
                         })
 
     # Work out magnitude
-    r_mag = spectrum.photometry("SDSS_r")
+    mag_intrinsic = spectrum.photometry(args.photometric_band)
 
     # Pass template to 4FS
     degraded_spectra = etc_wrapper.process_spectra(
@@ -107,11 +114,10 @@ for template_index, template in enumerate(templates):
     )
 
     index = degraded_spectra["HRS"].keys()[0]
-    exposure_time = degraded_spectra["HRS"][index][100]["spectrum"].metadata["exposure"]  # minutes
+    exposure_time = degraded_spectra["HRS"][index][100]["spectrum"].metadata["exposure"]  # seconds
 
     # Print output
-    print "{:100s} {:6.3f} {:6.3f}".format(template, r_mag, exposure_time)
+    print "{:100s} {:6.3f} {:6.3f}".format(template, mag_intrinsic, exposure_time)
 
     # Insert spectrum object into spectrum library
     library.insert(spectra=spectrum, filenames=os_path.split(template)[1])
-
