@@ -75,7 +75,7 @@ raster_diff = np.diff(raster[raster > 6000])
 pixels_per_angstrom = 1.0 / raster_diff[0]
 
 # Create pyxplot script to produce this plot
-width = 20
+width = 15
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 

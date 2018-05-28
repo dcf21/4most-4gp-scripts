@@ -17,6 +17,7 @@ do
     for run in "ahm2017_perturbed" "galah"
     do
         python2.7 mean_performance_vs_label.py \
+          --plot-width 14 --hide-date \
           --cannon-output "../../output_data/cannon/cannon_${run}_${mode}_10label.json" --dataset-label "No censoring" --dataset-colour "green" \
           --cannon-output "../../output_data/cannon/cannon_${run}_censored_${mode}_10label.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
           --cannon-output "../../output_data/cannon/cannon_${run}_censored2_${mode}_10label.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
@@ -33,6 +34,7 @@ do
     for run in "ahm2017_perturbed" "galah"
     do
         python2.7 mean_performance_vs_label.py \
+          --plot-width 14 --hide-date \
           --cannon-output "../../output_data/cannon/cannon_${run}_fehcut2_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained \$z<-1\$ only" --dataset-colour "green" \
           --cannon-output "../../output_data/cannon/cannon_${run}_${mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained on full sample" --dataset-colour "red" \
           --output-file "../../output_plots/cannon_performance/performance_vs_label/comparison_low_z_${run}_${mode}" &
@@ -50,7 +52,7 @@ do
         for divisor in "h" "fe"
         do
             python2.7 mean_performance_vs_label.py \
-              --plot-width 25 \
+              --plot-width 14 --hide-date \
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>0;[Fe/H]<1" --dataset-label "Giants; [Fe/H]\$>0\$" --dataset-colour "purple" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>0;[Fe/H]<1" --dataset-label "Dwarfs; [Fe/H]\$>0\$" --dataset-colour "magenta" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>-0.5;[Fe/H]<0" --dataset-label "Giants; \$-0.5<\$[Fe/H]\$<0\$" --dataset-colour "blue" --dataset-linetype 1 \
@@ -75,6 +77,7 @@ do
         for divisor in "h" "fe"
         do
             python2.7 mean_performance_vs_label.py \
+              --plot-width 14 --hide-date \
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_3label.json" --dataset-label "3 parameter; censored" --dataset-colour "blue" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
@@ -94,7 +97,9 @@ do
     cannon_run=`echo ${cannon_output} | sed 's@../../output_data/cannon/\(.*\).json@\1@g'`
 
     # Produce a plot of precision vs SNR
-    python2.7 mean_performance_vs_label.py --cannon-output "${cannon_output}" \
+    python2.7 mean_performance_vs_label.py \
+      --plot-width 14 --hide-date \
+      --cannon-output "${cannon_output}" \
       --output-file "../../output_plots/cannon_performance/performance_vs_label/${cannon_run}"
 
     # Produce a scatter plot of the nominal uncertainties in the Cannon's label estimates

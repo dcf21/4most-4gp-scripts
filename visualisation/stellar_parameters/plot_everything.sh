@@ -57,7 +57,28 @@ python scatter_plot_coloured.py --library turbospec_ahm2017_perturbed --library-
 
 # -------------------------------------------------------------------------------------------------------------------
 
-for library_path in ../../workspace/turbospec_*
+python histogram.py --library galah_training_sample_turbospec --library-colour red --library-title "Training set" \
+                    --library galah_test_sample_turbospec  --library-colour blue --library-title "Test set" \
+                    --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{1:-3}" \
+                    --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                    --using "\$1" --using "\$2" --using "\$3" \
+                    --output ../../output_plots/stellar_parameters/histogram_galah_pair
+
+python scatter_plot_coloured.py --library galah_training_sample_turbospec --library-title "Training set" \
+                                --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
+                                --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                                --colour-range-min -0.7 --colour-range-max 0.5 \
+                                --output ../../output_plots/stellar_parameters/hr_coloured_galah_pair_1
+
+python scatter_plot_coloured.py --library galah_test_sample_turbospec --library-title "Test set" \
+                                --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
+                                --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
+                                --colour-range-min -0.7 --colour-range-max 0.5 \
+                                --output ../../output_plots/stellar_parameters/hr_coloured_galah_pair_2
+
+# -------------------------------------------------------------------------------------------------------------------
+
+for library_path in ../../workspace/*turbospec*
 do
 
 library="$(basename "${library_path}")"
@@ -66,12 +87,12 @@ python scatter_plot_coloured.py --library ${library} \
                                 --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{:}" \
                                 --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
                                 --colour-range-min 0.5 --colour-range-max -2 \
-                                --output ../../output_plots/stellar_parameters/hr_coloured_${library}
+                                --output ../../output_plots/stellar_parameters/${library}/hr_coloured
 
 python histogram.py --library ${library} \
                     --label "Teff{7000:3400}" --label "logg{5:0}" --label "[Fe/H]{1:-3}" \
                     --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
                     --using "\$1" --using "\$2" --using "\$3" \
-                    --output ../../output_plots/stellar_parameters/histogram_${library}
+                    --output ../../output_plots/stellar_parameters/${library}/histogram
 
 done

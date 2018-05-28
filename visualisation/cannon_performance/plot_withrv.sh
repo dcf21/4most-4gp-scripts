@@ -26,6 +26,7 @@ do
     do
         # Plots averaging the Cannon's performance over stars of all types and metallicities
         python2.7 mean_performance_vs_label.py \
+          --plot-width 14 --hide-date \
           --abscissa "rv" \
           --abundances-over-${divisor} \
           --cannon-output "${run}" --dataset-label "${run_name_escaped}" --dataset-colour "green" \
@@ -33,6 +34,7 @@ do
 
         # Break down the Cannon's performance by the type of star
         #python2.7 mean_performance_vs_label.py \
+        #  --plot-width 14 --hide-date \
         #  --abscissa "rv" \
         #  --abundances-over-${divisor} \
         #  --plot-width 24 \

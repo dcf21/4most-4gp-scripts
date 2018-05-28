@@ -33,6 +33,10 @@ parser.add_argument('--output', default="/tmp/label_values", dest='output',
                     help="Filename to write output plot to.")
 args = parser.parse_args()
 
+# Create output directory
+output_figure_stem = os.path.split(args.output)[0]
+os.system("mkdir -p {}".format(output_figure_stem))
+
 # If no titles are supplied, default to the names of the libraries
 if (args.library_titles is None) or (len(args.library_titles) == 0):
     args.library_titles = [re.sub("_", "\\_", i) for i in args.libraries]
@@ -62,7 +66,7 @@ for index, library in enumerate(args.libraries):
 #
 
 # Create pyxplot script to produce this plot
-width = 16
+width = 15
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 

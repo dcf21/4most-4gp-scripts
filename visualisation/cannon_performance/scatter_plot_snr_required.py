@@ -125,7 +125,7 @@ with open(filename, "w") as f:
         f.write("%16s %16s %16s\n" % tuple(line))
 
 # Create pyxplot script to produce this plot
-width = 18
+width = 15
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
