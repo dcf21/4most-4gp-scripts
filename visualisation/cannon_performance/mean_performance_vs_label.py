@@ -214,8 +214,15 @@ class PlotLabelPrecision:
                 print "Rescaling x-axis to include {.1f}".format(abscissa_values[-1])
 
         # Create a sorted list of all the stars we've got
-        star_names = [item['Starname'] for item in cannon_stars]
-        star_names = sorted(set(star_names))
+        cannon_stars_by_name = {}
+        for star in cannon_stars:
+            star_name = star['Starname']
+            if star_name not in cannon_stars_by_name:
+                cannon_stars_by_name[star_name] = []
+            cannon_stars_by_name[star_name].append(star)
+
+        star_names = cannon_stars_by_name.keys()
+        star_names = sorted(star_names)
 
         # Construct the dictionary for storing the Cannon's mismatch to each stellar label
         # label_offset[abscissa][label_name][reference_value_set_counter] = offset
@@ -228,30 +235,32 @@ class PlotLabelPrecision:
         # Loop over stars in the Cannon output
         for star_name in star_names:
             # Loop over the Cannon's various attempts to match this star (e.g. at different abscissa values)
-            for star in cannon_stars:
-                if star['Starname'] == star_name:
-                    # Loop over the labels the Cannon tried to match
-                    for label_name in self.label_names:
-                        # Fetch the reference value for this label
-                        try:
-                            ref = label_reference_values[star_name][label_name]
-                        except KeyError:
-                            ref = np.nan
+            for star in cannon_stars_by_name[star_name]:
+                # Loop over the labels the Cannon tried to match
+                for label_name in self.label_names:
+                    # Fetch the reference value for this label
+                    try:
+                        ref = label_reference_values[star_name][label_name]
+                    except KeyError:
+                        ref = np.nan
 
-                        # Look up the name of Cannon label we're fitting, e.g. [Mg/H] for [Mg/Fe]
-                        label_info = self.label_info[label_name]
-                        cannon_label = label_info["cannon_label"]
+                    # Look up the name of Cannon label we're fitting, e.g. [Mg/H] for [Mg/Fe]
+                    label_info = self.label_info[label_name]
+                    cannon_label = label_info["cannon_label"]
 
-                        # Look up the Cannon's estimate of the value of this label
-                        if label_info["over_fe"]:
-                            cannon_output_value = star[cannon_label] - star["[Fe/H]"]
-                        else:
-                            cannon_output_value = star[cannon_label]
+                    # Look up the Cannon's estimate of the value of this label
+                    if label_info["over_fe"]:
+                        cannon_output_value = star[cannon_label] - star["[Fe/H]"]
+                    else:
+                        cannon_output_value = star[cannon_label]
 
-                        # Calculate the offset of the Cannon's output from the reference value
-                        label_offset[star[abscissa_info[0]]][label_name].append(cannon_output_value - ref)
+                    # Calculate the offset of the Cannon's output from the reference value
+                    label_offset[star[abscissa_info[0]]][label_name].append(cannon_output_value - ref)
 
         self.data_set_counter += 1
+
+        # Save memory
+        del cannon_stars_by_name
 
         # Construct a datafile listing all the offsets for each label, for each abscissa value
         # This full list of data points is used to make histograms
@@ -281,9 +290,9 @@ class PlotLabelPrecision:
 
             # Output data file of label mismatches at this abscissa value
             np.savetxt(fname=data_file, X=np.transpose(y), header=
-"# Each row represents a star\n"
-"# {0}\n\n".format("     ".join(["offset_{}".format(x) for x in self.label_names]))
-            )
+            "# Each row represents a star\n"
+            "# {0}\n\n".format("     ".join(["offset_{}".format(x) for x in self.label_names]))
+                       )
 
             # Output scatter plots of label cross-correlations at this abscissa value
             if self.correlation_plots:
@@ -321,8 +330,8 @@ class PlotLabelPrecision:
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # 1st column is RMS. Subsequent columns are various percentiles (see above)
             np.savetxt(fname=file_name, X=y, header=
-"# Abscissa_(probably_SNR)     RMS_offset     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile\n\n"
-            )
+            "# Abscissa_(probably_SNR)     RMS_offset     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile\n\n"
+                       )
 
             self.plot_precision[i].append([
                 "\"{}\" using 1:2".format(file_name),
@@ -340,8 +349,8 @@ class PlotLabelPrecision:
 
             with open(file_name, "w") as f:
                 f.write(
-"# Each block within this file represents a rectangular region to shade on a box-and-whisker plot\n"
-"# x y\n\n"
+                    "# Each block within this file represents a rectangular region to shade on a box-and-whisker plot\n"
+                    "# x y\n\n"
                 )
                 for j, datum in enumerate(y):
                     if self.abscissa_label.startswith("SNR"):
@@ -360,7 +369,7 @@ class PlotLabelPrecision:
                                format(file_name, j))
 
     def make_plots(self):
-        user_name = pwd.getpwuid( os.getuid() ).pw_gecos.split(",")[0]
+        user_name = pwd.getpwuid(os.getuid()).pw_gecos.split(",")[0]
         plot_creator = "{}, {}".format(user_name, time.strftime("%d %b %Y"))
 
         aspect = 1 / 1.618034  # Golden ratio
@@ -393,7 +402,7 @@ class PlotLabelPrecision:
                            self.plot_precision[2][j][1],
                            self.plot_width * aspect - 0.8,
                            self.plot_precision[2][j][3],
-                           self.plot_width*0.5))
+                           self.plot_width * 0.5))
 
                 if self.date_stamp:
                     ppl.write("""
@@ -453,7 +462,7 @@ class PlotLabelPrecision:
                 """.format(self.plot_width, aspect,
                            label_info["latex"],
                            self.plot_width * aspect - 0.8,
-                           self.plot_width*0.5))
+                           self.plot_width * 0.5))
 
                 if self.date_stamp:
                     ppl.write("""
@@ -511,7 +520,7 @@ class PlotLabelPrecision:
                     set label 1 "\\parbox{{{5}cm}}{{ {2}; {3} }}" page 1, page {4}
                     
                     """.format(self.plot_width, aspect, label_info["latex"], self.datasets[data_set_counter],
-                               self.plot_width * aspect - 0.8, self.plot_width*0.5))
+                               self.plot_width * aspect - 0.8, self.plot_width * 0.5))
 
                     if self.date_stamp:
                         ppl.write("""
@@ -565,7 +574,7 @@ class PlotLabelPrecision:
                                label_info["offset_max"] / 60.,
                                label_info["latex"], self.datasets[data_set_counter],
                                self.plot_width * 1.25 * aspect - 0.8,
-                               self.plot_width*0.5))
+                               self.plot_width * 0.5))
 
                     if self.date_stamp:
                         ppl.write("""
@@ -827,6 +836,9 @@ Create a set of plots of a number of Cannon runs.
                         reference_values[label] = reference_values[label] - reference_run["[Fe/H]"]
 
             data_set['reference_values'][star_name] = reference_values
+
+        # Free up memory
+        del test_items_by_star
 
         # Select only those stars which meet filtering criteria
         test_items_output = []  # A list of Cannon output for stars which meet the filter criteria
