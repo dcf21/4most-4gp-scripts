@@ -61,6 +61,7 @@ if not os.path.exists(args.cannon):
 cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
 
+# Check that labels exist
 for label in label_names:
     if label not in cannon_output["labels"]:
         print "scatter_plot_coloured.py could not proceed: Label <{}> not present in <{}>".format(label, args.cannon)
@@ -75,7 +76,7 @@ raster_diff = np.diff(raster[raster > 6000])
 pixels_per_angstrom = 1.0 / raster_diff[0]
 
 # Create pyxplot script to produce this plot
-width = 15
+width = 16
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
@@ -93,7 +94,7 @@ set nodisplay
 set origin 0,0
 set width {0}
 set size ratio {1}
-set term dpi 200
+set term dpi 400
 set nokey
 
 set multiplot
@@ -119,7 +120,7 @@ set label 1 "\\parbox{{{0}cm}}{{{6} \\newline {{\\bf {7} }} \\newline SNR/\\AA={
 set output "{0}.png"
 clear
 unset origin ; set axis y left ; unset xtics ; unset mxtics
-plot "{0}" title "Offset in {1} at SNR {2}." with dots colour col_scale($6-$3) ps 5
+plot "{0}" title "Offset in {1} at SNR {2}." with dots colour col_scale($6-$3) ps 8
 
 """.format(snr["filename"], args.label_axis_latex[2], snr["snr"])
 

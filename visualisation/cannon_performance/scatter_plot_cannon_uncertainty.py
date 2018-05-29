@@ -46,7 +46,7 @@ label_count = len(label_names)
 snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
 # Create pyxplot script to produce this plot
-width = 20
+width = 16
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
@@ -61,7 +61,7 @@ for index, label in enumerate(label_names):
 set nodisplay
 set width {0}
 set size ratio {1}
-set term dpi 200
+set term dpi 400
 set key bottom left
 
 set xlabel "Cannon estimated uncertainty in {2}"

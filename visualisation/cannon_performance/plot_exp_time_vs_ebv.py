@@ -239,6 +239,7 @@ set nodisplay
 set origin 0,0
 set width {0}
 set size ratio {1}
+set term dpi 400
 set fontsize 1.1
 set key below
 set keycol 3

@@ -64,9 +64,16 @@ if not os.path.exists(args.cannon):
 
 cannon_output = json.loads(open(args.cannon).read())
 
+# Check that labels exist
 for label in label_names:
     if label not in cannon_output["labels"]:
-        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".format(label, args.cannon)
+        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".\
+            format(label, args.cannon)
+        sys.exit()
+
+if args.colour_label not in cannon_output["labels"]:
+        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".\
+            format(args.colour_label, args.cannon)
         sys.exit()
 
 # Create a sorted list of all the SNR values we've got
@@ -87,13 +94,19 @@ offsets = {}  # offsets[star_name][SNR] = dictionary of label names and absolute
 label_values = {}  # label_values[star_name] = list of label values on x and y axes
 for star in cannon_output['stars']:
     object_name = star['Starname']
+    if object_name not in star_names:
+        continue
     if object_name not in offsets:
         offsets[object_name] = {}
     try:
         offsets[object_name][star['SNR']] = abs(star[args.colour_label] - star["target_{}".format(args.colour_label)])
-        label_values[object_name] = [star["target_{}".format(item)] for item in label_names]
+        if object_name not in label_values:
+            label_values[object_name] = [star["target_{}".format(item)] for item in label_names]
     except KeyError:
-        del offsets[object_name]
+        # If this star has missing data for one of the labels being measured, discard it
+        star_names.remove(object_name)
+        offsets.pop(object_name, None)  # Delete if exists
+        label_values.pop(object_name, None)
 
 # Loop over stars, calculating the SNR needed for each one
 output = []
@@ -104,28 +117,27 @@ for star_name in star_names:
         previous_snr = 0
         for snr in snr_values:
             new_offset = offsets[star_name][snr]
-            if new_offset > args.target_accuracy:
-                previous_offset = new_offset
-                previous_snr = snr
-                continue
-            weight_a = abs(new_offset - args.target_accuracy)
-            weight_b = abs(previous_offset - args.target_accuracy)
-            snr_required_per_pixel = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
-            snr_required_per_a = snr_required_per_pixel * sqrt(pixels_per_angstrom)
-            break
+            if (new_offset <= args.target_accuracy) and (previous_offset > args.target_accuracy):
+                weight_a = abs(new_offset - args.target_accuracy)
+                weight_b = abs(previous_offset - args.target_accuracy)
+                snr_required_per_pixel = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
+                snr_required_per_a = snr_required_per_pixel * sqrt(pixels_per_angstrom)
+            previous_offset = new_offset
+            previous_snr = snr
         output.append(label_values[star_name] + [snr_required_per_a])
 
 # Make sure that output directory exists
 os.system("mkdir -p {}".format(os_path.split(args.output_stub)[0]))
 
 # Write values to data files
+# Each line is in the format <x  y  SNR/A>
 filename = "{}.dat".format(args.output_stub)
 with open(filename, "w") as f:
     for line in output:
         f.write("%16s %16s %16s\n" % tuple(line))
 
 # Create pyxplot script to produce this plot
-width = 15
+width = 16
 aspect = 1 / 1.618034  # Golden ratio
 pyxplot_input = """
 
@@ -141,6 +153,7 @@ set nodisplay
 set origin 0,0
 set width {}
 set size ratio {}
+set term dpi 400
 set fontsize 1.1
 set nokey
 
@@ -162,7 +175,7 @@ pyxplot_input += """
 set output "{0}.png"
 clear
 unset origin ; set axis y left ; unset xtics ; unset mxtics
-plot "{0}" title "SNR needed to achieve accuracy of {1} {2} in {3}" with dots colour col_scale($3) ps 5
+plot "{0}" title "SNR needed to achieve accuracy of {1} {2} in {3}" with dots colour col_scale($3) ps 8
 
 """.format(filename, args.target_accuracy, args.accuracy_unit, args.label_axis_latex[2])
 

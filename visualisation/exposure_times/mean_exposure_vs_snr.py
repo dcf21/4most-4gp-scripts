@@ -97,7 +97,7 @@ with open("{}.ppl".format(stem), "w") as ppl:
     
     set width {0}
     set size ratio {1}
-    set term dpi 200
+    set term dpi 400
     set nodisplay ; set multiplot
     set label 1 texifyText("{2} ({3} stars)") page {4}, page 1
     

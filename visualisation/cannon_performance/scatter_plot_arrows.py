@@ -70,7 +70,7 @@ pyxplot_input = """
 
 set width {}
 set size ratio {}
-set term dpi 200
+set term dpi 300
 set key top left
 set linewidth 0.4
 

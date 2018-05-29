@@ -136,8 +136,8 @@ class PlotLabelPrecision:
             # label name, latex label, log axes, axis range
             "SNR/A": ["SNR", "$S/N$ $[{\\rm \\AA}^{-1}]$", False, (0, 250)],
             "SNR/pixel": ["SNR", "$S/N$ $[{\\rm pixel}^{-1}]$", False, (0, 250)],
-            "ebv": ["e_bv", "$E(B-V)$", True, (0.01, 4)],
-            "rv": ["rv", "RV [m/s]", True, (800, 60e3)]
+            "ebv": ["e_bv", "$E(B-V)$", True, (0.04, 3)],
+            "rv": ["rv", "RV [m/s]", True, (800, 50e3)]
         }
 
         self.plot_width = plot_width
@@ -394,13 +394,13 @@ class PlotLabelPrecision:
                 
                 set width {0}
                 set size ratio {1}
-                set term dpi 200
+                set term dpi 400
                 set nodisplay ; set multiplot
-                set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 1, page {3}
+                set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 0.2, page {3}
                 
                 """.format(self.plot_width, aspect,
                            self.plot_precision[2][j][1],
-                           self.plot_width * aspect - 0.8,
+                           self.plot_width * aspect + 0.2,
                            self.plot_precision[2][j][3],
                            self.plot_width * 0.5))
 
@@ -411,7 +411,7 @@ class PlotLabelPrecision:
                     """.format(plot_creator, self.plot_width * aspect + 0.4))
 
                 ppl.write("set fontsize 1.3\n")  # 1.6
-                ppl.write("set key top right ; set keycols 2\n")
+                ppl.write("set key top {0} ; set keycols 2\n".format("right" if abscissa_info[0] == "SNR" else "left"))
                 ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
                 ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
 
@@ -455,13 +455,13 @@ class PlotLabelPrecision:
                 
                 set width {0}
                 set size ratio {1}
-                set term dpi 200
+                set term dpi 400
                 set nodisplay ; set multiplot
-                set label 1 "\\parbox{{{4}cm}}{{ {2} }}" page 1, page {3}
+                set label 1 "\\parbox{{{4}cm}}{{ {2} }}" page 0.2, page {3}
                 
                 """.format(self.plot_width, aspect,
                            label_info["latex"],
-                           self.plot_width * aspect - 0.8,
+                           self.plot_width * aspect + 0.2,
                            self.plot_width * 0.5))
 
                 if self.date_stamp:
@@ -471,7 +471,7 @@ class PlotLabelPrecision:
                     """.format(plot_creator, self.plot_width * aspect + 0.4))
 
                 if len(self.plot_precision[i]) > 1:
-                    ppl.write("set key top right\n")
+                    ppl.write("set key top {0}\n".format("right" if abscissa_info[0] == "SNR" else "left"))
                 else:
                     ppl.write("set nokey\n")
 
@@ -514,13 +514,13 @@ class PlotLabelPrecision:
                 
                     set width {0}
                     set size ratio {1}
-                    set term dpi 200
+                    set term dpi 400
                     set nokey
                     set nodisplay ; set multiplot
-                    set label 1 "\\parbox{{{5}cm}}{{ {2}; {3} }}" page 1, page {4}
+                    set label 1 "\\parbox{{{5}cm}}{{ {2}; {3} }}" page 0.2, page {4}
                     
                     """.format(self.plot_width, aspect, label_info["latex"], self.datasets[data_set_counter],
-                               self.plot_width * aspect - 0.8, self.plot_width * 0.5))
+                               self.plot_width * aspect + 0.2, self.plot_width * 0.5))
 
                     if self.date_stamp:
                         ppl.write("""
@@ -562,18 +562,18 @@ class PlotLabelPrecision:
                 
                     set width {0}
                     set size ratio {1}
-                    set term dpi 200
+                    set term dpi 400
                     set key ycentre right
                     set nodisplay ; set multiplot
                     set binwidth {2}
-                    set label 1 "\\parbox{{{6}cm}}{{ {3}; {4} }}" page 1, page {5}
+                    set label 1 "\\parbox{{{6}cm}}{{ {3}; {4} }}" page 0.2, page {5}
                     
                     col_scale(z) = hsb(0.75 * z, 1, 1)
                     
                     """.format(self.plot_width * 1.25, aspect,
                                label_info["offset_max"] / 60.,
                                label_info["latex"], self.datasets[data_set_counter],
-                               self.plot_width * 1.25 * aspect - 0.8,
+                               self.plot_width * 1.25 * aspect + 0.2,
                                self.plot_width * 0.5))
 
                     if self.date_stamp:
@@ -644,7 +644,7 @@ class PlotLabelPrecision:
                     
                         set width {0}
                         set size ratio {1}
-                        set term dpi 100
+                        set term dpi 200
                         set nokey
                         set fontsize 1.6
                         set nodisplay

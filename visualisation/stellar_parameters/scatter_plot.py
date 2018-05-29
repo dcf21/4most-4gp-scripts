@@ -70,6 +70,7 @@ pyxplot_input = """
 set nodisplay
 set width {0}
 set size ratio {1}
+set term dpi 400
 set key top left
 
 set xlabel "{2}"
