@@ -28,11 +28,12 @@ class Synthesizer:
         return dict([(i, x[i]) for i in x.columns])
 
     # Read input parameters
-    def __init__(self, library_name, logger, docstring):
+    def __init__(self, library_name, logger, docstring, root_path="..", spectral_resolution=50000):
         self.logger = logger
         self.our_path = os_path.split(os_path.abspath(__file__))[0]
-        self.root_path = os_path.join(self.our_path, "..", "..")
+        self.root_path = os_path.join(self.our_path, root_path, "..")
         self.pid = os.getpid()
+        self.spectral_resolution = spectral_resolution
         parser = argparse.ArgumentParser(description=docstring)
         parser.add_argument('--output-library',
                             required=False,
@@ -103,7 +104,8 @@ class Synthesizer:
         self.logger.info("Synthesizing {} to <{}>".format(library_name, self.args.library))
 
         # Set path to workspace where we create libraries of spectra
-        self.workspace = self.args.workspace if self.args.workspace else os_path.join(self.our_path, "..", "workspace")
+        self.workspace = (self.args.workspace if self.args.workspace else
+                          os_path.join(self.our_path, root_path, "workspace"))
         os.system("mkdir -p {}".format(self.workspace))
 
     def set_star_list(self, star_list):
@@ -174,7 +176,6 @@ class Synthesizer:
         self.lambda_min = self.FourMostData.bands["LRS"]["lambda_min"]
         self.lambda_max = self.FourMostData.bands["LRS"]["lambda_max"]
         self.line_lists_path = self.FourMostData.bands["LRS"]["line_lists_edvardsson"]
-        self.spectral_resolution = 50000
 
         # Invoke a TurboSpectrum synthesizer instance
         self.synthesizer = TurboSpectrum(
