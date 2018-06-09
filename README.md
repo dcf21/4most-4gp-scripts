@@ -1,25 +1,32 @@
+The text on this page is a brief introduction to `4most-4gp-scripts`. For a
+more complete tutorial, please visit the
+[Wiki](https://github.com/dcf21/4most-4gp-scripts/wiki).
+
 # 4most-4gp-scripts
 
-The python scripts in this repository can be used to manipulate spectra in various ways, including running
-all of the 4MOST IWG7 tests. These scripts depend on the libraries in the
-[4most-4gp](https://github.com/dcf21/4most-4gp)
+The python scripts in this repository can be used to manipulate spectra in
+various ways, including running all of the 4MOST IWG7 tests. These scripts
+depend on the libraries in the [4most-4gp](https://github.com/dcf21/4most-4gp)
 repository, which you must install first.
 
-If you want to create your own tests, you can find pages in the sidebar on the right which explain how to do
-various tasks. You may also want to read about the 
-[code layout](structure)
+If you want to create your own tests, you can find pages in the sidebar on the
+right which explain how to do various tasks. You may also want to read about
+the [code layout](https://github.com/dcf21/4most-4gp-scripts/wiki/structure)
 within this repository.
 
-The rest of this page explains how to get started reproducing Dominic Ford's 4MOST IWG7 tests.
+The rest of this page explains how to get started reproducing Dominic Ford's
+4MOST IWG7 tests.
 
 Firstly, you need some spectra to work with.
 
-Create a directory called `workspace` inside the `4most-4gp-scripts` directory. This is the default location where
-scripts will expect to find spectra. You can change this if you really want to, but you'll have to pass a
-command line argument to every script telling it your alternative location for your spectra.
+Create a directory called `workspace` inside the `4most-4gp-scripts` directory.
+This is the default location where scripts will expect to find spectra. You can
+change this if you really want to, but you'll have to pass a command line
+argument to every script telling it your alternative location for your spectra.
 
-Next, download our standard libraries of spectra, as [described here](spectra). You should expand these archives
-into the `workspace` directory.
+Next, download our standard libraries of spectra, as [described
+here](https://github.com/dcf21/4most-4gp-scripts/wiki/spectra). You should
+expand these archives into the `workspace` directory.
 
 To run the Cannon on these spectra, you should do the following:
 
@@ -45,9 +52,11 @@ python2.7 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250,continuum_norma
                          --output-file "../output_data/cannon/cannon_ahm2017_perturbed_censored_lrs_10label"
 ```
 
-The output will get put in the `output_data/cannon` directory. The file `cannon_ahm2017_perturbed_censored_hrs_10label.json`
-will contain the results of testing the Cannon. The file `cannon_ahm2017_perturbed_censored_hrs_10label.cannon` is a binary
-file which contains the internal state of the trained Cannon.
+The output will get put in the `output_data/cannon` directory. The file
+`cannon_ahm2017_perturbed_censored_hrs_10label.json` will contain the results
+of testing the Cannon. The file
+`cannon_ahm2017_perturbed_censored_hrs_10label.cannon` is a binary file which
+contains the internal state of the trained Cannon.
 
+To plot your results, [see here](https://github.com/dcf21/4most-4gp-scripts/wiki/visualisation).
 
-To plot your results, [see here](visualisation).
