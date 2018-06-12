@@ -51,6 +51,10 @@ parser.add_argument('--description', dest='description',
 parser.add_argument('--labels', dest='labels',
                     default="Teff,logg,[Fe/H]",
                     help="List of the labels the Cannon is to learn to estimate.")
+parser.add_argument('--label-expressions', dest='label_expressions',
+                    default="",
+                    help="List of the algebraic labels the Cannon is to learn to estimate "
+                         "(e.g. photometry_B - photometry_V).")
 parser.add_argument('--censor-scheme', default="1", dest='censor_scheme',
                     help="Censoring scheme version to use (1, 2 or 3).")
 parser.add_argument('--censor', default="", dest='censor_line_list',
@@ -112,7 +116,7 @@ else:
     continuum_normalised_testing = True
 
 # List of labels over which we are going to test the performance of the Cannon
-test_labels = args.labels.split(",")
+test_labels_constant = args.labels.split(",")
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -146,7 +150,7 @@ test_library_ids = [i["specId"] for i in test_library_items]
 if args.assume_scaled_solar:
     for index in range(len(training_spectra)):
         metadata = training_spectra.get_metadata(index)
-        for label in test_labels:
+        for label in test_labels_constant:
             if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                 # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
                 metadata[label] = metadata["[Fe/H]"]
@@ -155,7 +159,7 @@ else:
     for index in range(len(training_spectra)):
         accept = True
         metadata = training_spectra.get_metadata(index)
-        for label in test_labels:
+        for label in test_labels_constant:
             if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                 accept = False
                 break
@@ -166,6 +170,17 @@ else:
     training_library_ids = training_library_ids_filtered
     training_spectra = training_library.open(ids=training_library_ids)
 
+# Evaluate labels which are calculated via metadata expressions
+test_labels_expressions = args.label_expressions.split(",")
+for index in range(len(training_spectra)):
+    metadata = training_spectra.get_metadata(index)
+    for label_expression in test_labels_expressions:
+        value = eval(label_expression, locals=metadata)
+        metadata[label_expression] = value
+
+# Make combined list of all labels the Cannon is going to fit
+test_labels = test_labels_constant + test_labels_expressions
+
 # If required, generate the censoring masks
 censoring_masks = None
 if args.censor_line_list != "":
@@ -173,7 +188,7 @@ if args.censor_line_list != "":
     censoring_masks = {}
     line_list_txt = open(args.censor_line_list).readlines()
 
-    for label_name in test_labels:
+    for label_name in test_labels_constant:
         allowed_lines = 0
         mask = np.zeros(raster.size, dtype=bool)
 
@@ -193,18 +208,18 @@ if args.censor_line_list != "":
             assert censoring_scheme in [1, 2, 3]
             if element_symbol != "H":
                 if censoring_scheme == 1:  # All elements can see all lines
-                    if "[{}/H]".format(element_symbol) not in test_labels:
+                    if "[{}/H]".format(element_symbol) not in test_labels_constant:
                         continue
                 elif censoring_scheme == 2:  # Elements can only see their own lines, but Teff, log(g) can see all
                     if label_name in ("Teff", "logg"):
-                        if "[{}/H]".format(element_symbol) not in test_labels:
+                        if "[{}/H]".format(element_symbol) not in test_labels_constant:
                             continue
                     else:
                         if "[{}/H]".format(element_symbol) != label_name:
                             continue
                 elif censoring_scheme == 3:  # As scheme 2, but [Fe/H] can also see all
                     if label_name in ("Teff", "logg", "[Fe/H]"):
-                        if "[{}/H]".format(element_symbol) not in test_labels:
+                        if "[{}/H]".format(element_symbol) not in test_labels_constant:
                             continue
                     else:
                         if "[{}/H]".format(element_symbol) != label_name:
@@ -212,13 +227,13 @@ if args.censor_line_list != "":
 
             # Is line specified as a range (broad), or a single central wavelength (assume narrow)
             if "-" in wavelength:
-                passband = [float(i) for i in wavelength.split("-")]
+                pass_band = [float(i) for i in wavelength.split("-")]
             else:
-                passband = [float(wavelength) - window, float(wavelength) + window]
+                pass_band = [float(wavelength) - window, float(wavelength) + window]
 
             # Allow this line
             allowed_lines += 1
-            window_mask = (raster >= passband[0]) * (passband[1] >= raster)
+            window_mask = (raster >= pass_band[0]) * (pass_band[1] >= raster)
             mask[window_mask] = True
 
         logger.info("Pixels used for label {}: {} of {} (in {} lines)".format(label_name, mask.sum(),
@@ -301,7 +316,7 @@ for index in range(N):
     snr_per = spectrum.metadata["SNR_per"] if "SNR_per" in spectrum.metadata else "pixel"
     snr_definition = spectrum.metadata["snr_definition"] if "snr_definition" in spectrum.metadata else ""
     ebv = spectrum.metadata["e_bv"] if "e_bv" in spectrum.metadata else 0
-    withrv = spectrum.metadata["rv"] if "rv" in spectrum.metadata else 0
+    with_rv = spectrum.metadata["rv"] if "rv" in spectrum.metadata else 0
     uid = spectrum.metadata["uid"] if "uid" in spectrum.metadata else ""
 
     # From the label covariance matrix extract the standard deviation in each label value
@@ -315,7 +330,7 @@ for index in range(N):
     result.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
 
     # Add target values for each label into the dictionary
-    for label_name in test_labels:
+    for label_name in test_labels_constant:
         if label_name in spectrum.metadata:
             result["target_{}".format(label_name)] = spectrum.metadata[label_name]
 
@@ -325,7 +340,7 @@ for index in range(N):
                    "SNR_per": snr_per,
                    "snr_definition": snr_definition,
                    "e_bv": ebv,
-                   "rv": withrv,
+                   "rv": with_rv,
                    "uid": uid,
                    "time": time_taken[index]
                    })

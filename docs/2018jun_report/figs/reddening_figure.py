@@ -115,14 +115,20 @@ set xlabel 'Wavelength [\AA]'
 set ylabel 'Flux [$\mathrm{erg}/\mathrm{s}/\mathrm{cm}^2/\mathrm{\AA}$]'
 
 set output 'fig1.png'
-plot 'fig1.dat' u 1:2 w l title 'E(B-V)\,$=0$', '' u 1:3 w l title 'E(B-V)\,$=0.5$', '' u 1:4 w l title 'E(B-V)\,$=1$'
+plot 'fig1.dat' u 1:2 w l col blue title 'E(B-V)\,$=0$', \
+     '' u 1:3 w l col orange title 'E(B-V)\,$=0.5$', \
+     '' u 1:4 w l col red title 'E(B-V)\,$=1$'
 
 set output 'fig2.png'
-plot 'fig2.dat' u 1:2 w l title 'E(B-V)\,$=0$', '' u 1:3 w l title 'E(B-V)\,$=0.5$', '' u 1:4 w l title 'E(B-V)\,$=1$'
+plot 'fig2.dat' u 1:2 w l col blue title 'E(B-V)\,$=0$', \
+      '' u 1:3 w l col orange title 'E(B-V)\,$=0.5$', \
+      '' u 1:4 w l col red title 'E(B-V)\,$=1$'
 
 set output 'fig3.png'
 set ylabel 'SNR/pixel'
 set nolog y
-plot 'fig3.dat' u 1:2 w l title 'E(B-V)\,$=0$', '' u 1:3 w l title 'E(B-V)\,$=0.5$', '' u 1:4 w l title 'E(B-V)\,$=1$'
+plot 'fig3.dat' u 1:2 w l col blue title 'E(B-V)\,$=0$', \
+      '' u 1:3 w l col orange title 'E(B-V)\,$=0.5$', \
+      '' u 1:4 w l col red title 'E(B-V)\,$=1$'
 
 """
