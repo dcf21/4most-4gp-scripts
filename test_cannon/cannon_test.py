@@ -175,7 +175,7 @@ test_labels_expressions = args.label_expressions.split(",")
 for index in range(len(training_spectra)):
     metadata = training_spectra.get_metadata(index)
     for label_expression in test_labels_expressions:
-        value = eval(label_expression, locals=metadata)
+        value = eval(label_expression, metadata)
         metadata[label_expression] = value
 
 # Make combined list of all labels the Cannon is going to fit
