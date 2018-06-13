@@ -171,12 +171,14 @@ else:
     training_spectra = training_library.open(ids=training_library_ids)
 
 # Evaluate labels which are calculated via metadata expressions
-test_labels_expressions = args.label_expressions.split(",")
-for index in range(len(training_spectra)):
-    metadata = training_spectra.get_metadata(index)
-    for label_expression in test_labels_expressions:
-        value = eval(label_expression, metadata)
-        metadata[label_expression] = value
+test_labels_expressions = []
+if args.label_expressions.strip():
+    test_labels_expressions = args.label_expressions.split(",")
+    for index in range(len(training_spectra)):
+        metadata = training_spectra.get_metadata(index)
+        for label_expression in test_labels_expressions:
+            value = eval(label_expression, metadata)
+            metadata[label_expression] = value
 
 # Make combined list of all labels the Cannon is going to fit
 test_labels = test_labels_constant + test_labels_expressions
@@ -239,6 +241,10 @@ if args.censor_line_list != "":
         logger.info("Pixels used for label {}: {} of {} (in {} lines)".format(label_name, mask.sum(),
                                                                               len(raster), allowed_lines))
         censoring_masks[label_name] = ~mask
+
+    # Make sure that label expressions also have masks set
+    for label_name in test_labels_expressions:
+        censoring_masks[label_name] = censoring_masks["Teff"].copy()
 
 # If we're doing our own continuum normalisation, we need to treat each wavelength arm separately
 # We look at the wavelength raster of the first training spectrum, and look for break points

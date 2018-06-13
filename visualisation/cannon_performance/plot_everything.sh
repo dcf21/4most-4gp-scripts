@@ -72,21 +72,30 @@ done
 for mode in lrs hrs
 do
     # Plot for both AHM2017 and GALAH datasets
-    for sample in "ahm2017_perturbed" "galah"
+    for sample in "galah"
     do
         for divisor in "h" "fe"
         do
+
             python2.7 mean_performance_vs_label.py \
-              --plot-width 14 --hide-date \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_3label.json" --dataset-label "3 parameter; censored" --dataset-colour "blue" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
-              --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_4label.json" --dataset-label "4 parameter; uncensored" --dataset-colour "blue" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_5label.json" --dataset-label "5 parameter; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "red" --dataset-linetype 1 \
               --abundances-over-${divisor} \
               --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_${sample}_${mode}_${divisor}" &
+
+            python2.7 mean_performance_vs_label.py \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_3label.json" --dataset-label "3 parameter; censored" --dataset-colour "blue" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_4label.json" --dataset-label "4 parameter; censored" --dataset-colour "green" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_5label.json" --dataset-label "5 parameter; censored" --dataset-colour "orange" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
+              --abundances-over-${divisor} \
+              --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_${sample}_${mode}_censored_${divisor}" &
+
         done
+        wait
     done
-    wait
 done
 
 # Now plot performance vs SNR for every Cannon run we have
