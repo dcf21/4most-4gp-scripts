@@ -209,17 +209,23 @@ if args.censor_line_list != "":
             censoring_scheme = int(args.censor_scheme)
             assert censoring_scheme in [1, 2, 3]
             if element_symbol != "H":
-                if censoring_scheme == 1:  # All elements can see all lines
+
+                # Scheme 1: All elements can see all lines
+                if censoring_scheme == 1:
                     if "[{}/H]".format(element_symbol) not in test_labels_constant:
                         continue
-                elif censoring_scheme == 2:  # Elements can only see their own lines, but Teff, log(g) can see all
+
+                # Scheme 2: Elements can only see their own lines, but Teff, log(g) can see all
+                elif censoring_scheme == 2:
                     if label_name in ("Teff", "logg"):
                         if "[{}/H]".format(element_symbol) not in test_labels_constant:
                             continue
                     else:
                         if "[{}/H]".format(element_symbol) != label_name:
                             continue
-                elif censoring_scheme == 3:  # As scheme 2, but [Fe/H] can also see all
+
+                # Scheme 3: As scheme 2, but [Fe/H] can also see all
+                elif censoring_scheme == 3:
                     if label_name in ("Teff", "logg", "[Fe/H]"):
                         if "[{}/H]".format(element_symbol) not in test_labels_constant:
                             continue
