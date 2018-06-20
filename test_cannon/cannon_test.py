@@ -146,8 +146,8 @@ test_library, test_library_items = [spectra[i] for i in ("library", "items")]
 
 # Load training set
 training_library_ids_all = [i["specId"] for i in training_library_items]
-training_spectra = training_library.open(ids=training_library_ids_all)
-raster = training_spectra.wavelengths
+training_spectra_all = training_library.open(ids=training_library_ids_all)
+raster = training_spectra_all.wavelengths
 
 # Load test set
 test_library_ids = [i["specId"] for i in test_library_items]
@@ -156,8 +156,8 @@ test_library_ids = [i["specId"] for i in test_library_items]
 test_labels_expressions = []
 if args.label_expressions.strip():
     test_labels_expressions = args.label_expressions.split(",")
-    for index in range(len(training_spectra)):
-        metadata = training_spectra.get_metadata(index)
+    for index in range(len(training_spectra_all)):
+        metadata = training_spectra_all.get_metadata(index)
         for label_expression in test_labels_expressions:
             value = eval(label_expression, metadata)
             metadata[label_expression] = value
@@ -170,17 +170,19 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
 
     # If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
     if args.assume_scaled_solar:
-        for index in range(len(training_spectra)):
-            metadata = training_spectra.get_metadata(index)
+        for index in range(len(training_spectra_all)):
+            metadata = training_spectra_all.get_metadata(index)
             for label in test_labels_constant:
                 if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                     # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
                     metadata[label] = metadata["[Fe/H]"]
+        training_library_ids = training_library_ids_all
+        training_spectra = training_spectra_all
     else:
         training_library_ids_filtered = []
-        for index in range(len(training_spectra)):
+        for index in range(len(training_spectra_all)):
             accept = True
-            metadata = training_spectra.get_metadata(index)
+            metadata = training_spectra_all.get_metadata(index)
             for label in test_labels_constant:
                 if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                     accept = False
@@ -188,7 +190,7 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
             if accept:
                 training_library_ids_filtered.append(training_library_ids_all[index])
         logger.info("Accepted {:d} / {:d} training spectra; others had labels missing.".
-                    format(len(training_library_ids_filtered), len(training_library_ids)))
+                    format(len(training_library_ids_filtered), len(training_library_ids_all)))
         training_library_ids = training_library_ids_filtered
         training_spectra = training_library.open(ids=training_library_ids)
 
