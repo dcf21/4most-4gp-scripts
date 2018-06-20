@@ -82,6 +82,7 @@ do
               --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_4label.json" --dataset-label "4 parameter; uncensored" --dataset-colour "blue" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_5label.json" --dataset-label "5 parameter; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "red" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_${mode}_12label.json" --dataset-label "12 parameters; uncensored" --dataset-colour "purple" --dataset-linetype 1 \
               --abundances-over-${divisor} \
               --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_${sample}_${mode}_${divisor}" &
 
@@ -90,6 +91,7 @@ do
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_4label.json" --dataset-label "4 parameter; censored" --dataset-colour "green" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_5label.json" --dataset-label "5 parameter; censored" --dataset-colour "orange" --dataset-linetype 1 \
               --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
+              --cannon-output "../../output_data/cannon/cannon_${sample}_censored_${mode}_12label.json" --dataset-label "12 parameters; censored" --dataset-colour "purple" --dataset-linetype 1 \
               --abundances-over-${divisor} \
               --output-file "../../output_plots/cannon_performance/performance_vs_label/comparisonB_${sample}_${mode}_censored_${divisor}" &
 
