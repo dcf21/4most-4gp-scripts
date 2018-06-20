@@ -189,8 +189,8 @@ if args.label_expressions.strip():
 # Fit each set of labels we're fitting individually, one by one
 for labels_individual_batch_count, labels_individual_batch in enumerate(test_labels_individual):
     # Make combined list of all labels the Cannon is going to fit
-    test_labels = test_labels_constant + test_labels_expressions
-    logger.info("Beginning fit of labels <>.".format(",".join(test_labels)))
+    test_labels = test_labels_constant + labels_individual_batch + test_labels_expressions
+    logger.info("Beginning fit of labels <{}>.".format(",".join(test_labels)))
 
     # If required, generate the censoring masks
     censoring_masks = None
