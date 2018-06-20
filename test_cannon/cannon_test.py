@@ -145,36 +145,12 @@ spectra = SpectrumLibrarySqlite.open_and_search(
 test_library, test_library_items = [spectra[i] for i in ("library", "items")]
 
 # Load training set
-training_library_ids = [i["specId"] for i in training_library_items]
-training_spectra = training_library.open(ids=training_library_ids)
+training_library_ids_all = [i["specId"] for i in training_library_items]
+training_spectra = training_library.open(ids=training_library_ids_all)
 raster = training_spectra.wavelengths
 
 # Load test set
 test_library_ids = [i["specId"] for i in test_library_items]
-
-# If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
-if args.assume_scaled_solar:
-    for index in range(len(training_spectra)):
-        metadata = training_spectra.get_metadata(index)
-        for label in test_labels_constant:
-            if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
-                # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
-                metadata[label] = metadata["[Fe/H]"]
-else:
-    training_library_ids_filtered = []
-    for index in range(len(training_spectra)):
-        accept = True
-        metadata = training_spectra.get_metadata(index)
-        for label in test_labels_constant:
-            if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
-                accept = False
-                break
-        if accept:
-            training_library_ids_filtered.append(training_library_ids[index])
-    logger.info("Accepted {:d} / {:d} training spectra; others had labels missing.".
-                format(len(training_library_ids_filtered), len(training_library_ids)))
-    training_library_ids = training_library_ids_filtered
-    training_spectra = training_library.open(ids=training_library_ids)
 
 # Evaluate labels which are calculated via metadata expressions
 test_labels_expressions = []
@@ -191,6 +167,30 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
     # Make combined list of all labels the Cannon is going to fit
     test_labels = test_labels_constant + labels_individual_batch + test_labels_expressions
     logger.info("Beginning fit of labels <{}>.".format(",".join(test_labels)))
+
+    # If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
+    if args.assume_scaled_solar:
+        for index in range(len(training_spectra)):
+            metadata = training_spectra.get_metadata(index)
+            for label in test_labels_constant:
+                if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
+                    # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
+                    metadata[label] = metadata["[Fe/H]"]
+    else:
+        training_library_ids_filtered = []
+        for index in range(len(training_spectra)):
+            accept = True
+            metadata = training_spectra.get_metadata(index)
+            for label in test_labels_constant:
+                if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
+                    accept = False
+                    break
+            if accept:
+                training_library_ids_filtered.append(training_library_ids_all[index])
+        logger.info("Accepted {:d} / {:d} training spectra; others had labels missing.".
+                    format(len(training_library_ids_filtered), len(training_library_ids)))
+        training_library_ids = training_library_ids_filtered
+        training_spectra = training_library.open(ids=training_library_ids)
 
     # If required, generate the censoring masks
     censoring_masks = None
