@@ -152,21 +152,8 @@ raster = training_spectra_all.wavelengths
 # Load test set
 test_library_ids = [i["specId"] for i in test_library_items]
 
-# Evaluate labels which are calculated via metadata expressions
-test_labels_expressions = []
-if args.label_expressions.strip():
-    test_labels_expressions = args.label_expressions.split(",")
-    for index in range(len(training_spectra_all)):
-        metadata = training_spectra_all.get_metadata(index)
-        for label_expression in test_labels_expressions:
-            value = eval(label_expression, metadata)
-            metadata[label_expression] = value
-
 # Fit each set of labels we're fitting individually, one by one
 for labels_individual_batch_count, labels_individual_batch in enumerate(test_labels_individual):
-    # Make combined list of all labels the Cannon is going to fit
-    test_labels = test_labels_constant + labels_individual_batch + test_labels_expressions
-    logger.info("Beginning fit of labels <{}>.".format(",".join(test_labels)))
 
     # If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
     if args.assume_scaled_solar:
@@ -193,6 +180,20 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
                     format(len(training_library_ids_filtered), len(training_library_ids_all)))
         training_library_ids = training_library_ids_filtered
         training_spectra = training_library.open(ids=training_library_ids)
+
+    # Evaluate labels which are calculated via metadata expressions
+    test_labels_expressions = []
+    if args.label_expressions.strip():
+        test_labels_expressions = args.label_expressions.split(",")
+        for index in range(len(training_spectra)):
+            metadata = training_spectra.get_metadata(index)
+            for label_expression in test_labels_expressions:
+                value = eval(label_expression, metadata)
+                metadata[label_expression] = value
+                
+    # Make combined list of all labels the Cannon is going to fit
+    test_labels = test_labels_constant + labels_individual_batch + test_labels_expressions
+    logger.info("Beginning fit of labels <{}>.".format(",".join(test_labels)))
 
     # If required, generate the censoring masks
     censoring_masks = None
