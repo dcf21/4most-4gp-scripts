@@ -153,13 +153,13 @@ raster = training_spectra_all.wavelengths
 test_library_ids = [i["specId"] for i in test_library_items]
 
 # Fit each set of labels we're fitting individually, one by one
-for labels_individual_batch_count, labels_individual_batch in enumerate(test_labels_individual):
+for labels_individual_batch_count, test_labels_individual_batch in enumerate(test_labels_individual):
 
     # If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
     if args.assume_scaled_solar:
         for index in range(len(training_spectra_all)):
             metadata = training_spectra_all.get_metadata(index)
-            for label in test_labels_constant + test_labels_individual:
+            for label in test_labels_constant + test_labels_individual_batch:
                 if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                     # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
                     metadata[label] = metadata["[Fe/H]"]
@@ -170,7 +170,7 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
         for index in range(len(training_spectra_all)):
             accept = True
             metadata = training_spectra_all.get_metadata(index)
-            for label in test_labels_constant + test_labels_individual:
+            for label in test_labels_constant + test_labels_individual_batch:
                 if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                     accept = False
                     break
@@ -192,7 +192,7 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
                 metadata[label_expression] = value
 
     # Make combined list of all labels the Cannon is going to fit
-    test_labels = test_labels_constant + labels_individual_batch + test_labels_expressions
+    test_labels = test_labels_constant + test_labels_individual_batch + test_labels_expressions
     logger.info("Beginning fit of labels <{}>.".format(",".join(test_labels)))
 
     # If required, generate the censoring masks
