@@ -55,6 +55,9 @@ parser.add_argument('--label-expressions', dest='label_expressions',
                     default="",
                     help="List of the algebraic labels the Cannon is to learn to estimate "
                          "(e.g. photometry_B - photometry_V).")
+parser.add_argument('--labels-individual', dest='labels_individual',
+                    default="",
+                    help="List of the labels the Cannon is to fit in separate fitting runs.")
 parser.add_argument('--censor-scheme', default="1", dest='censor_scheme',
                     help="Censoring scheme version to use (1, 2 or 3).")
 parser.add_argument('--censor', default="", dest='censor_line_list',
@@ -118,6 +121,9 @@ else:
 # List of labels over which we are going to test the performance of the Cannon
 test_labels_constant = args.labels.split(",")
 
+# List of labels we're going to fit individually
+test_labels_individual = [i.split("+") for i in args.labels_individual.split(",")]
+
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
@@ -180,208 +186,211 @@ if args.label_expressions.strip():
             value = eval(label_expression, metadata)
             metadata[label_expression] = value
 
-# Make combined list of all labels the Cannon is going to fit
-test_labels = test_labels_constant + test_labels_expressions
+# Fit each set of labels we're fitting individually, one by one
+for labels_individual_batch_count, labels_individual_batch in enumerate(test_labels_individual):
+    # Make combined list of all labels the Cannon is going to fit
+    test_labels = test_labels_constant + test_labels_expressions
+    logger.info("Beginning fit of labels <>.".format(",".join(test_labels)))
 
-# If required, generate the censoring masks
-censoring_masks = None
-if args.censor_line_list != "":
-    window = 1  # How many Angstroms either side of the line should be used?
-    censoring_masks = {}
-    line_list_txt = open(args.censor_line_list).readlines()
+    # If required, generate the censoring masks
+    censoring_masks = None
+    if args.censor_line_list != "":
+        window = 1  # How many Angstroms either side of the line should be used?
+        censoring_masks = {}
+        line_list_txt = open(args.censor_line_list).readlines()
 
-    for label_name in test_labels_constant:
-        allowed_lines = 0
-        mask = np.zeros(raster.size, dtype=bool)
+        for label_name in test_labels_constant:
+            allowed_lines = 0
+            mask = np.zeros(raster.size, dtype=bool)
 
-        # Loop over the lines in the line list and see which ones to include
-        for line in line_list_txt:
-            line = line.strip()
+            # Loop over the lines in the line list and see which ones to include
+            for line in line_list_txt:
+                line = line.strip()
 
-            # Ignore comment lines
-            if (len(line) == 0) or (line[0] == "#"):
-                continue
-            words = line.split()
-            element_symbol = words[0]
-            wavelength = words[2]
+                # Ignore comment lines
+                if (len(line) == 0) or (line[0] == "#"):
+                    continue
+                words = line.split()
+                element_symbol = words[0]
+                wavelength = words[2]
 
-            # Only select lines from elements we're trying to fit. Always use H lines.
-            censoring_scheme = int(args.censor_scheme)
-            assert censoring_scheme in [1, 2, 3]
-            if element_symbol != "H":
+                # Only select lines from elements we're trying to fit. Always use H lines.
+                censoring_scheme = int(args.censor_scheme)
+                assert censoring_scheme in [1, 2, 3]
+                if element_symbol != "H":
 
-                # Scheme 1: All elements can see all lines
-                if censoring_scheme == 1:
-                    if "[{}/H]".format(element_symbol) not in test_labels_constant:
-                        continue
-
-                # Scheme 2: Elements can only see their own lines, but Teff, log(g) can see all
-                elif censoring_scheme == 2:
-                    if label_name in ("Teff", "logg"):
+                    # Scheme 1: All elements can see all lines
+                    if censoring_scheme == 1:
                         if "[{}/H]".format(element_symbol) not in test_labels_constant:
                             continue
-                    else:
-                        if "[{}/H]".format(element_symbol) != label_name:
-                            continue
 
-                # Scheme 3: As scheme 2, but [Fe/H] can also see all
-                elif censoring_scheme == 3:
-                    if label_name in ("Teff", "logg", "[Fe/H]"):
-                        if "[{}/H]".format(element_symbol) not in test_labels_constant:
-                            continue
-                    else:
-                        if "[{}/H]".format(element_symbol) != label_name:
-                            continue
+                    # Scheme 2: Elements can only see their own lines, but Teff, log(g) can see all
+                    elif censoring_scheme == 2:
+                        if label_name in ("Teff", "logg"):
+                            if "[{}/H]".format(element_symbol) not in test_labels_constant:
+                                continue
+                        else:
+                            if "[{}/H]".format(element_symbol) != label_name:
+                                continue
 
-            # Is line specified as a range (broad), or a single central wavelength (assume narrow)
-            if "-" in wavelength:
-                pass_band = [float(i) for i in wavelength.split("-")]
-            else:
-                pass_band = [float(wavelength) - window, float(wavelength) + window]
+                    # Scheme 3: As scheme 2, but [Fe/H] can also see all
+                    elif censoring_scheme == 3:
+                        if label_name in ("Teff", "logg", "[Fe/H]"):
+                            if "[{}/H]".format(element_symbol) not in test_labels_constant:
+                                continue
+                        else:
+                            if "[{}/H]".format(element_symbol) != label_name:
+                                continue
 
-            # Allow this line
-            allowed_lines += 1
-            window_mask = (raster >= pass_band[0]) * (pass_band[1] >= raster)
-            mask[window_mask] = True
+                # Is line specified as a range (broad), or a single central wavelength (assume narrow)
+                if "-" in wavelength:
+                    pass_band = [float(i) for i in wavelength.split("-")]
+                else:
+                    pass_band = [float(wavelength) - window, float(wavelength) + window]
 
-        logger.info("Pixels used for label {}: {} of {} (in {} lines)".format(label_name, mask.sum(),
-                                                                              len(raster), allowed_lines))
-        censoring_masks[label_name] = ~mask
+                # Allow this line
+                allowed_lines += 1
+                window_mask = (raster >= pass_band[0]) * (pass_band[1] >= raster)
+                mask[window_mask] = True
 
-    # Make sure that label expressions also have masks set
-    for label_name in test_labels_expressions:
-        censoring_masks[label_name] = censoring_masks["Teff"].copy()
+            logger.info("Pixels used for label {}: {} of {} (in {} lines)".format(label_name, mask.sum(),
+                                                                                  len(raster), allowed_lines))
+            censoring_masks[label_name] = ~mask
 
-# If we're doing our own continuum normalisation, we need to treat each wavelength arm separately
-# We look at the wavelength raster of the first training spectrum, and look for break points
-break_points = []
-raster_diffs = np.diff(raster)
-diff = raster_diffs[0]
-for i in range(len(raster_diffs) - 2):
-    second_diff = raster_diffs[i] / diff
-    diff = raster_diffs[i]
-    if (second_diff < 0.98) or (second_diff > 1.02):
-        break_points.append((raster[i] + raster[i + 1]) / 2)
-        diff = raster_diffs[i + 1]
+        # Make sure that label expressions also have masks set
+        for label_name in test_labels_expressions:
+            censoring_masks[label_name] = censoring_masks["Teff"].copy()
 
-# Construct and train a model
-time_training_start = time.time()
-if not args.reload_cannon:
-    model = CannonClass(training_set=training_spectra,
-                        wavelength_arms=break_points,
-                        label_names=test_labels,
-                        tolerance=args.tolerance,
-                        censors=censoring_masks,
-                        threads=None if args.multithread else 1
-                        )
-else:
-    model = CannonClass(training_set=training_spectra,
-                        wavelength_arms=break_points,
-                        load_from_file=args.reload_cannon,
-                        label_names=test_labels,
-                        tolerance=args.tolerance,
-                        censors=censoring_masks,
-                        threads=None if args.multithread else 1
-                        )
-time_training_end = time.time()
+    # If we're doing our own continuum normalisation, we need to treat each wavelength arm separately
+    # We look at the wavelength raster of the first training spectrum, and look for break points
+    break_points = []
+    raster_diffs = np.diff(raster)
+    diff = raster_diffs[0]
+    for i in range(len(raster_diffs) - 2):
+        second_diff = raster_diffs[i] / diff
+        diff = raster_diffs[i]
+        if (second_diff < 0.98) or (second_diff > 1.02):
+            break_points.append((raster[i] + raster[i + 1]) / 2)
+            diff = raster_diffs[i + 1]
 
-# Save the model
-model.save_model(filename=args.output_file + ".cannon",
-                 overwrite=True)
+    # Construct and train a model
+    time_training_start = time.time()
+    if not args.reload_cannon:
+        model = CannonClass(training_set=training_spectra,
+                            wavelength_arms=break_points,
+                            label_names=test_labels,
+                            tolerance=args.tolerance,
+                            censors=censoring_masks,
+                            threads=None if args.multithread else 1
+                            )
+    else:
+        model = CannonClass(training_set=training_spectra,
+                            wavelength_arms=break_points,
+                            load_from_file=args.reload_cannon,
+                            label_names=test_labels,
+                            tolerance=args.tolerance,
+                            censors=censoring_masks,
+                            threads=None if args.multithread else 1
+                            )
+    time_training_end = time.time()
 
-# Test the model
-N = len(test_library_ids)
-time_taken = np.zeros(N)
-results = []
-for index in range(N):
-    test_spectrum_array = test_library.open(ids=test_library_ids[index])
-    spectrum = test_spectrum_array.extract_item(0)
-    logger.info("Testing {}/{}: {}".format(index + 1, N, spectrum.metadata['Starname']))
+    # Save the model
+    model.save_model(filename="{:s}-{:03d}.cannon".format(args.output_file, labels_individual_batch_count),
+                     overwrite=True)
 
-    # Calculate the time taken to process this spectrum
-    time_start = time.time()
+    # Test the model
+    N = len(test_library_ids)
+    time_taken = np.zeros(N)
+    results = []
+    for index in range(N):
+        test_spectrum_array = test_library.open(ids=test_library_ids[index])
+        spectrum = test_spectrum_array.extract_item(0)
+        logger.info("Testing {}/{}: {}".format(index + 1, N, spectrum.metadata['Starname']))
 
-    # If requested, interpolate the test set onto the same raster as the training set. DANGEROUS!
-    if args.interpolate:
-        from fourgp_degrade.interpolate import SpectrumInterpolator
+        # Calculate the time taken to process this spectrum
+        time_start = time.time()
 
-        first_training_spectrum = training_spectra.extract_item(0)
-        interpolator = SpectrumInterpolator(spectrum)
-        spectrum_new = interpolator.match_to_other_spectrum(first_training_spectrum)
-        spectrum_new.metadata = spectrum.metadata
-        spectrum = spectrum_new
+        # If requested, interpolate the test set onto the same raster as the training set. DANGEROUS!
+        if args.interpolate:
+            from fourgp_degrade.interpolate import SpectrumInterpolator
 
-    # Pass spectrum to the Cannon
-    labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
+            first_training_spectrum = training_spectra.extract_item(0)
+            interpolator = SpectrumInterpolator(spectrum)
+            spectrum_new = interpolator.match_to_other_spectrum(first_training_spectrum)
+            spectrum_new.metadata = spectrum.metadata
+            spectrum = spectrum_new
 
-    # Check whether Cannon failed
-    if labels is None:
-        continue
+        # Pass spectrum to the Cannon
+        labels, cov, meta = model.fit_spectrum(spectrum=spectrum)
 
-    # Measure the time taken
-    time_end = time.time()
-    time_taken[index] = time_end - time_start
+        # Check whether Cannon failed
+        if labels is None:
+            continue
 
-    # Identify which star it is and what the SNR is
-    star_name = spectrum.metadata["Starname"] if "Starname" in spectrum.metadata else ""
-    snr = spectrum.metadata["SNR"] if "SNR" in spectrum.metadata else 0
-    snr_per = spectrum.metadata["SNR_per"] if "SNR_per" in spectrum.metadata else "pixel"
-    snr_definition = spectrum.metadata["snr_definition"] if "snr_definition" in spectrum.metadata else ""
-    ebv = spectrum.metadata["e_bv"] if "e_bv" in spectrum.metadata else 0
-    with_rv = spectrum.metadata["rv"] if "rv" in spectrum.metadata else 0
-    uid = spectrum.metadata["uid"] if "uid" in spectrum.metadata else ""
+        # Measure the time taken
+        time_end = time.time()
+        time_taken[index] = time_end - time_start
 
-    # From the label covariance matrix extract the standard deviation in each label value
-    # (diagonal terms in the matrix are variances)
-    err_labels = np.sqrt(np.diag(cov[0]))
+        # Identify which star it is and what the SNR is
+        star_name = spectrum.metadata["Starname"] if "Starname" in spectrum.metadata else ""
+        snr = spectrum.metadata["SNR"] if "SNR" in spectrum.metadata else 0
+        snr_per = spectrum.metadata["SNR_per"] if "SNR_per" in spectrum.metadata else "pixel"
+        snr_definition = spectrum.metadata["snr_definition"] if "snr_definition" in spectrum.metadata else ""
+        ebv = spectrum.metadata["e_bv"] if "e_bv" in spectrum.metadata else 0
+        with_rv = spectrum.metadata["rv"] if "rv" in spectrum.metadata else 0
+        uid = spectrum.metadata["uid"] if "uid" in spectrum.metadata else ""
 
-    # Turn list of label values into a dictionary
-    result = dict(zip(test_labels, labels[0]))
+        # From the label covariance matrix extract the standard deviation in each label value
+        # (diagonal terms in the matrix are variances)
+        err_labels = np.sqrt(np.diag(cov[0]))
 
-    # Add the standard deviations of each label into the dictionary
-    result.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
+        # Turn list of label values into a dictionary
+        result = dict(zip(test_labels, labels[0]))
 
-    # Add target values for each label into the dictionary
-    for label_name in test_labels_constant:
-        if label_name in spectrum.metadata:
-            result["target_{}".format(label_name)] = spectrum.metadata[label_name]
+        # Add the standard deviations of each label into the dictionary
+        result.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
 
-    # Add the star name and the SNR ratio of the test spectrum
-    result.update({"Starname": star_name,
-                   "SNR": snr,
-                   "SNR_per": snr_per,
-                   "snr_definition": snr_definition,
-                   "e_bv": ebv,
-                   "rv": with_rv,
-                   "uid": uid,
-                   "time": time_taken[index]
-                   })
-    results.append(result)
+        # Add target values for each label into the dictionary
+        for label_name in test_labels_constant:
+            if label_name in spectrum.metadata:
+                result["target_{}".format(label_name)] = spectrum.metadata[label_name]
 
-# Report time taken
-logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spectrum.".format(N,
-                                                                                               np.mean(time_taken),
-                                                                                               np.std(time_taken)))
+        # Add the star name and the SNR ratio of the test spectrum
+        result.update({"Starname": star_name,
+                       "SNR": snr,
+                       "SNR_per": snr_per,
+                       "snr_definition": snr_definition,
+                       "e_bv": ebv,
+                       "rv": with_rv,
+                       "uid": uid,
+                       "time": time_taken[index]
+                       })
+        results.append(result)
 
-# Write results to JSON file
-with open(args.output_file + ".json", "w") as f:
-    censoring_output = None
-    if censoring_masks is not None:
-        censoring_output = dict([(label, tuple([int(i) for i in mask]))
-                                 for label, mask in censoring_masks.iteritems()])
+    # Report time taken
+    logger.info("Fitting of {:d} spectra completed. Took {:.2f} +/- {:.2f} sec / spectrum.".format(N,
+                                                                                                   np.mean(time_taken),
+                                                                                                   np.std(time_taken)))
 
-    f.write(json.dumps({
-        "train_library": args.train_library,
-        "test_library": args.test_library,
-        "tolerance": args.tolerance,
-        "description": args.description,
-        "assume_scaled_solar": args.assume_scaled_solar,
-        "line_list": args.censor_line_list,
-        "start_time": time_training_start,
-        "end_time": time.time(),
-        "training_time": time_training_end - time_training_start,
-        "labels": test_labels,
-        "wavelength_raster": tuple(raster),
-        "censoring_mask": censoring_output,
-        "stars": results
-    }))
+    # Write results to JSON file
+    with open("{:s}-{:03d}.json".format(args.output_file, labels_individual_batch_count), "w") as f:
+        censoring_output = None
+        if censoring_masks is not None:
+            censoring_output = dict([(label, tuple([int(i) for i in mask]))
+                                     for label, mask in censoring_masks.iteritems()])
+
+        f.write(json.dumps({
+            "train_library": args.train_library,
+            "test_library": args.test_library,
+            "tolerance": args.tolerance,
+            "description": args.description,
+            "assume_scaled_solar": args.assume_scaled_solar,
+            "line_list": args.censor_line_list,
+            "start_time": time_training_start,
+            "end_time": time.time(),
+            "training_time": time_training_end - time_training_start,
+            "labels": test_labels,
+            "wavelength_raster": tuple(raster),
+            "censoring_mask": censoring_output,
+            "stars": results
+        }))
