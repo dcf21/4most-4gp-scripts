@@ -159,7 +159,7 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
     if args.assume_scaled_solar:
         for index in range(len(training_spectra_all)):
             metadata = training_spectra_all.get_metadata(index)
-            for label in test_labels_constant:
+            for label in test_labels_constant + test_labels_individual:
                 if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                     # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
                     metadata[label] = metadata["[Fe/H]"]
@@ -170,7 +170,7 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
         for index in range(len(training_spectra_all)):
             accept = True
             metadata = training_spectra_all.get_metadata(index)
-            for label in test_labels_constant:
+            for label in test_labels_constant + test_labels_individual:
                 if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                     accept = False
                     break
@@ -190,7 +190,7 @@ for labels_individual_batch_count, labels_individual_batch in enumerate(test_lab
             for label_expression in test_labels_expressions:
                 value = eval(label_expression, metadata)
                 metadata[label_expression] = value
-                
+
     # Make combined list of all labels the Cannon is going to fit
     test_labels = test_labels_constant + labels_individual_batch + test_labels_expressions
     logger.info("Beginning fit of labels <{}>.".format(",".join(test_labels)))
