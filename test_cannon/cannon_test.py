@@ -160,13 +160,17 @@ def create_censoring_masks(censoring_scheme, raster, censoring_line_list, label_
                 window_mask = (raster >= pass_band[0]) * (pass_band[1] >= raster)
                 mask[window_mask] = True
 
-            logger.info("Pixels used for label {}: {} of {} (in {} lines)".format(label_name, mask.sum(),
-                                                                                  len(raster), allowed_lines))
+            logger.info("Pixels used for label {}: {} of {} (in {} lines)".
+                        format(label_name, mask.sum(), len(raster), allowed_lines))
             censoring_masks[label_name] = ~mask
 
         # Make sure that label expressions also have masks set
         for label_name in label_expressions:
-            censoring_masks[label_name] = censoring_masks["Teff"].copy()
+            mask = censoring_masks["Teff"].copy()
+            censoring_masks[label_name] = mask
+
+            logger.info("Pixels used for label {}: {} of {} (copied from Teff)".
+                        format(label_name, len(raster) - mask.sum(), len(raster)))
     return censoring_masks
 
 
@@ -267,7 +271,8 @@ def main():
                                                                            args.output_file))
 
     # Pick which Cannon version to use
-    cannon_class, continuum_normalised_testing, continuum_normalised_training = select_cannon(args)
+    cannon_class, continuum_normalised_testing, continuum_normalised_training = \
+        select_cannon(continuum_normalisation=args.continuum_normalisation)
 
     # List of labels over which we are going to test the performance of the Cannon
     test_label_fields = args.labels.split(",")
