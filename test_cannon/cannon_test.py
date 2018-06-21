@@ -341,10 +341,10 @@ def main():
         # If required, generate the censoring masks
         censoring_masks = create_censoring_masks(
             censoring_scheme=int(args.censor_scheme),
+            raster=raster,
             censoring_line_list=args.censor_line_list,
             label_fields=test_label_fields + test_labels_individual_batch,
             label_expressions=test_labels_expressions
-
         )
 
         # If we're doing our own continuum normalisation, we need to treat each wavelength arm separately
