@@ -278,7 +278,10 @@ def main():
     test_label_fields = args.labels.split(",")
 
     # List of labels we're going to fit individually
-    test_labels_individual = [i.split("+") for i in args.labels_individual.split(",")]
+    if args.labels_individual:
+        test_labels_individual = [i.split("+") for i in args.labels_individual.split(",")]
+    else:
+        test_labels_individual = [[]]
 
     # Set path to workspace where we expect to find libraries of spectra
     our_path = os_path.split(os_path.abspath(__file__))[0]
