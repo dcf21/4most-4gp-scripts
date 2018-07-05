@@ -21,70 +21,8 @@ import numpy as np
 import json
 
 from lib.multiplotter import make_multiplot
-
-
-class LabelSettings:
-    """
-    This class defines the list of labels that we're interested in producing plots for, and defines metadata such as
-    axis limits that we use when plotting our performance for them.
-    """
-
-    def __init__(self):
-
-        # Define all of the allowed labels we can plot precision for. For each label we define the LaTeX
-        # title to put on the precision axis, as well the the limits of the axis and the target values to indicate.
-        self.label_info = {
-            "Teff": {"latex": r"$T_{\rm eff}$ $[{\rm K}]$", "cannon_label": "Teff", "over_fe": False, "offset_min": 0,
-                     "offset_max": 300, "targets": [100]},
-            "logg": {"latex": r"$\log{g}$ $[{\rm dex}]$", "cannon_label": "logg", "over_fe": False, "offset_min": 0,
-                     "offset_max": 0.8, "targets": [0.3]},
-            "[Fe/H]": {"latex": r"$[{\rm Fe}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Fe/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[C/H]": {"latex": r"$[{\rm C}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[C/H]", "over_fe": False,
-                      "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
-            "[N/H]": {"latex": r"$[{\rm N}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[N/H]", "over_fe": False,
-                      "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
-            "[O/H]": {"latex": r"$[{\rm O}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[O/H]", "over_fe": False,
-                      "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
-            "[Na/H]": {"latex": r"$[{\rm Na}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Na/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Mg/H]": {"latex": r"$[{\rm Mg}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Mg/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Al/H]": {"latex": r"$[{\rm Al}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Al/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Si/H]": {"latex": r"$[{\rm Si}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Si/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Ca/H]": {"latex": r"$[{\rm Ca}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ca/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Ti/H]": {"latex": r"$[{\rm Ti}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ti/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Mn/H]": {"latex": r"$[{\rm Mn}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Mn/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Co/H]": {"latex": r"$[{\rm Co}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Co/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Ni/H]": {"latex": r"$[{\rm Ni}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ni/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Ba/H]": {"latex": r"$[{\rm Ba}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Ba/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 1.1, "targets": [0.1, 0.2]},
-            "[Sr/H]": {"latex": r"$[{\rm Sr}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Sr/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Cr/H]": {"latex": r"$[{\rm Cr}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Cr/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 0.75, "targets": [0.1, 0.2]},
-            "[Li/H]": {"latex": r"$[{\rm Li}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Li/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 1.1, "targets": [0.2, 0.4]},
-            "[Eu/H]": {"latex": r"$[{\rm Eu}/{\rm H}]$ $[{\rm dex}]$", "cannon_label": "[Eu/H]", "over_fe": False,
-                       "offset_min": 0, "offset_max": 1.1, "targets": [0.2, 0.4]},
-        }
-
-        # Allow abundance over Fe to also be plotted
-        for key in self.label_info.keys():
-            test = re.match("\[(.*)/H\]", key)
-            if test is not None:
-                info = self.label_info[key].copy()
-                new_key = "[{}/Fe]".format(test.group(1))
-                info["over_fe"] = True
-                info["latex"] = re.sub("rm H}", "rm Fe}", info["latex"])
-                self.label_info[new_key] = info
+from lib.label_information import LabelInformation
+from lib.abscissa_information import AbcissaInformation
 
 
 class PlotLabelPrecision:
@@ -145,17 +83,11 @@ class PlotLabelPrecision:
         os.system("rm -f {}/*".format(output_figure_stem))
 
         # Fetch a list of the labels we produce performance plots for
-        self.label_info = LabelSettings().label_info
+        self.label_info = LabelInformation().label_info
 
         # All of the horizontal axes we can plot precision against. The parameter "abscissa_label" should be one of the
         # keys to this dictionary.
-        self.abscissa_labels = {
-            # label name, latex label, log axes, axis range
-            "SNR/A": ["SNR", "$S/N$ $[{\\rm \\AA}^{-1}]$", False, (0, 250)],
-            "SNR/pixel": ["SNR", "$S/N$ $[{\\rm pixel}^{-1}]$", False, (0, 250)],
-            "ebv": ["e_bv", "$E(B-V)$", True, (0.04, 3)],
-            "rv": ["rv", "RV [m/s]", True, (800, 50e3)]
-        }
+        self.abscissa_labels = AbcissaInformation().abscissa_labels
 
         self.plot_width = plot_width
         self.keep_eps = keep_eps
@@ -767,7 +699,7 @@ Create a set of plots of a number of Cannon runs.
     None
     """
 
-    label_info = LabelSettings().label_info
+    label_info = LabelInformation().label_info
 
     # Work out list of labels to plot, based on first data set we're provided with
     data_set_0 = json.loads(open(data_sets[0]['cannon_output']).read())
