@@ -23,7 +23,7 @@ from operator import itemgetter
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
 
-from lib_multiplotter import make_multiplot
+from lib.multiplotter import make_multiplot
 
 
 def dict_merge(x, y):

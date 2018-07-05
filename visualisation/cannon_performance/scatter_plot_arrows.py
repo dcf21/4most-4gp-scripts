@@ -19,7 +19,7 @@ import json
 import numpy as np
 from label_tabulator import tabulate_labels
 
-from lib_multiplotter import make_multiplot
+from lib.multiplotter import make_multiplot
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)

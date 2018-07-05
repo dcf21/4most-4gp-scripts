@@ -20,7 +20,7 @@ import argparse
 import numpy as np
 import json
 
-from lib_multiplotter import make_multiplot
+from lib.multiplotter import make_multiplot
 
 
 class LabelSettings:

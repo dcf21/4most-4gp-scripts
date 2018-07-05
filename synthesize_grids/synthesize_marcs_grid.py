@@ -15,7 +15,7 @@ import re
 from os import path as os_path
 import logging
 import glob
-from base_synthesizer import Synthesizer
+from lib.base_synthesizer import Synthesizer
 
 # Start logging our progress
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',

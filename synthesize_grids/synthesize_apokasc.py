@@ -13,7 +13,7 @@ Take stellar parameters of the APOKASC training set and test sets, and synthesiz
 import numpy as np
 import logging
 from astropy.table import Table
-from base_synthesizer import Synthesizer
+from lib.base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
 element_list = ("[C/H]", "[N/H]", "[O/H]", "[Na/H]", "[Mg/H]", "[Al/H]", "[Si/H]",

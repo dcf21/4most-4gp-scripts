@@ -14,7 +14,7 @@ import os
 import re
 import argparse
 
-from lib_multiplotter import make_multiplot
+from lib.multiplotter import make_multiplot
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)

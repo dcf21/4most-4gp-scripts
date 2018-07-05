@@ -11,7 +11,7 @@ Take parameters of synthetic dwarf sample emailed by Ross on 20 March 2018, and 
 """
 
 import logging
-from base_synthesizer import Synthesizer
+from lib.base_synthesizer import Synthesizer
 
 # Start logging our progress
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',

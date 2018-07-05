@@ -11,7 +11,7 @@ Synthesize a handful of demo stars, e.g. the Sun, using TurboSpectrum.
 """
 
 import logging
-from base_synthesizer import Synthesizer
+from lib.base_synthesizer import Synthesizer
 
 # Start logging our progress
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',

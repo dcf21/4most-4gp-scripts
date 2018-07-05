@@ -15,7 +15,7 @@ Parameters downloaded from here: http://sagadatabase.jp/?page_id=10
 import re
 import numpy as np
 import logging
-from base_synthesizer import Synthesizer
+from lib.base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
 # Elements with neutral abundances, e.g. LI1

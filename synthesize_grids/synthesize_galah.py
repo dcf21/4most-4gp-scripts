@@ -14,7 +14,7 @@ TurboSpectrum.
 import numpy as np
 import logging
 from astropy.io import fits
-from base_synthesizer import Synthesizer
+from lib.base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
 element_list = (
