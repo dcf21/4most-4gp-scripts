@@ -1,5 +1,11 @@
-#!/usr/bin/env python2.7
+#!../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
+
+# NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
+# <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
+# is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
+# <python export_spectra.py>, but <./export_spectra.py> will not work.
+
 
 """
 Take spectrum library, and export the spectra in it in ASCII format.

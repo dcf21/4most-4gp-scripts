@@ -1,5 +1,10 @@
-#!/usr/bin/env python2.7
+#!../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
+
+# NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
+# <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
+# is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
+# <python import_brani_grid.py>, but <./import_brani_grid.py> will not work.
 
 """
 Take the 3x3x3 grid of template spectra used by Brani's RV code, and turn it into a SpectrumLibrary for use in

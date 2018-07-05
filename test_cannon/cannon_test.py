@@ -1,5 +1,10 @@
-#!/usr/bin/env python2.7
+#!../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
+
+# NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
+# <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
+# is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
+# <python cannon_test.py>, but <./cannon_test.py> will not work.
 
 """
 Take a training set and a test set, and see how well the Cannon can reproduce the stellar labels on the test
