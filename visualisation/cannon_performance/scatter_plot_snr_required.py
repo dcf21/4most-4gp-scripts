@@ -66,22 +66,22 @@ for item in args.labels:
 
 # Read Cannon output
 if not os.path.exists(args.cannon):
-        print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
-        sys.exit()
+    print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+    sys.exit()
 
 cannon_output = json.loads(open(args.cannon).read())
 
 # Check that labels exist
 for label in label_names:
     if label not in cannon_output["labels"]:
-        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".\
+        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>". \
             format(label, args.cannon)
         sys.exit()
 
 if args.colour_by_label not in cannon_output["labels"]:
-        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".\
-            format(args.colour_by_label, args.cannon)
-        sys.exit()
+    print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>". \
+        format(args.colour_by_label, args.cannon)
+    sys.exit()
 
 # Create a sorted list of all the SNR values we've got
 snr_values = [item['SNR'] for item in cannon_output['stars']]
@@ -145,81 +145,58 @@ with open(filename, "w") as f:
         f.write("%16s %16s %16s\n" % tuple(line))
 
 # Create pyxplot script to produce this plot
-width = 16
-aspect = 1 / 1.618034  # Golden ratio
-pyxplot_input = """
+plotter = PyxplotDriver()
 
-col_scale_z(z) = min(max(  (z-({0})) / (({1})-({0}))  ,0),1)
+plotter.make_plot(output_filename=filename,
+                  caption=cannon_output['description'],
+                  pyxplot_script="""
 
-col_scale(z) = (z>{1}) ? colors.black : hsb(0.75 * col_scale_z(z), 1, 1)
-
-""".format(args.colour_range_min, args.colour_range_max)
-
-pyxplot_input += """
+col_scale_z(z) = min(max(  (z-({colour_range_min})) / (({colour_range_max})-({colour_range_min}))  ,0),1)
+col_scale(z) = (z>{colour_range_max}) ? colors.black : hsb(0.75 * col_scale_z(z), 1, 1)
     
-set nodisplay
-set origin 0,0
-set width {}
-set size ratio {}
-set term dpi 400
 set fontsize 1.1
 set nokey
 
 set multiplot
 
-set xlabel "Input {}"
-set xrange [{}]
-set ylabel "Input {}"
-set yrange [{}]
-
-# set label 1 "{}" at page 0.5, page {}
-
-""".format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
-           cannon_output['description'], width * aspect - 0.5)
-
-pyxplot_input += """
+set xlabel "Input {x_label}"
+set xrange [{x_range}]
+set ylabel "Input {y_label}"
+set yrange [{y_range}]
     
-set output "{0}.png"
-clear
-unset origin ; set axis y left ; unset xtics ; unset mxtics
-plot "{0}" title "SNR needed to achieve accuracy of {1} {2} in {3}" with dots colour col_scale($3) ps 8
-
-""".format(filename, args.target_accuracy, args.accuracy_unit, args.label_axis_latex[2])
-
-pyxplot_input += """
+set axis y left ; unset xtics ; unset mxtics
+plot "{data_filename}" title "SNR needed to achieve accuracy of {target_accuracy} {unit} in {colour_by_label}" \
+     with dots colour col_scale($3) ps 8
 
 unset label
 set noxlabel
 set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y y2 right
-set ylabel "SNR/\AA (at 6000\AA) needed to achieve accuracy of {1} {2} in {0}"
-set yrange [{3}:{4}]
+set ylabel "SNR/\AA (at 6000\AA) needed to achieve accuracy of {target_accuracy} {unit} in {colour_by_label}"
+set yrange [{colour_range_min}:{colour_range_max}]
 set y2label "SNR/pixel (at 6000\AA)"
-set y2range [{3}/{7}:{4}/{7}]
-set c1range [{3}:{4}] norenormalise
-set width {5}
+set y2range [{colour_range_min}*{snr_per_pixel_to_a}:{colour_range_max}*{snr_per_pixel_to_a}]
+set c1range [{colour_range_min}:{colour_range_max}] norenormalise
+set width {colour_bar_width}
 set size ratio 1 / 0.05
 set colormap col_scale(c1)
 set nocolkey
 set sample grid 2x200
-set origin {6}, 0
+set origin {colour_bar_x_pos}, 0
 plot y with colourmap
+                  
+                  """.format(colour_range_min=args.colour_range_min,
+                             colour_range_max=args.colour_range_max,
+                             x_label=args.label_axis_latex[0], x_range=label_list[0]["range"],
+                             y_label=args.label_axis_latex[1], y_range=label_list[1]["range"],
+                             data_filename=filename,
+                             target_accuracy=args.target_accuracy, unit=args.accuracy_unit,
+                             colour_by_label=args.label_axis_latex[2],
+                             colour_bar_width=plotter.width * plotter.aspect * 0.05,
+                             colour_bar_x_pos=plotter.width + 1,
+                             snr_per_pixel_to_a=1. / sqrt(pixels_per_angstrom)
+                             ))
 
-""".format(args.label_axis_latex[2], args.target_accuracy, args.accuracy_unit,
-           args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1,
-           sqrt(pixels_per_angstrom))
-
-pyxplot_input += """
-
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-""".format(filename)
-
-# Run pyxplot
-p = os.popen("pyxplot", "w")
-p.write(pyxplot_input)
-p.close()
+# Clean up plotter
+del plotter
