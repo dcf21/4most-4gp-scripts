@@ -10,23 +10,14 @@
 Take an output file from the Cannon, and plot the Cannon's predictive model coefficients.
 """
 
-import os
 from os import path as os_path
 import argparse
-import re
 import json
 import numpy as np
 
-from operator import itemgetter
-
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
-
-
-def dict_merge(x, y):
-    z = x.copy()   # start with x's keys and values
-    z.update(y)    # modifies z with y's keys and values & returns None
-    return z
+from lib import plot_settings
 
 
 # Read input parameters
@@ -37,7 +28,7 @@ parser.add_argument('--cannon-output',
                     default="../../output_data/cannon/cannon_galah_hrs_10label",
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output-stub', default="/tmp/cannon_model_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/cannon_model_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 

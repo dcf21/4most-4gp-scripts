@@ -11,7 +11,6 @@ Take an output file from the Cannon, and plot the Cannon's predictive model of h
 span varies with one of the variables.
 """
 
-import os
 from os import path as os_path
 import argparse
 import re
@@ -23,12 +22,12 @@ from operator import itemgetter
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
 
-from lib.multiplotter import make_multiplot
+from lib.multiplotter import PyxplotDriver
 
 
 def dict_merge(x, y):
-    z = x.copy()   # start with x's keys and values
-    z.update(y)    # modifies z with y's keys and values & returns None
+    z = x.copy()  # start with x's keys and values
+    z.update(y)  # modifies z with y's keys and values & returns None
     return z
 
 
@@ -53,7 +52,7 @@ parser.add_argument('--cannon-output',
                     required=True,
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output-stub', default="/tmp/cannon_model_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/cannon_model_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -188,73 +187,33 @@ with open("{}.dat".format(args.output_stub), "w") as f:
                                            datum["flux_error"][i]))
         f.write("\n\n\n\n")
 
-# Create pyxplot script to produce this plot
-eps_list = []
-width = 25
-aspect = 1 / 1.618034  # Golden ratio
-pyxplot_input = """
+# Instantiate pyxplot
+plotter = PyxplotDriver(multiplot_filename="{}_multiplot".format(args.output_stub), multiplot_aspect=4.8 / 8)
 
-set width {0}
-set size ratio {1}
-set term dpi 400
+# Make list of items we're going to plot
+for data_set_count, data_set in enumerate(["Synthesised", "Cannon model"]):
+    plotter.make_plot(output_filename="{}_{}".format(args.output_stub, data_set_count), pyxplot_script="""
+
 set key below
 set linewidth 0.4
 
 set xlabel "Wavelength / \AA"
-set xrange [{2}:{3}]
+set xrange [{x_min}:{x_max}]
 set ylabel "Continuum-normalised flux"
 set yrange [0.8:1.02]
 
-set label 1 "{4}" at page 0.5, page {5}
+plot {plot_items}
 
-set output "/tmp/foo.png"
-set nodisplay
+""".format(x_min=args.wavelength_min, x_max=args.wavelength_max,
+           plot_items=", ".join(["""
+"{filename}.dat" using 1:3 index {index} title "{data_set} {label_latex}={label_value:.2f}" with lines
+    """.format(filename=args.output_stub,
+               index=i + data_set_count * len(stars),
+               data_set=data_set,
+               label_latex=args.label_axis_latex,
+               label_value=j["value"]).strip()
+                                 for i, j in enumerate(stars)]))
+                      )
 
-plot """.format(width, aspect,
-                args.wavelength_min, args.wavelength_max,
-                description, width * aspect - 1.1)
-
-plot_items = []
-for i, j in enumerate(stars):
-    plot_items.append(""" "{0}.dat" using 1:3 index {1} title "Synthesised {2}={3:.2f}" with lines """. \
-                      format(args.output_stub, i, args.label_axis_latex, j["value"]))
-
-pyxplot_input += ", ".join(plot_items)
-
-pyxplot_input += """
-
-set term eps ; set output '{0}_1.eps' ; set display ; refresh
-set term png ; set output '{0}_1.png' ; set display ; refresh
-set term pdf ; set output '{0}_1.pdf' ; set display ; refresh
-
-plot """.format(args.output_stub)
-
-eps_list.append("{0}_1.eps".format(args.output_stub))
-
-plot_items = []
-for i, j in enumerate(cannon_predictions):
-    plot_items.append(""" "{0}.dat" using 1:3 index {1} title "Cannon model {2}={3:.2f}" with lines """. \
-                      format(args.output_stub, i + len(stars), args.label_axis_latex, j["value"]))
-
-pyxplot_input += ", ".join(plot_items)
-
-pyxplot_input += """
-
-set term eps ; set output '{0}_2.eps' ; set display ; refresh
-set term png ; set output '{0}_2.png' ; set display ; refresh
-set term pdf ; set output '{0}_2.pdf' ; set display ; refresh
-
-""".format(args.output_stub)
-
-eps_list.append("{0}_2.eps".format(args.output_stub))
-
-# Run pyxplot
-p = os.popen("pyxplot", "w")
-p.write(pyxplot_input)
-p.close()
-
-# Make multiplot
-make_multiplot(eps_files=eps_list,
-               output_filename="{0}_multiplot".format(args.output_stub),
-               aspect=4.8 / 8
-               )
+# Clean up plotter
+del plotter

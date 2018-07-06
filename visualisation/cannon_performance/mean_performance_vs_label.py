@@ -23,6 +23,7 @@ import json
 from lib.multiplotter import make_multiplot
 from lib.label_information import LabelInformation
 from lib.abscissa_information import AbcissaInformation
+from lib import plot_settings
 
 
 class PlotLabelPrecision:
@@ -859,8 +860,6 @@ if __name__ == "__main__":
     parser.add_argument('--abscissa', default="SNR/A", dest='abscissa_label',
                         help="Name of the quantity to plot on the horizontal axis. Must be a keyword of the "
                              "dictionary abscissa_labels.")
-    parser.add_argument('--plot-width', default="18", dest='width',
-                        help="Width of each plot.")
     parser.add_argument('--dataset-label', action="append", dest='data_set_label',
                         help="Title for a set of predictions output from the Cannon, e.g. LRS or HRS.")
     parser.add_argument('--dataset-filter', action="append", dest='data_set_filter',
@@ -869,7 +868,7 @@ if __name__ == "__main__":
                         help="A list of colours with which to plot each run of the Cannon.")
     parser.add_argument('--dataset-linetype', action="append", dest='data_set_linetype',
                         help="A list of Pyxplot line types with which to plot Cannon runs.")
-    parser.add_argument('--output-file', default="/tmp/cannon_performance_plot", dest='output_file',
+    parser.add_argument('--output', default="/tmp/cannon_performance_plot", dest='output_file',
                         help="Data file to write output to.")
     parser.add_argument('--use-reference-labels',
                         action='store_true',
@@ -890,15 +889,6 @@ if __name__ == "__main__":
                         dest="abundances_over_h",
                         help="Plot abundances over Fe.")
     parser.set_defaults(abundances_over_h=True)
-    parser.add_argument('--show-date',
-                        action='store_true',
-                        dest="date_stamp",
-                        help="Put a date stamp on the plot.")
-    parser.add_argument('--hide-date',
-                        action='store_false',
-                        dest="date_stamp",
-                        help="Don't put a date stamp on the plot.")
-    parser.set_defaults(date_stamp=True)
     args = parser.parse_args()
 
     # If titles, colours, etc, are not supplied for Cannon runs, we use the descriptions stored in the JSON files
@@ -951,10 +941,9 @@ if __name__ == "__main__":
 
     generate_set_of_plots(data_sets=cannon_outputs,
                           abundances_over_h=args.abundances_over_h,
-                          plot_width=float(args.width),
+                          plot_width=plot_settings.plot_width,
                           abscissa_label=args.abscissa_label,
                           compare_against_reference_labels=args.use_reference_labels,
                           output_figure_stem=args.output_file,
                           run_title="",  # "External" if args.use_reference_labels else "Internal"
-                          date_stamp=args.date_stamp
                           )

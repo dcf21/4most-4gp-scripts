@@ -19,7 +19,7 @@ import json
 import numpy as np
 from label_tabulator import tabulate_labels
 
-from lib.multiplotter import make_multiplot
+from lib.multiplotter import PyxplotDriver
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -32,7 +32,7 @@ parser.add_argument('--cannon-output',
                     default="",
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -57,8 +57,8 @@ snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
 
 # Fetch title for this Cannon run
 if not os.path.exists(args.cannon):
-        print "scatter_plot_arrows.py could not proceed: Cannon run <{}> not found".format(args.cannon)
-        sys.exit()
+    print "scatter_plot_arrows.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+    sys.exit()
 
 cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
@@ -69,52 +69,31 @@ raster_diff = np.diff(raster[raster > 6000])
 pixels_per_angstrom = 1.0 / raster_diff[0]
 
 # Create pyxplot script to produce this plot
-width = 25
-aspect = 1 / 1.618034  # Golden ratio
-pyxplot_input = """
+plotter = PyxplotDriver(multiplot_filename="{filename}_multiplot".format(filename=args.output_stub),
+                        multiplot_aspect=5.1 / 8)
 
-set width {}
-set size ratio {}
-set term dpi 300
+for snr in snr_list:
+    plotter.make_plot(output_filename=snr["filename"], caption=description, pyxplot_script="""
+    
 set key top left
 set linewidth 0.4
 
-set xlabel "{}"
-set xrange [{}]
-set ylabel "{}"
-set yrange [{}]
+set xlabel "{x_label}"
+set xrange [{x_range}]
+set ylabel "{y_label}"
+set yrange [{y_range}]
 
-set label 1 "{}" at page 0.5, page {}
+plot "{filename}" title "Cannon output -$>$ Synthesised values at SNR/\\AA={snr_per_a:.1f}." \
+     with arrows colour red using 3:4:1:2
 
-""".format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"],
-           args.label_axis_latex[1], label_list[1]["range"],
-           description, width * aspect - 1.1)
-
-eps_list = []
-for snr in snr_list:
-    pyxplot_input += """
-    
-set nodisplay
-set output "{0}.png"
-plot "{0}" title "Cannon output -$>$ Synthesised values at SNR/\\AA={1:.1f}." with arrows c red using 3:4:1:2
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-""".format(snr["filename"],
-           snr["snr"] * np.sqrt(pixels_per_angstrom)  # Convert SNR/pixel to SNR/A
+""".format(x_label=args.label_axis_latex[0],
+           y_label=args.label_axis_latex[1],
+           x_range=label_list[0]["range"],
+           y_range=label_list[1]["range"],
+           filename=snr["filename"],
+           snr_per_a=snr["snr"] * np.sqrt(pixels_per_angstrom)  # Convert SNR/pixel to SNR/A
            )
+                      )
 
-    eps_list.append("{0}.eps".format(snr["filename"]))
-
-# Run pyxplot
-p = os.popen("pyxplot", "w")
-p.write(pyxplot_input)
-p.close()
-
-# Make multiplot
-make_multiplot(eps_files=eps_list,
-               output_filename="{0}_multiplot".format(args.output_stub),
-               aspect=5.1 / 8
-               )
+# Clean up plotter
+del plotter

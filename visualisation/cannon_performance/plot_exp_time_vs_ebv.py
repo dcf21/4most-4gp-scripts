@@ -25,6 +25,7 @@ import numpy as np
 from operator import itemgetter
 
 from fourgp_speclib import SpectrumLibrarySqlite
+from lib.multiplotter import PyxplotDriver
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -42,9 +43,7 @@ parser.add_argument('--cannon-output',
                     help="Cannon output file we should analyse.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
-parser.add_argument('--plot-width', default="15", dest='width',
-                    help="Width of each plot.")
-parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -220,6 +219,9 @@ for star_index, star_name in enumerate(star_names):
                 break
             exposure[star_name][j][e_bv] = [exposure_time_needed, offset_vs_exposure, snr_needed]
 
+# Instantiate pyxplot
+plotter = PyxplotDriver()
+
 # Write exposure time values to data files and plot them
 for k, star_name in enumerate(star_names):
     # Write file listing E(B-V) and exposure time needed for each target
@@ -234,17 +236,10 @@ for k, star_name in enumerate(star_names):
             f.write("\n\n")
 
     # Create pyxplot script to produce this plot
-    width = float(args.width)
-    aspect = 1 / 1.618034  # Golden ratio
-    pyxplot_input = ""
-
-    pyxplot_input += """
+    # Plot exposure times in minutes
+    plotter.make_plot(output_filename=filename, caption=star_name, pyxplot_script="""
     
-set nodisplay
 set origin 0,0
-set width {0}
-set size ratio {1}
-set term dpi 400
 set fontsize 1.1
 set key below
 set keycol 3
@@ -256,35 +251,16 @@ set ylabel "Exposure time / min"
 set yrange [5:1200]
 set log y
 
-set label 1 texify("{2}") at page 0.5, page {3}
+plot {plot_items}
 
-""".format(width, aspect, star_name, width * aspect - 0.5)
-
-    datasets = []
-    for j, target in enumerate(args.targets):
-        # Plot exposure times in minutes
-        datasets.append(" \"{0}\" using $1:$2 index {1} title \"RMS error in {2}\" with lines ".
-                        format(filename, j, re.sub("<", " $<$ ", target)))
-
-    pyxplot_input += """
-
-plot {0}
-
-""".format(",".join(datasets))
-
-    pyxplot_input += """
-
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-""".format(filename)
-
-    # Run pyxplot
-    p = os.popen("pyxplot", "w")
-    p.write(pyxplot_input)
-    p.close()
-
+""".format(plot_items=",".join(["""
+"{filename}" using $1:$2 index {index} title "RMS error in {title}" with lines
+    """.format(filename=filename,
+               index=j,
+               title=re.sub("<", " $<$ ", target)).strip()
+                                for j, target in enumerate(args.targets)
+                                ]))
+                      )
 
 # Write label-offset vs SNR values to data files and plot them for diagnostics
 for k, star_name in enumerate(star_names):
@@ -302,20 +278,14 @@ for k, star_name in enumerate(star_names):
                 for j, target in enumerate(args.targets):
                     offset = exposure[star_name][j][e_bv][1][i][2]
                     f.write("{:16s} ".format(str(offset)))
-                f.write("  # Average of {:d} points; exposure time %6.1f min\n".
+                f.write("  # Average of {:d} points; exposure time {:6.1f} min\n".
                         format(exposure[star_name][0][e_bv][1][i][3], exposure[star_name][0][e_bv][1][i][0]))
 
         # Create pyxplot script to produce this plot
-        width = float(args.width)
-        aspect = 1 / 1.618034  # Golden ratio
-        pyxplot_input = ""
-
-        pyxplot_input += """
+        # Plot exposure times in minutes
+        plotter.make_plot(output_filename=filename2, caption=star_name, pyxplot_script="""
     
-set nodisplay
 set origin 0,0
-set width {0}
-set size ratio {1}
 set fontsize 1.1
 set key below
 set keycol 3
@@ -326,31 +296,16 @@ set log x
 set ylabel "RMS offset in abundance"
 set yrange [0:0.5]
 
-set label 1 texify("{2}") at page 0.5, page {3}
+plot {plot_items}
 
-""".format(width, aspect, star_name, width * aspect - 0.5)
+""".format(plot_items=",".join(["""
+"{filename}" using 1:{column:d} title "{title}" with lines
+    """.format(filename=filename2,
+               column=2 + j,
+               title=re.sub("<", " $<$ ", target)).strip()
+                                for j, target in enumerate(args.targets)
+                                ]))
+                          )
 
-        datasets = []
-        for j, target in enumerate(args.targets):
-            # Plot exposure times in minutes
-            datasets.append(" \"{0}\" using 1:{1:d} title \"{2}\" with lines ".
-                            format(filename2, 2+j, re.sub("<", " $<$ ", target)))
-
-        pyxplot_input += """
-
-plot {0}
-
-""".format(",".join(datasets))
-
-        pyxplot_input += """
-
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-""".format(filename2)
-
-        # Run pyxplot
-        p = os.popen("pyxplot", "w")
-        p.write(pyxplot_input)
-        p.close()
+# Clean up plotter
+del plotter

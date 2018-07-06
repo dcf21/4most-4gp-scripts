@@ -11,7 +11,6 @@ Take an output file from the Cannon, and plot the Cannon's predictive model of h
 varies with one of the variables.
 """
 
-import os
 from os import path as os_path
 import argparse
 import re
@@ -22,11 +21,12 @@ from operator import itemgetter
 
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
+from lib.multiplotter import PyxplotDriver
 
 
 def dict_merge(x, y):
-    z = x.copy()   # start with x's keys and values
-    z.update(y)    # modifies z with y's keys and values & returns None
+    z = x.copy()  # start with x's keys and values
+    z.update(y)  # modifies z with y's keys and values & returns None
     return z
 
 
@@ -49,7 +49,7 @@ parser.add_argument('--cannon-output',
                     required=True,
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output-stub', default="/tmp/cannon_model_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/cannon_model_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -185,53 +185,50 @@ with open("{}.dat".format(args.output_stub), "w") as f:
     for datum in cannon_predictions:
         f.write("{} {} {}\n".format(datum["value"], datum["flux"], datum["flux_error"]))
 
-# Create pyxplot script to produce this plot
-width = 25
-aspect = 1 / 1.618034  # Golden ratio
-pyxplot_input = """
-
-set width {0}
-set size ratio {1}
-set term dpi 400
-set key below
-set linewidth 0.4
-
-set xlabel "{2}"
-set xrange [{3}:{4}]
-set ylabel "Continuum-normalised flux at {5:.1f} A"
-set yrange [0.8:1.02]
-
-set label 1 "{6}" at page 0.5, page {7}
-    
-set nodisplay
-set output "{8}.png"
-plot """.format(width, aspect,
-                args.label_axis_latex, value_min, value_max,
-                args.wavelength,
-                description, width * aspect - 1.1,
-                args.output_stub)
-
+# Make list of items we're going to plot
 plot_items = []
 index_counter = 0
 for snr in sorted(stars.keys()):
-    plot_items.append(""" "{0}.dat" index {1} title "4FS output at SNR/pixel {2:.1f}" with p pt 1 """.
-                      format(args.output_stub, index_counter, snr))
+    plot_items.append("""
+"{0}.dat" index {1} title "4FS output at SNR/pixel {2:.1f}" with p pt 1 """.
+                      format(args.output_stub, index_counter, snr).strip())
     index_counter += 1
 
-plot_items.append(""" "{0}.dat" index {1} title "Cannon internal model" with line color red lw 2 """.
-                  format(args.output_stub, index_counter))
+plot_items.append("""
+"{0}.dat" index {1} title "Cannon internal model" with line color red lw 2 """.
+                  format(args.output_stub, index_counter).strip())
 
-pyxplot_input += ", ".join(plot_items)
+# Create pyxplot script to produce this plot
+plotter = PyxplotDriver()
 
-pyxplot_input += """
+plotter.make_plot(output_filename=args.output_stub, caption=description, pyxplot_script="""
 
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
+set key below
+set linewidth 0.4
 
-""".format(args.output_stub)
+set xlabel "{x_label}"
+set xrange [{x_min}:{x_max}]
+set ylabel "Continuum-normalised flux at {wavelength:.1f} A"
+set yrange [0.8:1.02]
 
-# Run pyxplot
-p = os.popen("pyxplot", "w")
-p.write(pyxplot_input)
-p.close()
+plot {plot_items}
+
+""".format(x_label=args.label_axis_latex, x_min=value_min, x_max=value_max,
+           wavelength=args.wavelength,
+           plot_items=", ".join([
+                                    """
+"{filename}.dat" index {index} title "4FS output at SNR/pixel {snr:.1f}" with p pt 1
+    """.format(filename=args.output_stub,
+               index=index_counter,
+               snr=snr).strip()
+                                    for index_counter, snr in enumerate(sorted(stars.keys()))
+                                ] + [
+                                    """
+"{filename}.dat" index {index} title "Cannon internal model" with line color red lw 2
+    """.format(filename=args.output_stub,
+               index=len(stars)).strip()
+                                ]))
+                  )
+
+# Clean up plotter
+del plotter

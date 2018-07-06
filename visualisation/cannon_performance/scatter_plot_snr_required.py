@@ -20,13 +20,15 @@ import json
 from math import sqrt
 import numpy as np
 
+from lib.multiplotter import PyxplotDriver
+
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--label', required=True, action="append", dest='labels',
                     help="Labels we should plot on the two axes of the scatter plot.")
 parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
                     help="Titles we should put on the two axes of the scatter plot.")
-parser.add_argument('--colour-by-label', required=True, dest='colour_label',
+parser.add_argument('--colour-by-label', required=True, dest='colour_by_label',
                     help="Label we should use to colour code points by the SNR needed to achieve some "
                          "nominal accuracy in that label.")
 parser.add_argument('--target-accuracy', required=True, dest='target_accuracy', type=float,
@@ -40,7 +42,7 @@ parser.add_argument('--cannon-output',
                     default="",
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/cannon_estimates_", dest='output_stub',
                     help="Data file to write output to.")
 parser.add_argument('--accuracy-unit', default="apples", dest='accuracy_unit',
                     help="Unit to put after target accuracy we're aiming to achieve in label")
@@ -76,9 +78,9 @@ for label in label_names:
             format(label, args.cannon)
         sys.exit()
 
-if args.colour_label not in cannon_output["labels"]:
+if args.colour_by_label not in cannon_output["labels"]:
         print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".\
-            format(args.colour_label, args.cannon)
+            format(args.colour_by_label, args.cannon)
         sys.exit()
 
 # Create a sorted list of all the SNR values we've got
@@ -104,7 +106,8 @@ for star in cannon_output['stars']:
     if object_name not in offsets:
         offsets[object_name] = {}
     try:
-        offsets[object_name][star['SNR']] = abs(star[args.colour_label] - star["target_{}".format(args.colour_label)])
+        offsets[object_name][star['SNR']] = abs(star[args.colour_by_label] -
+                                                star["target_{}".format(args.colour_by_label)])
         if object_name not in label_values:
             label_values[object_name] = [star["target_{}".format(item)] for item in label_names]
     except KeyError:
