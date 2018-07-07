@@ -211,7 +211,8 @@ plot {plot_items}
                index=i + data_set_count * len(stars),
                data_set=data_set,
                label_latex=args.label_axis_latex,
-               label_value=j["value"]).strip()
+               label_value=j["value"]
+               ).strip()
                                  for i, j in enumerate(stars)]))
                       )
 

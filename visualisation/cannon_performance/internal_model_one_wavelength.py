@@ -220,13 +220,15 @@ plot {plot_items}
 "{filename}.dat" index {index} title "4FS output at SNR/pixel {snr:.1f}" with p pt 1
     """.format(filename=args.output_stub,
                index=index_counter,
-               snr=snr).strip()
+               snr=snr
+               ).strip()
                                     for index_counter, snr in enumerate(sorted(stars.keys()))
                                 ] + [
                                     """
 "{filename}.dat" index {index} title "Cannon internal model" with line color red lw 2
     """.format(filename=args.output_stub,
-               index=len(stars)).strip()
+               index=len(stars)
+               ).strip()
                                 ]))
                   )
 

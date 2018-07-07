@@ -19,20 +19,15 @@ import json
 import numpy as np
 from label_tabulator import tabulate_labels
 
+from lib.label_information import LabelInformation
 from lib.multiplotter import PyxplotDriver
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--label', required=True, action="append", dest='labels',
                     help="Labels we should plot on the two axes of the scatter plot.")
-parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
-                    help="Titles we should put on the two axes of the scatter plot.")
 parser.add_argument('--colour-by-label', required=True, dest='colour_by_label',
                     help="Label we should use to colour code points by the Cannon's offset from library values.")
-parser.add_argument('--colour-range-min', required=True, dest='colour_range_min', type=float,
-                    help="The range of parameter values to use in colouring points.")
-parser.add_argument('--colour-range-max', required=True, dest='colour_range_max', type=float,
-                    help="The range of parameter values to use in colouring points.")
 parser.add_argument('--cannon-output',
                     required=True,
                     default="",
@@ -44,19 +39,22 @@ args = parser.parse_args()
 
 # Check that we have one label to plot on each axis label, and a title to show on each axis
 assert len(args.labels) == 2, "A scatter plot needs two labels to plot -- one on each axis."
-assert len(args.label_axis_latex) == 3, "A coloured scatter plot needs label names for two axes, plus the colour scale."
+
+# Label information
+label_information = LabelInformation().label_info
 
 # Labels are supplied with ranges listed in {}. We extract the names to pass to label_tabulator.
 label_list = []
-label_names = []
 for item in args.labels + [args.colour_by_label]:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
     label_list.append({
         "name": test.group(1),
-        "range": test.group(2)
+        "latex": label_information[test.group(1)]["latex"],
+        "range": test.group(2),
+        "min": test.group(2).split(":")[0],
+        "max": test.group(2).split(":")[1],
     })
-    label_names.append(test.group(1))
 
 # Fetch title for this Cannon run
 if not os.path.exists(args.cannon):
@@ -67,13 +65,14 @@ cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
 
 # Check that labels exist
-for label in label_names:
-    if label not in cannon_output["labels"]:
-        print "scatter_plot_coloured.py could not proceed: Label <{}> not present in <{}>".format(label, args.cannon)
+for label in label_list:
+    if label["name"] not in cannon_output["labels"]:
+        print "scatter_plot_coloured.py could not proceed: Label <{}> not present in <{}>".format(label["name"],
+                                                                                                  args.cannon)
         sys.exit()
 
 # Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
+snr_list = tabulate_labels(args.output_stub, [i['name'] for i in label_names], args.cannon)
 
 # Convert SNR/pixel to SNR/A at 6000A
 raster = np.array(cannon_output['wavelength_raster'])
@@ -125,12 +124,12 @@ set sample grid 2x200
 set origin {colour_bar_x_pos}, 0
 plot y with colourmap
 
-""".format(colour_range_min=args.colour_range_min,
-           colour_range_max=args.colour_range_max,
-           x_label=args.label_axis_latex[0], x_range=label_list[0]["range"],
-           y_label=args.label_axis_latex[1], y_range=label_list[1]["range"],
+""".format(colour_range_min=label_list[2]["min"],
+           colour_range_max=label_list[2]["max"],
+           x_label=label_list[0]["latex"], x_range=label_list[0]["range"],
+           y_label=label_list[1]["latex"], y_range=label_list[1]["range"],
            data_filename=snr["filename"],
-           label_latex=args.label_axis_latex[2],
+           label_latex=label_list[2]["latex"],
            snr_pixel=snr["snr"],
            colour_bar_width=plotter.width * plotter.aspect * 0.05,
            colour_bar_x_pos=plotter.width + 1

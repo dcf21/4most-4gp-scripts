@@ -136,6 +136,7 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
     return snr_list_with_filenames
 
 
+# If we're invoked as a script, read input parameters from the command line
 if __name__ == "__main__":
     # Read input parameters
     parser = argparse.ArgumentParser(description=__doc__)

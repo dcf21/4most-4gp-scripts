@@ -14,7 +14,8 @@ import os
 import re
 import argparse
 
-from lib.multiplotter import make_multiplot
+from lib.multiplotter import PyxplotDriver
+from label_tabulator import tabulate_labels
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -46,7 +47,7 @@ if (args.library_titles is None) or (len(args.library_titles) == 0):
 
 # If no colours are supplied for libraries, default to Pyxplot's sequence of colours
 if (args.library_colours is None) or (len(args.library_colours) == 0):
-    args.library_colours = [str(i+1) for i in range(len(args.libraries))]
+    args.library_colours = [str(i + 1) for i in range(len(args.libraries))]
 
 # If no using items specified, assume a sensible default
 if (args.using is None) or (len(args.using) == 0):
@@ -64,7 +65,6 @@ assert len(args.library_colours) == len(args.libraries), "Need a colour for each
 assert len(args.labels) >= 1, "A histogram needs at least one label to plot."
 
 label_list = []
-label_command_line = ""
 for item in args.labels:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name[:2]>, with range to plot in []."
@@ -72,70 +72,57 @@ for item in args.labels:
         "name": test.group(1),
         "range": test.group(2)
     })
-    label_command_line += " --label \"{}\" ".format(test.group(1))
 
 for index, library in enumerate(args.libraries):
-    os.system("python label_tabulator.py --library {0} {1} --output-file /tmp/tg{2:06d}.dat".
-              format(library, label_command_line, index))
+    tabulate_labels(library_list=[library],
+                    label_list=[item['name'] for item in label_list],
+                    output_file="{output}_{index}.dat".format(output=args.output, index=index)
+                    )
 
 # Create pyxplot script to produce each histogram in turn
-eps_list = []
-pyxplot_input = ""
+plotter = PyxplotDriver(multiplot_filename="{0}_multiplot".format(args.output),
+                        multiplot_aspect=5.5 / 8)
+
 for counter, using_expression in enumerate(args.using):
-    width = 13
-    aspect = 1 / 1.618034  # Golden ratio
-
-    stub = "{0}_{1}".format(args.output, counter)
-
-    pyxplot_input += """
+    plotter.make_plot(output_filename="{output}_{counter}".format(output=args.output, counter=counter),
+                      pyxplot_script="""
     
-set nodisplay
-set width {0}
-set size ratio {1}
-set term dpi 400
 set nokey # key top right
 
-set xlabel "{2}"
-set xrange [{3}]
-set ylabel "Stars per unit {2}"
+set xlabel "{x_label}"
+set xrange [{x_range}]
+set ylabel "Stars per unit {x_label}"
 
-set binwidth {4}
-    
-    """.format(width, aspect,
-               args.label_axis_latex[counter], label_list[counter]["range"],
-               args.binwidth[counter]
+set binwidth {bin_width}
+
+{make_histograms}
+
+plot {plot_items}
+
+    """.format(x_label=args.label_axis_latex[counter],
+               x_range=label_list[counter]["range"],
+               bin_width=args.binwidth[counter],
+               make_histograms="\n".join(["""
+histogram h{index:06d}_{counter:03d}() "{output}_{index}.dat" using {using}
+               """.format(index=index,
+                          counter=counter,
+                          output=args.output,
+                          using=using_expression)
+                                          for index, library in enumerate(args.libraries)
+                                          ]),
+               plot_items=", ".join(["""
+h{index:06d}_{counter:03d}(x) title "{title}" with histeps colour {colour}
+               """.format(index=index,
+                          counter=counter,
+                          title=title,
+                          colour=colour
+                          ).strip()
+                                     for index, library, title, colour in enumerate(zip(args.libraries,
+                                                                                        args.library_titles,
+                                                                                        args.library_colours))
+                                     ])
                )
+                      )
 
-    for index in range(len(args.libraries)):
-        pyxplot_input += """
-        
-histogram h{0:06d}_{1:03d}() "/tmp/tg{0:06d}.dat" using {2}
-    
-    """.format(index, counter, using_expression)
-
-    plot_items = []
-    for index in range(len(args.libraries)):
-        plot_items.append(""" h{0:06d}_{1:03d}(x) title "{2}" with histeps colour {3} """.
-                          format(index, counter, args.library_titles[index], args.library_colours[index]))
-    pyxplot_input += "plot " + ", ".join(plot_items)
-
-    pyxplot_input += """
-    
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
-    
-    """.format(stub)
-
-    eps_list.append("{0}.eps".format(stub))
-
-# Run pyxplot
-p = os.popen("pyxplot", "w")
-p.write(pyxplot_input)
-p.close()
-
-# Make multiplot
-make_multiplot(eps_files=eps_list,
-               output_filename="{0}_multiplot".format(args.output),
-               aspect=5.5 / 8
-               )
+# Clean up plotter
+del plotter

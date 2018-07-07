@@ -14,6 +14,9 @@ import os
 import re
 import argparse
 
+from lib.multiplotter import PyxplotDriver
+from label_tabulator import tabulate_labels
+
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--library', required=True, action="append", dest='libraries',
@@ -42,7 +45,7 @@ if (args.library_titles is None) or (len(args.library_titles) == 0):
 
 # If no colours are supplied for libraries, default to Pyxplot's sequence of colours
 if (args.library_colours is None) or (len(args.library_colours) == 0):
-    args.library_colours = [str(i+1) for i in range(len(args.libraries))]
+    args.library_colours = [str(i + 1) for i in range(len(args.libraries))]
 
 # Check that we have a title for each spectrum library we're plotting
 assert len(args.library_titles) == len(args.libraries), "Need a title for each library we are plotting"
@@ -52,7 +55,6 @@ assert len(args.library_colours) == len(args.libraries), "Need a colour for each
 assert len(args.labels) >= 2, "A scatter plot needs at least two labels to plot -- one on each axis."
 
 label_list = []
-label_command_line = ""
 for item in args.labels:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
@@ -60,49 +62,44 @@ for item in args.labels:
         "name": test.group(1),
         "range": test.group(2)
     })
-    label_command_line += " --label \"{}\" ".format(test.group(1))
 
 for index, library in enumerate(args.libraries):
-    os.system("python label_tabulator.py --library {0} {1} --output-file /tmp/tg{2:06d}.dat".
-              format(library, label_command_line, index))
+    tabulate_labels(library_list=[library],
+                    label_list=[item['name'] for item in label_list],
+                    output_file="{output}_{index}.dat".format(output=args.output, index=index)
+                    )
 
 # Create pyxplot script to produce this plot
-width = 16
-aspect = 1 / 1.618034  # Golden ratio
+plotter = PyxplotDriver()
 
-pyxplot_input = """
-
-set nodisplay
-set width {0}
-set size ratio {1}
-set term dpi 400
+plotter.make_plot(output_filename=args.output,
+                  pyxplot_script="""
+                  
 set key top left
 
-set xlabel "{2}"
-set xrange [{3}]
-set ylabel "{4}"
-set yrange [{5}]
+set xlabel "{x_label}"
+set xrange [{x_range}]
+set ylabel "{y_label}"
+set yrange [{y_range}]
 
-""".format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"],
-           args.label_axis_latex[1], label_list[1]["range"]
-           )
+plot {plot_items}
+                  
+                  """.format(x_label=args.label_axis_latex[0], x_range=label_list[0]["range"],
+                             y_label=args.label_axis_latex[1], y_range=label_list[1]["range"],
+                             plot_items=", ".join(["""
+"{output}_{index}.dat" title "{title}" using {using} with dots colour {colour} ps 8
+                             """.format(output=args.output,
+                                        index=index,
+                                        using=args.using,
+                                        title=title,
+                                        colour=colour
+                                        ).strip()
+                                                   for index, title, colour in enumerate(zip(args.libraries,
+                                                                                             args.library_titles,
+                                                                                             args.library_colours))
+                                                   ])
+                             )
+                  )
 
-plot_items = []
-for index in range(len(args.libraries)):
-    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour {} ps 8 """.
-                      format(index, args.library_titles[index], args.using, args.library_colours[index]))
-pyxplot_input += "plot " + ", ".join(plot_items)
-
-pyxplot_input += """
-
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-""".format(args.output)
-
-# Run pyxplot
-p = os.popen("pyxplot", "w")
-p.write(pyxplot_input)
-p.close()
+# Clean up plotter
+del plotter

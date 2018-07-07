@@ -11,7 +11,6 @@ This script looks in the directory <4most-4gp-scripts/output_data/cannon> to see
 Cannon and plots up the results automatically.
 """
 
-import os
 import sys
 import logging
 import re
@@ -21,6 +20,7 @@ from os import path as os_path
 
 from lib import plot_settings
 from lib.label_information import LabelInformation
+from lib.batch_processor import BatchProcessor
 
 # Create logger
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
@@ -32,57 +32,55 @@ our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "../../output_data/cannon")
 
 # Path to python binary
-python_path = sys.executable
+batch.python = sys.executable
 
-# Output directory
-output_path = os_path.join(our_path, "../../output_plots/cannon_performance")
+# Create a long list of all the shell commands we want to run
+batch = BatchProcessor(logger=logger,
+                       output_path=os_path.join(our_path, "../../output_plots/cannon_performance")
+                       )
 
 # We run most jobs for both 4MOST LRS and HRS
 modes_4most = ["hrs", "lrs"]
-
-# Create a long list of all the shell commands we want to run
-jobs = []
 
 # comparison_censoring_schemes_*
 # Create plots of the relative performance of the 4 censoring schemes, trained and tested on UVES or GALAH
 for mode in modes_4most:
     for sample in ["ahm2017_perturbed", "galah"]:
-        jobs.append({
-            "command": """"
+        batch.register_job(command="""
 {python} mean_performance_vs_label.py \
   --cannon-output "{data_path}/cannon_{sample}_{mode}_10label.json" --dataset-label "No censoring" --dataset-colour "green" \
   --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_10label.json" --dataset-label "Censoring scheme 1" --dataset-colour "blue" \
   --cannon-output "{data_path}/cannon_{sample}_censored2_{mode}_10label.json" --dataset-label "Censoring scheme 2" --dataset-colour "red" \
   --cannon-output "{data_path}/cannon_{sample}_censored3_{mode}_10label.json" --dataset-label "Censoring scheme 3" --dataset-colour "purple"
-""".format(python=python_path, mode=mode, sample=sample, data_path=workspace),
-            "output": """
+""".format(python=batch.python, mode=mode, sample=sample, data_path=workspace),
+
+                           output="""
 {plots_path}/comparison_censoring_schemes_{sample}_{mode}
 """.format(mode=mode, sample=sample, plots_path="performance_vs_label")
-        })
+                           )
 
 # comparison_low_z_*
 # Create a plot of the performance of the Cannon, when trained and tested on the [Fe/H] < -1 and [Fe/H] > 1 regimes
 # separately
 for mode in modes_4most:
     for sample in ["ahm2017_perturbed", "galah"]:
-        jobs.append({
-            "command": """
+        batch.register_job(command="""
 {python} mean_performance_vs_label.py \
   --cannon-output "{data_path}/cannon_{sample}_fehcut2_{mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained \$z<-1\$ only" --dataset-colour "green" \
   --cannon-output "{data_path}/cannon_{sample}_{mode}_10label.json" --dataset-filter "[Fe/H]<-1" --dataset-label "Trained on full sample" --dataset-colour "red"
-""".format(python=python_path, mode=mode, sample=sample, data_path=workspace),
-            "output": """
+""".format(python=batch.python, mode=mode, sample=sample, data_path=workspace),
+
+                           output="""
 {plots_path}/comparison_low_z_{sample}_{mode}
 """.format(mode=mode, sample=sample, plots_path="performance_vs_label")
-        })
+                           )
 
 # comparisonA -- Plot the performance of the Cannon for different types of stars -- giants and dwarfs, metal rich and
 # metal poor
 for mode in modes_4most:
     for sample in ["ahm2017_perturbed", "galah"]:
         for divisor in ["h", "fe"]:
-            jobs.append({
-                "command": """
+            batch.register_job(command="""
 {python} mean_performance_vs_label.py \
   --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>0;[Fe/H]<1" --dataset-label "Giants; [Fe/H]\$>0\$" --dataset-colour "purple" --dataset-linetype 1 \
   --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>0;[Fe/H]<1" --dataset-label "Dwarfs; [Fe/H]\$>0\$" --dataset-colour "magenta" --dataset-linetype 1 \
@@ -93,45 +91,32 @@ for mode in modes_4most:
   --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_10label.json" --dataset-filter "logg<3.25;[Fe/H]>-2;[Fe/H]<-1" --dataset-label "Giants; [Fe/H]$<-1$" --dataset-colour "green" --dataset-linetype 1 \
   --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_10label.json" --dataset-filter "logg>3.25;[Fe/H]>-2;[Fe/H]<-1" --dataset-label "Dwarfs; [Fe/H]$<-1$" --dataset-colour "brown" --dataset-linetype 1 \
   --abundances-over-{divisor}
-""".format(python=python_path, mode=mode, sample=sample, divisor=divisor, data_path=workspace),
-                "output": """
+""".format(python=batch.python, mode=mode, sample=sample, divisor=divisor, data_path=workspace),
+
+                               output="""
 {plots_path}/comparisonA_{sample}_{mode}_{divisor}
 """.format(mode=mode, sample=sample, divisor=divisor, plots_path="performance_vs_label")
-            })
+                               )
 
 # comparisonB -- Plot the performance of the Cannon when fitting 3 or 10 parameters
 for mode in modes_4most:
     for sample in ["ahm2017_perturbed", "galah"]:
         for divisor in ["h", "fe"]:
-            jobs.append({
-                "command": """
+            for censoring in ["", "_censored"]:
+                batch.register_job(command="""
 {python} mean_performance_vs_label.py \
-  --cannon-output "{data_path}/cannon_{sample}_{mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_{mode}_4label.json" --dataset-label "4 parameter; uncensored" --dataset-colour "blue" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_{mode}_5label.json" --dataset-label "5 parameter; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_{mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "red" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_{mode}_12label.json" --dataset-label "12 parameters; uncensored" --dataset-colour "purple" --dataset-linetype 1 \
+  --cannon-output "{data_path}/cannon_{sample}{censoring}_{mode}_3label.json" --dataset-label "3 parameter; uncensored" --dataset-colour "green" --dataset-linetype 1 \
+  --cannon-output "{data_path}/cannon_{sample}{censoring}_{mode}_4label.json" --dataset-label "4 parameter; uncensored" --dataset-colour "blue" --dataset-linetype 1 \
+  --cannon-output "{data_path}/cannon_{sample}{censoring}_{mode}_5label.json" --dataset-label "5 parameter; uncensored" --dataset-colour "orange" --dataset-linetype 1 \
+  --cannon-output "{data_path}/cannon_{sample}{censoring}_{mode}_10label.json" --dataset-label "10 parameters; uncensored" --dataset-colour "red" --dataset-linetype 1 \
+  --cannon-output "{data_path}/cannon_{sample}{censoring}_{mode}_12label.json" --dataset-label "12 parameters; uncensored" --dataset-colour "purple" --dataset-linetype 1 \
   --abundances-over-{divisor}
-""".format(python=python_path, mode=mode, sample=sample, divisor=divisor, data_path=workspace),
-                "output": """
-{plots_path}/comparisonB_{sample}_{mode}_{divisor}
-""".format(mode=mode, sample=sample, divisor=divisor, plots_path="performance_vs_label")
-            })
+""".format(python=batch.python, mode=mode, sample=sample, divisor=divisor, data_path=workspace),
 
-            jobs.append({
-                "command": """
-{python} mean_performance_vs_label.py \
-  --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_3label.json" --dataset-label "3 parameter; censored" --dataset-colour "blue" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_4label.json" --dataset-label "4 parameter; censored" --dataset-colour "green" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_5label.json" --dataset-label "5 parameter; censored" --dataset-colour "orange" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_10label.json" --dataset-label "10 parameters; censored" --dataset-colour "red" --dataset-linetype 1 \
-  --cannon-output "{data_path}/cannon_{sample}_censored_{mode}_12label.json" --dataset-label "12 parameters; censored" --dataset-colour "purple" --dataset-linetype 1 \
-  --abundances-over-{divisor}
-""".format(python=python_path, mode=mode, sample=sample, divisor=divisor, data_path=workspace),
-                "output": """
-{plots_path}/comparisonB_{sample}_{mode}_censored_{divisor}
-""".format(mode=mode, sample=sample, divisor=divisor, plots_path="performance_vs_label")
-            })
+                                   output="""
+{plots_path}/comparisonB_{sample}{censoring}_{mode}_{divisor}
+""".format(mode=mode, sample=sample, divisor=divisor, censoring=censoring, plots_path="performance_vs_label")
+                                   )
 
 # Now plot performance vs SNR for every Cannon run we have
 cannon_runs = sorted(glob.glob(os_path.join(workspace, "*.json")))
@@ -145,25 +130,25 @@ for i, cannon_run_filename in enumerate(cannon_runs):
     cannon_run_name = test.group(1)
 
     # Produce a plot of precision vs SNR
-    jobs.append({
-        "command": """
+    batch.register_job(command="""
 {python} mean_performance_vs_label.py \
   --cannon-output "{cannon_run_filename}"
-""".format(python=python_path, cannon_run_filename=cannon_run_filename),
-        "output": """
+""".format(python=batch.python, cannon_run_filename=cannon_run_filename),
+
+                       output="""
 {plots_path}/{cannon_run_name}
 """.format(cannon_run_name=cannon_run_name, plots_path="performance_vs_label")
-    })
+                       )
 
     # Produce a scatter plot of the nominal uncertainties in the Cannon's label estimates
-    jobs.append({
-        "command": """
+    batch.register_job(command="""
 {python} scatter_plot_cannon_uncertainty.py --cannon-output "{cannon_run_filename}"
-""".format(python=python_path, cannon_run_filename=cannon_run_filename),
-        "output": """
+""".format(python=batch.python, cannon_run_filename=cannon_run_filename),
+
+                       output="""
 {plots_path}/{cannon_run_name}
 """.format(cannon_run_name=cannon_run_name, plots_path="uncertainties")
-    })
+                       )
 
     # Now produce scatter plots of the SNR required to achieve the target precision in each label for each star
     label_info = LabelInformation().label_info
@@ -179,8 +164,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
 
         # required_snrA
         # Scatter plots of required SNR in the Teff / log(g) plane
-        jobs.append({
-            "command": """
+        batch.register_job(command="""
 {python} scatter_plot_snr_required.py --label "Teff{{7000:3400}}" --label "logg{{5:0}}" \
   --label-axis-latex "Teff" --label-axis-latex "log(g)" \
   --label-axis-latex "{colour_by_label}" \
@@ -189,17 +173,17 @@ for i, cannon_run_filename in enumerate(cannon_runs):
   --colour-range-min 30 --colour-range-max 120 \
   --cannon-output "{cannon_run_filename}" \
   --accuracy-unit "{accuracy_unit}"
-""".format(python=python_path, cannon_run_filename=cannon_run_filename,
+""".format(python=batch.python, cannon_run_filename=cannon_run_filename,
            colour_by_label=colour_by_label, target_accuracy=target_accuracy, accuracy_unit=target_unit),
-            "output": """
+
+                           output="""
 {plots_path}/{cannon_run_name}/{path_safe_label}
 """.format(cannon_run_name=cannon_run_name, path_safe_label=path_safe_label, plots_path="required_snrA")
-        })
+                           )
 
         # required_snrB
         # Scatter plots of required SNR in the metallicity / log(g) plane
-        jobs.append({
-            "command": """
+        batch.register_job(command="""
 {python} scatter_plot_snr_required.py --label "[Fe/H]{{1:-3}}" --label "logg{{5:0}}" \
   --label-axis-latex "[Fe/H]" --label-axis-latex "log(g)" \
   --label-axis-latex "{colour_by_label}" \
@@ -208,17 +192,17 @@ for i, cannon_run_filename in enumerate(cannon_runs):
   --colour-range-min 30 --colour-range-max 120 \
   --cannon-output "{cannon_run_filename}" \
   --accuracy-unit "{accuracy_unit}"
-""".format(python=python_path, cannon_run_filename=cannon_run_filename,
+""".format(python=batch.python, cannon_run_filename=cannon_run_filename,
            colour_by_label=colour_by_label, target_accuracy=target_accuracy, accuracy_unit=target_unit),
-            "output": """
+
+                           output="""
 {plots_path}/{cannon_run_name}/{path_safe_label}
 """.format(cannon_run_name=cannon_run_name, path_safe_label=path_safe_label, plots_path="required_snrB")
-        })
+                           )
 
         # label_offsets/A_*
         # Scatter plots of the absolute offsets in each label, in the Teff / log(g) plane
-        jobs.append({
-            "command": """
+        batch.register_job(command="""
 {python} scatter_plot_coloured.py --label "Teff{{7000:3400}}" --label "logg{{5:0}}" \
   --label-axis-latex "Teff" --label-axis-latex "log(g)" \
   --label-axis-latex "{colour_by_label}" \
@@ -226,18 +210,18 @@ for i, cannon_run_filename in enumerate(cannon_runs):
   --colour-range-min "{axis_min}" \
   --colour-range-max "{axis_max}" \
   --cannon-output "{cannon_run_filename}"
-""".format(python=python_path, cannon_run_filename=cannon_run_filename,
+""".format(python=batch.python, cannon_run_filename=cannon_run_filename,
            colour_by_label=colour_by_label, target_accuracy=target_accuracy, accuracy_unit=target_unit,
            axis_min=-3 * target_accuracy, axis_max=3 * target_accuracy),
-            "output": """
+
+                           output="""
 {plots_path}/{cannon_run_name}/A_{path_safe_label}
 """.format(cannon_run_name=cannon_run_name, path_safe_label=path_safe_label, plots_path="label_offsets")
-        })
+                           )
 
         # label_offsets/B_*
         # Scatter plots of the absolute offsets in each label, in the [Fe/H] / log(g) plane
-        jobs.append({
-            "command": """
+        batch.register_job(command="""
 {python} scatter_plot_coloured.py --label "[Fe/H]{{1:-3}}" --label "logg{{5:0}}" \
   --label-axis-latex "[Fe/H]" --label-axis-latex "log(g)" \
   --label-axis-latex "{colour_by_label}" \
@@ -245,25 +229,21 @@ for i, cannon_run_filename in enumerate(cannon_runs):
   --colour-range-min "{axis_min}" \
   --colour-range-max "{axis_max}" \
   --cannon-output "{cannon_run_filename}"
-""".format(python=python_path, cannon_run_filename=cannon_run_filename,
+""".format(python=batch.python, cannon_run_filename=cannon_run_filename,
            colour_by_label=colour_by_label, target_accuracy=target_accuracy, accuracy_unit=target_unit,
            axis_min=-3 * target_accuracy, axis_max=3 * target_accuracy),
-            "output": """
+
+                           output="""
 {plots_path}/{cannon_run_name}/B_{path_safe_label}
 """.format(cannon_run_name=cannon_run_name, path_safe_label=path_safe_label, plots_path="label_offsets")
-        })
-
-# Check which file products already exist so don't need to be remade
-jobs_which_need_running = [True] * len(jobs)
+                           )
 
 # If we are not overwriting plots we've already made, then check which files already exist
 if not plot_settings.overwrite_plots:
-    jobs_which_need_running = [not os_path.exists(os_path.join(output_path, item["output"])) for item in jobs]
+    batch.filter_jobs_where_products_already_exist()
 
 # Report how many plots need making afresh
-logger.info("Making {:d} plots.".format(sum(jobs_which_need_running)))
-
-logger.info("Not making {:d} plots, because they are already made.".
-            format(sum([not i for i in jobs_which_need_running])))
+batch.report_status()
 
 # Now run the shell commands
+batch.run_jobs()

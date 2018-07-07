@@ -74,7 +74,7 @@ plot {plot_items}
 
 """.format(label_name=label,
            label_range=1000 if label == "Teff" else 2,
-           plot_items=["""
+           plot_items=", ".join(["""
 "{filename}" using {column_x}:(${column_y_1}-${column_y_2}) title "SNR {snr:.1f}" \
              with dots colour col_scale({colour_value}) ps 5
            """.format(filename=snr["filename"],
@@ -84,8 +84,7 @@ plot {plot_items}
                       snr=snr["snr"] * np.sqrt(pixels_per_angstrom),
                       colour_value=index2 / max(float(len(snr_list) - 1), 1)).strip()
                        for index2, snr in enumerate(snr_list)
-                       ]
-           )
+                       ]))
                       )
 
 # Clean up plotter

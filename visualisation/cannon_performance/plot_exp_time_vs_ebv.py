@@ -302,7 +302,8 @@ plot {plot_items}
 "{filename}" using 1:{column:d} title "{title}" with lines
     """.format(filename=filename2,
                column=2 + j,
-               title=re.sub("<", " $<$ ", target)).strip()
+               title=re.sub("<", " $<$ ", target)
+               ).strip()
                                 for j, target in enumerate(args.targets)
                                 ]))
                           )

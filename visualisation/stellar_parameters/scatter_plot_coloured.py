@@ -14,6 +14,9 @@ import os
 import re
 import argparse
 
+from lib.multiplotter import PyxplotDriver
+from label_tabulator import tabulate_labels
+
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--library', required=True, action="append", dest='libraries',
@@ -54,7 +57,6 @@ assert len(args.labels) >= 3, \
     "A scatter plot needs at least three labels to plot -- one on each axis, plus one to colour."
 
 label_list = []
-label_command_line = ""
 for item in args.labels:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
@@ -62,126 +64,77 @@ for item in args.labels:
         "name": test.group(1),
         "range": test.group(2)
     })
-    label_command_line += " --label \"{}\" ".format(test.group(1))
 
 for index, library in enumerate(args.libraries):
-    os.system("python label_tabulator.py --library {0} {1} --output-file /tmp/tg{2:06d}.dat".
-              format(library, label_command_line, index))
-
-#
+    tabulate_labels(library_list=[library],
+                    label_list=[item['name'] for item in label_list],
+                    output_file="{output}_{index}.dat".format(output=args.output, index=index)
+                    )
 
 # Create pyxplot script to produce this plot
-width = 13
-aspect = 1 / 1.618034  # Golden ratio
-pyxplot_input = """
+plotter = PyxplotDriver()
 
-set nodisplay
-set width {0}
-set size ratio {1}
-set term dpi 400
+for mode in ["colour", "mono"]:
+    plotter.make_plot(output_filename="{}_{}".format(args.output, mono),
+                      caption=r"\bf {}".format(r" \newline ".join(args.library_titles)),
+                      pyxplot_script="""
+
 set nokey
-
 set multiplot
 
-set xlabel "{2}"
-set xrange [{3}]
-set ylabel "{4}"
-set yrange [{5}]
+set xlabel "{x_label}"
+set xrange [{x_range}]
+set ylabel "{y_label}"
+set yrange [{y_range}]
 
-set textvalign top
-# set label 1 "\\parbox{{{0}cm}}{{\\bf {6} }}" at page 0.5, page {7}
-
-""".format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
-           " \\newline ".join(args.library_titles),
-           width*aspect-0.3
-           )
-
-pyxplot_input += """
-
-col_scale_z(z) = min(max(  (z-({0})) / (({1})-({0}))  ,0),1)
-
+col_scale_z(z) = min(max(  (z-({colour_range_min})) / (({colour_range_max})-({colour_range_min}))  ,0),1)
 col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
 
-""".format(args.colour_range_min, args.colour_range_max)
+plot {plot_items}
 
-plot_items = []
-for index in range(len(args.libraries)):
-    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour col_scale({}) ps 8 """.
-                      format(index, args.library_titles[index], args.using, args.colour_expression))
-pyxplot_input += "plot " + ", ".join(plot_items)
+{make_colour_scale}
 
-pyxplot_input += """
-
+                      """.format(x_label=args.label_axis_latex[0], x_range=label_list[0]["range"],
+                                 y_label=args.label_axis_latex[1], y_range=label_list[1]["range"],
+                                 colour_range_min=args.colour_range_min, colour_range_max=args.colour_range_max,
+                                 plot_items=", ".join(["""
+"{output}_{index}.dat" title "{title}" using {using} with dots colour {colour} ps 8
+                                 """.format(output=args.output,
+                                            index=index,
+                                            title=title,
+                                            using=args.using,
+                                            colour=("col_scale({colour_exp})".format(colour_exp=args.colour_expression)
+                                                    if mode == "colour"
+                                                    else "")
+                                            ).strip()
+                                                       for index, library, title in enumerate(zip(args.libraries,
+                                                                                                  args.library_titles))
+                                                       ]),
+                                 make_colour_scale=("""
 set noxlabel
 unset label
 set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y right
-set ylabel "{0}"
-set yrange [{1}:{2}]
-set c1range [{1}:{2}] norenormalise
-set width {3}
+set ylabel "{label_latex}"
+set yrange [{colour_range_min}:{colour_range_max}]
+set c1range [{colour_range_min}:{colour_range_max}] norenormalise
+set width {colour_bar_width}
 set size ratio 1 / 0.05
 set colormap col_scale(c1)
 set nocolkey
 set sample grid 2x200
-set origin {4}, 0
+set origin {colour_bar_x_pos}, 0
 plot y with colourmap
+                                            """.format(label_latex=args.label_axis_latex[2],
+                                                       colour_range_min=args.colour_range_min,
+                                                       colour_range_max=args.colour_range_max,
+                                                       colour_bar_width=plotter.width * plotter.aspect * 0.05,
+                                                       colour_bar_x_pos=plotter.width + 1)
+                                                    if mode == "colour"
+                                                    else "")
+                                 )
+                      )
 
-""".format(args.label_axis_latex[2], args.colour_range_min, args.colour_range_max, width * aspect * 0.05, width + 1)
-
-pyxplot_input += """
-
-set term eps ; set output '{0}.eps' ; set display ; refresh
-set term png ; set output '{0}.png' ; set display ; refresh
-set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-""".format(args.output)
-
-# Create mono version
-
-pyxplot_input += """
-
-set nodisplay
-clear
-unset axis x y
-unset xtics
-unset mxtics
-set width {0}
-set size ratio {1}
-set nokey
-set multiplot
-
-set xlabel "{2}"
-set xrange [{3}]
-set ylabel "{4}"
-set yrange [{5}]
-
-set textvalign top
-set label 1 "\\parbox{{{0}cm}}{{\\bf {6} }}" at page 0.5, page {7}
-
-""".format(width, aspect,
-           args.label_axis_latex[0], label_list[0]["range"], args.label_axis_latex[1], label_list[1]["range"],
-           " \\newline ".join(args.library_titles),
-           width*aspect-0.3
-           )
-
-plot_items = []
-for index in range(len(args.libraries)):
-    plot_items.append(""" "/tmp/tg{:06d}.dat" title "{}" using {} with dots colour black ps 8 """.
-                      format(index, args.library_titles[index], args.using, args.colour_expression))
-pyxplot_input += "plot " + ", ".join(plot_items)
-
-pyxplot_input += """
-
-set term eps ; set output '{0}_mono.eps' ; set display ; refresh
-set term png ; set output '{0}_mono.png' ; set display ; refresh
-set term pdf ; set output '{0}_mono.pdf' ; set display ; refresh
-
-""".format(args.output)
-
-# Run pyxplot
-p = os.popen("pyxplot", "w")
-p.write(pyxplot_input)
-p.close()
+# Clean up plotter
+del plotter
