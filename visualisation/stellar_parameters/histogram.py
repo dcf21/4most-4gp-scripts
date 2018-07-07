@@ -31,7 +31,7 @@ parser.add_argument('--label-axis-latex', action="append", required=True, dest='
                     help="Labels we should output histogram for.")
 parser.add_argument('--using', action="append", dest='using',
                     help="Pyxplot using statement.")
-parser.add_argument('--binwidth', action="append", dest='binwidth',
+parser.add_argument('--bin-width', action="append", dest='bin_width',
                     help="Widths of bins to use in histogram.")
 parser.add_argument('--output', default="/tmp/label_values", dest='output',
                     help="Filename to write output plot to.")
@@ -54,8 +54,8 @@ if (args.using is None) or (len(args.using) == 0):
     args.using = ["$1"]
 
 # If no bin widths specified, make up some values
-if (args.binwidth is None) or (len(args.binwidth) == 0):
-    args.binwidth = [(25 if item.startswith("Teff") else 0.025) for item in args.labels]
+if (args.bin_width is None) or (len(args.bin_width) == 0):
+    args.bin_width = [(25 if item.startswith("Teff") else 0.025) for item in args.labels]
 
 # Check that we have a title for each spectrum library we're plotting
 assert len(args.library_titles) == len(args.libraries), "Need a title for each library we are plotting"
@@ -101,7 +101,7 @@ plot {plot_items}
 
     """.format(x_label=args.label_axis_latex[counter],
                x_range=label_list[counter]["range"],
-               bin_width=args.binwidth[counter],
+               bin_width=args.bin_width[counter],
                make_histograms="\n".join(["""
 histogram h{index:06d}_{counter:03d}() "{output}_{index}.dat" using {using}
                """.format(index=index,

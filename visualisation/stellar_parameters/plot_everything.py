@@ -38,32 +38,32 @@ for i, library in enumerate(libraries):
     library_name = os_path.split(library)[1]
 
     # Keep user updated on progress
-    logger.info("{:4d}/{:4d} Working on <{}>".format(i + 1, len(library) + 1, library_name))
+    logger.info("{:4d}/{:4d} Working on <{}>".format(i + 1, len(libraries), library_name))
 
     # Produce a scatter plot colour-coding the metallicity of the stars in a Kiel diagram
     batch.register_job(script="scatter_plot_coloured.py",
-                       output="{library}/hr_coloured",
+                       output="{library_name}/hr_coloured",
                        arguments={
-                           "library": library,
+                           "library": library_name,
                            "label": ["Teff{{7000:3400}}", "logg{{5:0}}", "[Fe/H]{{:}}"],
                            "label-axis-latex": ["Teff", "log(g)", "[Fe/H]"],
                            "colour-range-min": 0.5,
                            "colour-range-max": 2
                        },
-                       substitutions={"library": library}
+                       substitutions={"library_name": library_name}
                        )
 
     # Produce a histogram of each label in turn
     batch.register_job(script="histogram.py",
-                       output="{library}/histogram",
+                       output="{library_name}/histogram",
                        arguments={
-                           "library": library,
+                           "library": library_name,
                            "label": ["Teff{{7000:3400}}", "logg{{5:0}}", "[Fe/H]{{1:-3}}"],
                            "label-axis-latex": ["Teff", "log(g)", "[Fe/H]"],
                            "using": ["\$1", "\$2", "\$3"]
 
                        },
-                       substitutions={"library": library}
+                       substitutions={"library_name": library_name}
                        )
 
 # If we are not overwriting plots we've already made, then check which files already exist
@@ -72,6 +72,7 @@ if not plot_settings.overwrite_plots:
 
 # Report how many plots need making afresh
 batch.report_status()
+batch.list_shell_commands_to_file("plotting.log")
 
 # Now run the shell commands
 batch.run_jobs()

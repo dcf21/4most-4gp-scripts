@@ -11,7 +11,6 @@ This script looks in the directory <4most-4gp-scripts/output_data/cannon> to see
 Cannon and plots up the results automatically.
 """
 
-import sys
 import logging
 import re
 import glob
@@ -30,9 +29,6 @@ logger = logging.getLogger(__name__)
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "../../output_data/cannon")
-
-# Path to python binary
-batch.python = sys.executable
 
 # Create a long list of all the shell commands we want to run
 batch = BatchProcessor(logger=logger,
@@ -159,7 +155,7 @@ cannon_runs = sorted(glob.glob(os_path.join(workspace, "*.json")))
 for i, cannon_run_filename in enumerate(cannon_runs):
 
     # Keep user updated on progress
-    logger.info("{:4d}/{:4d} Working out jobs for <{}>".format(i + 1, len(cannon_runs) + 1, cannon_run_filename))
+    logger.info("{:4d}/{:4d} Working out jobs for <{}>".format(i + 1, len(cannon_runs), cannon_run_filename))
 
     # Extract name of Cannon run from filename
     test = re.match(os_path.join(workspace, r"(.*).json"), cannon_run_filename)
@@ -281,6 +277,7 @@ if not plot_settings.overwrite_plots:
 
 # Report how many plots need making afresh
 batch.report_status()
+batch.list_shell_commands_to_file("plotting.log")
 
 # Now run the shell commands
 batch.run_jobs()

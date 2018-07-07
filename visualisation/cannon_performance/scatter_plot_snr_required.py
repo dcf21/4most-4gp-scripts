@@ -17,11 +17,11 @@ import sys
 import argparse
 import re
 import json
-from math import sqrt
 import numpy as np
 
 from lib.label_information import LabelInformation
 from lib.multiplotter import PyxplotDriver
+from lib.snr_conversion import SNRConverter
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -33,9 +33,9 @@ parser.add_argument('--colour-by-label', required=True, dest='colour_by_label',
 parser.add_argument('--target-accuracy', required=True, dest='target_accuracy', type=float,
                     help="The target accuracy in the label we are colour-coding.")
 parser.add_argument('--colour-range-min', required=True, dest='colour_range_min', type=float,
-                    help="The range of SNR values to use in colouring points.")
+                    help="The range of SNR/pixel values to use in colouring points.")
 parser.add_argument('--colour-range-max', required=True, dest='colour_range_max', type=float,
-                    help="The range of SNR values to use in colouring points.")
+                    help="The range of SNR/pixel values to use in colouring points.")
 parser.add_argument('--cannon-output',
                     required=True,
                     default="",
@@ -77,7 +77,7 @@ cannon_output = json.loads(open(args.cannon).read())
 for label in label_list:
     if label["name"] not in cannon_output["labels"]:
         print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".format(label["name"],
-                                                                                                  args.cannon)
+                                                                                                      args.cannon)
         sys.exit()
 
 # Create a sorted list of all the SNR values we've got
@@ -89,9 +89,8 @@ star_names = [item['Starname'] for item in cannon_output['stars']]
 star_names = sorted(set(star_names))
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
-raster = np.array(cannon_output['wavelength_raster'])
-raster_diff = np.diff(raster[raster > 6000])
-pixels_per_angstrom = 1.0 / raster_diff[0]
+snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
+                             snr_at_wavelength=6100)
 
 # Loop over stars, calculating offsets for the label we're colour-coding
 offsets = {}  # offsets[star_name][SNR] = dictionary of label names and absolute offsets
@@ -126,7 +125,7 @@ for star_name in star_names:
                 weight_a = abs(new_offset - args.target_accuracy)
                 weight_b = abs(previous_offset - args.target_accuracy)
                 snr_required_per_pixel = (previous_snr * weight_a + snr * weight_b) / (weight_a + weight_b)
-                snr_required_per_a = snr_required_per_pixel * sqrt(pixels_per_angstrom)
+                snr_required_per_a = snr_converter.per_pixel(snr_required_per_pixel).per_a()
             previous_offset = new_offset
             previous_snr = snr
         output.append(label_values[star_name] + [snr_required_per_a])
@@ -148,8 +147,9 @@ plotter.make_plot(output_filename=filename,
                   caption=cannon_output['description'],
                   pyxplot_script="""
 
-col_scale_z(z) = min(max(  (z-({colour_range_min})) / (({colour_range_max})-({colour_range_min}))  ,0),1)
-col_scale(z) = (z>{colour_range_max}) ? colors.black : hsb(0.75 * col_scale_z(z), 1, 1)
+col_scale_z(z) = min(max(  (z-({colour_range_min_per_pixel})) / \
+                 (({colour_range_max_per_pixel})-({colour_range_min_per_pixel}))  ,0),1)
+col_scale(z) = (z>{colour_range_max_per_pixel}) ? colors.black : hsb(0.75 * col_scale_z(z), 1, 1)
     
 set fontsize 1.1
 set nokey
@@ -171,10 +171,10 @@ set xrange [0:1]
 set noxtics ; set nomxtics
 set axis y y2 right
 set ylabel "SNR/\AA (at 6000\AA) needed to achieve accuracy of {target_accuracy} {unit} in {colour_by_label}"
-set yrange [{colour_range_min}:{colour_range_max}]
+set yrange [{colour_range_min_per_pixel}:{colour_range_max_per_pixel}]
 set y2label "SNR/pixel (at 6000\AA)"
-set y2range [{colour_range_min}*{snr_per_pixel_to_a}:{colour_range_max}*{snr_per_pixel_to_a}]
-set c1range [{colour_range_min}:{colour_range_max}] norenormalise
+set y2range [{colour_range_min_per_a}:{colour_range_max_per_a}]
+set c1range [{colour_range_min_per_pixel}:{colour_range_max_per_pixel}] norenormalise
 set width {colour_bar_width}
 set size ratio 1 / 0.05
 set colormap col_scale(c1)
@@ -183,16 +183,17 @@ set sample grid 2x200
 set origin {colour_bar_x_pos}, 0
 plot y with colourmap
                   
-                  """.format(colour_range_min=args.colour_range_min,
-                             colour_range_max=args.colour_range_max,
+                  """.format(colour_range_min_per_pixel=args.colour_range_min,
+                             colour_range_max_per_pixel=args.colour_range_max,
+                             colour_range_min_per_a=snr_converter.per_pixel(args.colour_range_min).per_a(),
+                             colour_range_max_per_a=snr_converter.per_pixel(args.colour_range_max).per_a(),
                              x_label=label_list[0]["latex"], x_range=label_list[0]["range"],
                              y_label=label_list[1]["latex"], y_range=label_list[1]["range"],
                              data_filename=filename,
                              target_accuracy=args.target_accuracy, unit=args.accuracy_unit,
                              colour_by_label=label_list[2]["latex"],
                              colour_bar_width=plotter.width * plotter.aspect * 0.05,
-                             colour_bar_x_pos=plotter.width + 1,
-                             snr_per_pixel_to_a=1. / sqrt(pixels_per_angstrom)
+                             colour_bar_x_pos=plotter.width + 1
                              ))
 
 # Clean up plotter
