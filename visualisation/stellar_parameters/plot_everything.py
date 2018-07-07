@@ -41,32 +41,29 @@ for i, library in enumerate(libraries):
     logger.info("{:4d}/{:4d} Working on <{}>".format(i + 1, len(library) + 1, library_name))
 
     # Produce a scatter plot colour-coding the metallicity of the stars in a Kiel diagram
-    batch.register_job(command="""
-{python} scatter_plot_coloured.py \
-    --library "{library}" \
-    --label "Teff{{7000:3400}}" --label "logg{{5:0}}" --label "[Fe/H]{{:}}" \
-    --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-    --colour-range-min 0.5 --colour-range-max -2
-""".format(python=batch.python, library=library),
-
-                       output="""
-{library}/hr_coloured
-""".format(library=library)
+    batch.register_job(script="scatter_plot_coloured.py",
+                       output="{library}/hr_coloured",
+                       arguments={
+                           "library": library,
+                           "label": ["Teff{{7000:3400}}", "logg{{5:0}}", "[Fe/H]{{:}}"],
+                           "label-axis-latex": ["Teff", "log(g)", "[Fe/H]"],
+                           "colour-range-min": 0.5,
+                           "colour-range-max": 2
+                       },
+                       substitutions={"library": library}
                        )
 
     # Produce a histogram of each label in turn
-    batch.register_job(command="""
-{python} histogram.py \
-    --library ${library} \
-    --label "Teff{{7000:3400}}" --label "logg{{5:0}}" --label "[Fe/H]{{1:-3}}" \
-    --label-axis-latex "Teff" --label-axis-latex "log(g)" --label-axis-latex "[Fe/H]" \
-    --using "\$1" --using "\$2" --using "\$3" \
-    --output ../../output_plots/stellar_parameters/${library}/histogram
-""".format(python=batch.python, library=library),
+    batch.register_job(script="histogram.py",
+                       output="{library}/histogram",
+                       arguments={
+                           "library": library,
+                           "label": ["Teff{{7000:3400}}", "logg{{5:0}}", "[Fe/H]{{1:-3}}"],
+                           "label-axis-latex": ["Teff", "log(g)", "[Fe/H]"],
+                           "using": ["\$1", "\$2", "\$3"]
 
-                       output="""
-{library}/histogram
-""".format(library=library)
+                       },
+                       substitutions={"library": library}
                        )
 
 # If we are not overwriting plots we've already made, then check which files already exist

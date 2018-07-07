@@ -20,14 +20,13 @@ import json
 from math import sqrt
 import numpy as np
 
+from lib.label_information import LabelInformation
 from lib.multiplotter import PyxplotDriver
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--label', required=True, action="append", dest='labels',
                     help="Labels we should plot on the two axes of the scatter plot.")
-parser.add_argument('--label-axis-latex', required=True, action="append", dest='label_axis_latex',
-                    help="Titles we should put on the two axes of the scatter plot.")
 parser.add_argument('--colour-by-label', required=True, dest='colour_by_label',
                     help="Label we should use to colour code points by the SNR needed to achieve some "
                          "nominal accuracy in that label.")
@@ -50,19 +49,22 @@ args = parser.parse_args()
 
 # Check that we have one label to plot on each axis label, and a title to show on each axis
 assert len(args.labels) == 2, "A scatter plot needs two labels to plot -- one on each axis."
-assert len(args.label_axis_latex) == 3, "A coloured scatter plot needs label names for two axes, plus the colour scale."
+
+# Label information
+label_information = LabelInformation().label_info
 
 # Labels are supplied with ranges listed in {}. We extract the names to pass to label_tabulator.
 label_list = []
-label_names = []
-for item in args.labels:
+for item in args.labels + [args.colour_by_label]:
     test = re.match("(.*){(.*:.*)}", item)
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
     label_list.append({
         "name": test.group(1),
-        "range": test.group(2)
+        "latex": label_information[test.group(1)]["latex"],
+        "range": test.group(2),
+        "min": test.group(2).split(":")[0],
+        "max": test.group(2).split(":")[1]
     })
-    label_names.append(test.group(1))
 
 # Read Cannon output
 if not os.path.exists(args.cannon):
@@ -72,16 +74,11 @@ if not os.path.exists(args.cannon):
 cannon_output = json.loads(open(args.cannon).read())
 
 # Check that labels exist
-for label in label_names:
-    if label not in cannon_output["labels"]:
-        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>". \
-            format(label, args.cannon)
+for label in label_list:
+    if label["name"] not in cannon_output["labels"]:
+        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".format(label["name"],
+                                                                                                  args.cannon)
         sys.exit()
-
-if args.colour_by_label not in cannon_output["labels"]:
-    print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>". \
-        format(args.colour_by_label, args.cannon)
-    sys.exit()
 
 # Create a sorted list of all the SNR values we've got
 snr_values = [item['SNR'] for item in cannon_output['stars']]
@@ -109,7 +106,7 @@ for star in cannon_output['stars']:
         offsets[object_name][star['SNR']] = abs(star[args.colour_by_label] -
                                                 star["target_{}".format(args.colour_by_label)])
         if object_name not in label_values:
-            label_values[object_name] = [star["target_{}".format(item)] for item in label_names]
+            label_values[object_name] = [star["target_{}".format(item['name'])] for item in label_list]
     except KeyError:
         # If this star has missing data for one of the labels being measured, discard it
         star_names.remove(object_name)
@@ -188,11 +185,11 @@ plot y with colourmap
                   
                   """.format(colour_range_min=args.colour_range_min,
                              colour_range_max=args.colour_range_max,
-                             x_label=args.label_axis_latex[0], x_range=label_list[0]["range"],
-                             y_label=args.label_axis_latex[1], y_range=label_list[1]["range"],
+                             x_label=label_list[0]["latex"], x_range=label_list[0]["range"],
+                             y_label=label_list[1]["latex"], y_range=label_list[1]["range"],
                              data_filename=filename,
                              target_accuracy=args.target_accuracy, unit=args.accuracy_unit,
-                             colour_by_label=args.label_axis_latex[2],
+                             colour_by_label=label_list[2]["latex"],
                              colour_bar_width=plotter.width * plotter.aspect * 0.05,
                              colour_bar_x_pos=plotter.width + 1,
                              snr_per_pixel_to_a=1. / sqrt(pixels_per_angstrom)

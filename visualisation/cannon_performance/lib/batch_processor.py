@@ -19,8 +19,13 @@ class BatchProcessor:
         self.python = sys.executable
         self.job_list = []
 
-    def register_job(self, command, output):
-        self.job_list.append({"command": command, "output": output, "needs_doing": True})
+    def register_job(self, script, arguments, substitutions, output):
+        self.job_list.append({"script": script,
+                              "arguments": arguments,
+                              "substitutions": substitutions,
+                              "output": output,
+                              "needs_doing": True
+                              })
 
     def filter_jobs_where_products_already_exist(self):
         # Check which file products already exist and don't need to be remade

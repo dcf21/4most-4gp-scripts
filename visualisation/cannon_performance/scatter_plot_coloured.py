@@ -53,7 +53,7 @@ for item in args.labels + [args.colour_by_label]:
         "latex": label_information[test.group(1)]["latex"],
         "range": test.group(2),
         "min": test.group(2).split(":")[0],
-        "max": test.group(2).split(":")[1],
+        "max": test.group(2).split(":")[1]
     })
 
 # Fetch title for this Cannon run
