@@ -7,8 +7,7 @@
 # <python plot_everything.py>, but <./plot_everything.py> will not work.
 
 """
-This script looks in the directory <4most-4gp-scripts/output_data/cannon> to see what tests you've run through the
-Cannon and plots up the results automatically.
+This script looks in the directory <4most-4gp-scripts/workspace> to see what spectrum libraries you have created, and plots histograms and Kiel diagrams of the contents of each.
 """
 
 import logging
@@ -29,7 +28,7 @@ workspace = os_path.join(our_path, "../../workspace")
 
 # Create a long list of all the shell commands we want to run
 batch = BatchProcessor(logger=logger,
-                       output_path=os_path.join(our_path, "../../output_plots/stellar_parameters")
+                       output_path=os_path.join(our_path, "../../../../output_plots/stellar_parameters")
                        )
 
 # Plot stellar parameter distributions in every spectrum library we have

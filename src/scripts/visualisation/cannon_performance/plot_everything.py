@@ -28,11 +28,11 @@ logger = logging.getLogger(__name__)
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "../../output_data/cannon")
+workspace = os_path.join(our_path, "../../../../output_data/cannon")
 
 # Create a long list of all the shell commands we want to run
 batch = BatchProcessor(logger=logger,
-                       output_path=os_path.join(our_path, "../../output_plots/cannon_performance")
+                       output_path=os_path.join(our_path, "../../../../output_plots/cannon_performance")
                        )
 
 # We run most jobs for both 4MOST LRS and HRS
