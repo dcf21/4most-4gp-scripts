@@ -20,7 +20,7 @@ import numpy as np
 from label_tabulator import tabulate_labels
 
 from lib.label_information import LabelInformation
-from lib.multiplotter import PyxplotDriver
+from lib.pyxplot_driver import PyxplotDriver
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)

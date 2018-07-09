@@ -20,7 +20,7 @@ import json
 import numpy as np
 
 from lib.label_information import LabelInformation
-from lib.multiplotter import PyxplotDriver
+from lib.pyxplot_driver import PyxplotDriver
 from lib.snr_conversion import SNRConverter
 
 # Read input parameters

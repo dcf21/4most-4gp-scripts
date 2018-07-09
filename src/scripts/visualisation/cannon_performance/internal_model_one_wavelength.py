@@ -21,7 +21,7 @@ from operator import itemgetter
 
 from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
-from lib.multiplotter import PyxplotDriver
+from lib.pyxplot_driver import PyxplotDriver
 
 
 def dict_merge(x, y):
