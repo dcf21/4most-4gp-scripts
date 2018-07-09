@@ -65,22 +65,27 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
         None
     """
 
+    # Metadata about all the labels which we can plot the Cannon's precision in estimating
     label_info = LabelInformation().label_info
 
+    # Metadata data about all of the horizontal axes that we can plot precision against
     abscissa_info = AbcissaInformation().abscissa_labels
+
+    # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
+    unique_json_files = set([item['cannon_output'] for item in data_sets])
+    labels_in_each_data_set = [json.loads(open(json_file).read())['labels'] for json_file in unique_json_files]
+    unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
+
+    # Filter out any labels where we don't have metadata about how to plot them
+    label_names = [item for item in unique_labels if item in label_info]
 
     # Create directory to store output files in
     os.system("mkdir -p {}".format(output_figure_stem))
 
-    datasets = []
+    data_set_titles = []
     output_figure_stem = os_path.abspath(output_figure_stem) + "/"
     data_set_counter = -1
     plot_histograms = [[{} for j in data_sets] for i in label_names]
-
-    # Work out list of labels to plot, based on first data set we're provided with
-    data_set_0 = json.loads(open(data_sets[0]['cannon_output']).read())
-    label_names = [item for item in data_set_0['labels'] if item in label_info]
-    del data_set_0
 
     # If requested, plot all abundances (apart from Fe) over Fe
     if not abundances_over_h:
@@ -124,7 +129,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
         raster_diff = np.diff(raster[raster > 6000])
         pixels_per_angstrom = 1.0 / raster_diff[0]
 
-        datasets.append(legend_label)
+        data_set_titles.append(legend_label)
 
         # LaTeX strings to use to label each stellar label on graph axes
         labels_info = [label_info[ln] for ln in label_names]
@@ -215,7 +220,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                 
                 """.format(plot_width * 1.25, aspect,
                            label_info["offset_max"] / 60.,
-                           label_info["latex"], datasets[data_set_counter],
+                           label_info["latex"], data_set_titles[data_set_counter],
                            plot_width * 1.25 * aspect + 0.2,
                            plot_width * 0.5))
 
