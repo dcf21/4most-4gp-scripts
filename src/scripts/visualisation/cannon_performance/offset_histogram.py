@@ -190,6 +190,10 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
     abscissa_info = abscissa_labels[abscissa_label]
 
+    # Create pyxplot script to produce this plot
+    plotter = PyxplotDriver(multiplot_filename="histogram_multiplot".format(output_figure_stem),
+                            multiplot_aspect=6. / 8)
+
     # Create a new pyxplot script for precision plots
     for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
 

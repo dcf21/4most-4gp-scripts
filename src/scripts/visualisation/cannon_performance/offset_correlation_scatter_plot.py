@@ -189,6 +189,9 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
 
     abscissa_info = abscissa_labels[abscissa_label]
 
+    # Create pyxplot script to produce this plot
+    plotter = PyxplotDriver()
+
     # Create a new pyxplot script for correlation plots
     if correlation_plots:
         for data_set_counter, data_set_items in enumerate(plot_cross_correlations):

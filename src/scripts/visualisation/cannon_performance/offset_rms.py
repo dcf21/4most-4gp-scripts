@@ -191,118 +191,105 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
     abscissa_info = abscissa_labels[abscissa_label]
 
+    # Create pyxplot script to produce this plot
+    plotter_all = PyxplotDriver(multiplot_filename="precision_all_multiplot".format(output_figure_stem),
+                                multiplot_aspect=6. / 8)
+
+    plotter = PyxplotDriver(multiplot_filename="precision_multiplot".format(output_figure_stem),
+                            multiplot_aspect=6. / 8)
+
     # Create a new pyxplot script for precision in all elements in one plot
     for j in range(len(plot_precision[0])):
-        stem = "{}precisionall_{:d}".format(output_figure_stem, j)
-        with open("{}.ppl".format(stem), "w") as ppl:
-            ppl.write("""
-            
-            set width {0}
-            set size ratio {1}
-            set term dpi 400
-            set nodisplay ; set multiplot
-            set label 1 "\\parbox{{{5}cm}}{{ {2} ({4} stars) }}" page 0.2, page {3}
-            
-            """.format(plot_width, aspect,
-                       plot_precision[2][j][1],
-                       plot_width * aspect + 0.2,
-                       plot_precision[2][j][3],
-                       plot_width * 0.5))
+        plotter_all.make_plot(output_filename="{}precisionall_{:d}".format(output_figure_stem, j),
+                              caption=r"""
+{title} ({star_count} stars)
+                              """.format(
+                                  title=plot_precision[2][j][1],
+                                  star_count=plot_precision[2][j][3]
+                              ).strip(),
+                              pyxplot_script="""
 
-            ppl.write("set fontsize 1.3\n")  # 1.6
-            ppl.write("set key top {0} ; set keycols 2\n".format("right" if abscissa_info[0] == "SNR" else "left"))
-            ppl.write("set ylabel \"RMS offset in abundance [dex]\"\n")
-            ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
+set fontsize 1.3
+set key top {keypos}
+set keycols 2
+set ylabel "RMS offset in abundance [dex]"
+set xlabel "{x_label}"
+set yrange [0:0.5]
+{set_log}
+{set_x_range}
 
-            # Set axis limits
-            ppl.write("set yrange [0:0.5]\n")
-
-            if abscissa_info[2]:
-                ppl.write("set log x\n")
-
-            if common_x_limits is not None:
-                ppl.write("set xrange [{}:{}]\n".format(common_x_limits[0], common_x_limits[1]))
-
-            plot_items = []
-            for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
-                if label_name.startswith("["):
-                    item = plot_precision[i][j]
-                    # Remove string "[dex]" from end of legend label
-                    plot_items.append(
-                        "{} title \"{}\" w lp pt {}".format(item[0], label_info["latex"][:-13], 16 + (i - 2)))
-
-            # Add lines for target accuracy in this label
-            for target_value in (0.1, 0.2):
-                plot_items.append("{} with lines col grey(0.75) notitle".format(target_value))
-
-            ppl.write("plot {}\n".format(",".join(plot_items)))
-
-            ppl.write("""
-            
-            set term eps ; set output '{0}.eps' ; set display ; refresh
-            set term png ; set output '{0}.png' ; set display ; refresh
-            set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-            """.format(stem))
-        os.system("pyxplot {}.ppl".format(stem))
+plot {plot_items}
+                              """.format(
+                                  keypos="right" if abscissa_info[0] == "SNR" else "left",
+                                  x_label=abscissa_info["latex"],
+                                  set_log=("set log x" if abscissa_info[2] else ""),
+                                  set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
+                                               if common_x_limits is not None else ""),
+                                  plot_items=", ".join(["""
+{filename} title "{title}" w lp pt {point_type}
+                                      """.format(
+                                      filename=plot_precision[i][j],
+                                      title=label_info["latex"][:-13],  # Remove string "[dex]" from end of label
+                                      point_type=16 + (i - 2)
+                                  ).strip()
+                                                        for i, (label_name, label_info) in
+                                                        enumerate(zip(label_names, labels_info))
+                                                        if label_name.startswith("[")
+                                                        ] + ["""
+{target} with lines col grey(0.75) notitle
+                                      """.format(
+                                      target=target_value
+                                  ).strip()
+                                                             for target_value in (0.1, 0.2)
+                                                             ])
+                              )
+                              )
 
     # Create a new pyxplot script for precision plots
     for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
-        stem = "{}precision_{:d}".format(output_figure_stem, i)
-        with open("{}.ppl".format(stem), "w") as ppl:
-            ppl.write("""
-            
-            set width {0}
-            set size ratio {1}
-            set term dpi 400
-            set nodisplay ; set multiplot
-            set label 1 "\\parbox{{{4}cm}}{{ {2} }}" page 0.2, page {3}
-            
-            """.format(plot_width, aspect,
-                       label_info["latex"],
-                       plot_width * aspect + 0.2,
-                       plot_width * 0.5))
+        plotter_all.make_plot(output_filename="{}precision_{:d}".format(output_figure_stem, i),
+                              caption=label_info["latex"],
+                              pyxplot_script="""
+                                  
+{set_key}
+set fontsize 1.3
+set ylabel "RMS offset in {y_label}"
+set xlabel "{x_label}"
+set yrange [{y_min}:{y_max}]
+{set_log}
+{set_x_range}
 
-            if date_stamp:
-                ppl.write("""
-                set fontsize 0.8
-                text "{}" at 0, {}
-                """.format(plot_creator, plot_width * aspect + 0.4))
+plot {plot_items}
 
-            if len(plot_precision[i]) > 1:
-                ppl.write("set key top {0}\n".format("right" if abscissa_info[0] == "SNR" else "left"))
-            else:
-                ppl.write("set nokey\n")
+                                  """.format(
+                                  set_key=("set key top {}".format("right"
+                                                                   if abscissa_info[0] == "SNR"
+                                                                   else "left")
+                                           if (len(plot_precision[i]) > 1)
+                                           else "set nokey"),
+                                  x_label=abscissa_info["latex"],
+                                  y_label=label_info["latex"],
+                                  y_min=label_info["offset_min"],
+                                  y_max=label_info["offset_max"],
+                                  set_log=("set log x" if abscissa_info[2] else ""),
+                                  set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
+                                               if common_x_limits is not None else ""),
+                                  plot_items=", ".join(["""
+{filename} title "{title} ({star_count} stars)" {style}
+                                      """.format(
+                                      **item
+                                  ).strip()
+                                                        for item in plot_precision[i]
+                                                        ] + ["""
+{target} with lines col grey(0.75) notitle
+                                      """.format(
+                                      target=target_value
+                                  ).strip()
+                                                             for target_value in label_info["targets"]
+                                                             ])
 
-            ppl.write("set fontsize 1.3\n")  # 1.6
-            ppl.write("set ylabel \"RMS offset in {}\"\n".format(label_info["latex"]))
-            ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
-
-            # Set axis limits
-            ppl.write("set yrange [{}:{}]\n".format(label_info["offset_min"], label_info["offset_max"]))
-
-            if abscissa_info[2]:
-                ppl.write("set log x\n")
-
-            if common_x_limits is not None:
-                ppl.write("set xrange [{}:{}]\n".format(common_x_limits[0], common_x_limits[1]))
-
-            plot_items = ["{0} title \"{1} ({3} stars)\" {2}".format(*item) for item in plot_precision[i]]
-
-            # Add lines for target accuracy in this label
-            for target_value in label_info["targets"]:
-                plot_items.append("{} with lines col grey(0.75) notitle".format(target_value))
-
-            ppl.write("plot {}\n".format(",".join(plot_items)))
-
-            ppl.write("""
-            
-            set term eps ; set output '{0}.eps' ; set display ; refresh
-            set term png ; set output '{0}.png' ; set display ; refresh
-            set term pdf ; set output '{0}.pdf' ; set display ; refresh
-
-            """.format(stem))
-        os.system("pyxplot {}.ppl".format(stem))
+                              )
+                              )
 
 
 if __name__ == "__main__":
