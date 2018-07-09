@@ -142,10 +142,10 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
         if common_x_limits is not None:
             if abscissa_values[0] > common_x_limits[1]:
                 common_x_limits[1] = abscissa_values[0]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[0])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[0])
             if abscissa_values[-1] < common_x_limits[0]:
                 common_x_limits[0] = abscissa_values[-1]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[-1])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[-1])
 
         data_set_counter += 1
 
@@ -176,9 +176,11 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
                 ]
 
             # Output data file of label mismatches at this abscissa value
-            np.savetxt(fname=data_file, X=np.transpose(y), header=
-            "# Each row represents a star\n"
-            "# {0}\n\n".format("     ".join(["offset_{}".format(x) for x in label_names]))
+            np.savetxt(fname=data_file, X=np.transpose(y), header="""
+# Each row represents a star
+# {0}
+
+""".format("     ".join(["offset_{}".format(x) for x in label_names]))
                        )
 
             # Output scatter plots of label cross-correlations at this abscissa value
@@ -198,75 +200,57 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
     plotter = PyxplotDriver()
 
     # Create a new pyxplot script for correlation plots
-    if correlation_plots:
-        for data_set_counter, data_set_items in enumerate(plot_cross_correlations):
-            for k, (abscissa_value, plot_item) in enumerate(sorted(data_set_items.iteritems())):
-                (data_filename, snr_scaling) = plot_item
-                stem = "{}correlation_{:d}_{:d}".format(output_figure_stem, k, data_set_counter)
-                with open("{}.ppl".format(stem), "w") as ppl:
-                    item_width = 4
+    for data_set_counter, data_set_items in enumerate(plot_cross_correlations):
+        for k, (abscissa_value, plot_item) in enumerate(sorted(data_set_items.iteritems())):
+            (data_filename, snr_scaling) = plot_item
 
-                    if abscissa_label == "SNR/A":
-                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                            format(abscissa_value, abscissa_value / snr_scaling)
-                    elif abscissa_label == "SNR/pixel":
-                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                            format(abscissa_value * snr_scaling, abscissa_value)
+            if abscissa_label == "SNR/A":
+                caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                    format(abscissa_value, abscissa_value / snr_scaling)
+            elif abscissa_label == "SNR/pixel":
+                caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                    format(abscissa_value * snr_scaling, abscissa_value)
+            else:
+                caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
+
+            ppl = """
+set nokey
+set fontsize 1.6
+                  """
+
+            for i in range(len(label_names) - 1):
+                for j in range(i + 1, len(label_names)):
+                    label_info = label_info[label_names[j]]
+                    if i == 0:
+                        ppl += "unset yformat\n"
+                        ppl += "set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"])
                     else:
-                        caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
+                        ppl += "set yformat '' ; set ylabel ''\n"
+                    ppl += "set yrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
+                                                         label_info["offset_max"] * 1.2)
 
-                    ppl.write("""
-                
-                    set width {0}
-                    set size ratio {1}
-                    set term dpi 200
-                    set nokey
-                    set fontsize 1.6
-                    set nodisplay
-                    set multiplot
-                    text "{2}" at {3}-2, {3}-6 val center hal right
-                    text "{4:s}" at {3}-2, {3}-7 val center hal right
-                    
-                    """.format(item_width, 1,
-                               data_set_titles[data_set_counter],
-                               item_width * len(label_names),
-                               caption
-                               ))
+                    label_info = label_info[label_names[i]]
+                    if j == len(label_names) - 1:
+                        ppl += "unset xformat\n"
+                        ppl += "set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"])
+                    else:
+                        ppl += "set xformat '' ; set xlabel ''\n"
+                    ppl += "set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
+                                                         label_info["offset_max"] * 1.2)
 
-                    for i in range(len(label_names) - 1):
-                        for j in range(i + 1, len(label_names)):
-                            label_info = label_info[label_names[j]]
-                            if i == 0:
-                                ppl.write("unset yformat\n")
-                                ppl.write("set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
-                            else:
-                                ppl.write("set yformat '' ; set ylabel ''\n")
-                            ppl.write("set yrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
-                                                                    label_info["offset_max"] * 1.2))
+                    ppl += "set origin {},{}\n".format(i * item_width, (len(label_names) - 1 - j) * item_width)
 
-                            label_info = label_info[label_names[i]]
-                            if j == len(label_names) - 1:
-                                ppl.write("unset xformat\n")
-                                ppl.write("set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
-                            else:
-                                ppl.write("set xformat '' ; set xlabel ''\n")
-                            ppl.write("set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
-                                                                    label_info["offset_max"] * 1.2))
+                    ppl += "plot  \"{}\" using {}:{} w dots ps 2\n".format(data_filename, i + 1, j + 1)
 
-                            ppl.write("set origin {},{}\n".format(i * item_width,
-                                                                  (len(label_names) - 1 - j) * item_width))
-
-                            ppl.write("plot  \"{}\" using {}:{} w dots ps 2\n".
-                                      format(data_filename, i + 1, j + 1))
-
-                    ppl.write("""
-                    
-                    set term eps ; set output '{0}.eps' ; set display ; refresh
-                    set term png ; set output '{0}.png' ; set display ; refresh
-                    set term pdf ; set output '{0}.pdf' ; set display ; refresh
-                    
-                    """.format(stem))
-                os.system("timeout 30s pyxplot {0}.ppl".format(stem))
+            plotter.make_plot(output_filename=("{}correlation_{:d}_{:d}".
+                                               format(output_figure_stem, k, data_set_counter)),
+                              caption=r"""
+{data_set_title} \newline {caption}
+                              """.format(data_set_title=data_set_titles[data_set_counter],
+                                         caption=caption
+                                         ),
+                              pyxplot_script=ppl
+                              )
 
 
 if __name__ == "__main__":

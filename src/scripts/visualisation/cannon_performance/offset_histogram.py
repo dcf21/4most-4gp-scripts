@@ -177,9 +177,11 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                 ]
 
             # Output data file of label mismatches at this abscissa value
-            np.savetxt(fname=data_file, X=np.transpose(y), header=
-            "# Each row represents a star\n"
-            "# {0}\n\n".format("     ".join(["offset_{}".format(x) for x in label_names]))
+            np.savetxt(fname=data_file, X=np.transpose(y), header="""
+# Each row represents a star
+# {0}
+
+""".format("     ".join(["offset_{}".format(x) for x in label_names]))
                        )
 
             # Output scatter plots of label cross-correlations at this abscissa value
@@ -204,64 +206,66 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
         # Create a new pyxplot script for histogram plots
         for data_set_counter, data_set_items in enumerate(plot_histograms[i]):
-            stem = "{}histogram_{:d}_{:d}".format(output_figure_stem, i, data_set_counter)
-            with open("{}.ppl".format(stem), "w") as ppl:
-                ppl.write("""
-            
-                set width {0}
-                set size ratio {1}
-                set term dpi 400
-                set key ycentre right
-                set nodisplay ; set multiplot
-                set binwidth {2}
-                set label 1 "\\parbox{{{6}cm}}{{ {3}; {4} }}" page 0.2, page {5}
-                
-                col_scale(z) = hsb(0.75 * z, 1, 1)
-                
-                """.format(plot_width * 1.25, aspect,
-                           label_info["offset_max"] / 60.,
-                           label_info["latex"], data_set_titles[data_set_counter],
-                           plot_width * 1.25 * aspect + 0.2,
-                           plot_width * 0.5))
 
-                ppl.write("set fontsize 1.3\n")  # 1.1
-                ppl.write("set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
-                ppl.write("set ylabel \"Number of stars per unit {}\"\n".format(label_info["latex"]))
-                ppl.write("set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
-                                                        label_info["offset_max"] * 1.2))
+            plot_items = []
+            k_max = float(len(data_set_items) - 1)
+            if k_max < 1:
+                k_max = 1.
 
-                ppl_items = []
-                k_max = float(len(data_set_items) - 1)
-                if k_max < 1:
-                    k_max = 1.
+            for k, (abscissa_value, items) in enumerate(sorted(data_set_items.iteritems())):
+                for j, (plot_item, snr_scaling, column) in enumerate(items):
 
-                for k, (abscissa_value, plot_items) in enumerate(sorted(data_set_items.iteritems())):
-                    for j, (plot_item, snr_scaling, column) in enumerate(plot_items):
-                        ppl.write("histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}\n".
-                                  format(j, abscissa_value, plot_item, column))
+                    if abscissa_label == "SNR/A":
+                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                            format(abscissa_value, abscissa_value / snr_scaling)
+                    elif abscissa_label == "SNR/pixel":
+                        caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
+                            format(abscissa_value * snr_scaling, abscissa_value)
+                    else:
+                        caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
 
-                        if abscissa_label == "SNR/A":
-                            caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                                format(abscissa_value, abscissa_value / snr_scaling)
-                        elif abscissa_label == "SNR/pixel":
-                            caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                                format(abscissa_value * snr_scaling, abscissa_value)
-                        else:
-                            caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
+                    plot_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) title '{2:s}'".
+                                      format(j, abscissa_value, caption, k / k_max))
 
-                        ppl_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) "
-                                         "title '{2:s}'".
-                                         format(j, abscissa_value, caption, k / k_max))
+            plotter.make_plot(output_filename="{}histogram_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
+                              caption="""
+                              
+{label_name}; {data_set_title}
+                              """.format(
+                                  label_name=label_info["latex"],
+                                  data_set_title=data_set_titles[data_set_counter]
+                              ).strip(),
+                              pyxplot_script="""
 
-                ppl.write("""
-                plot {0}
-                
-                set term eps ; set output '{1}.eps' ; set display ; refresh
-                set term png ; set output '{1}.png' ; set display ; refresh
-                set term pdf ; set output '{1}.pdf' ; set display ; refresh
-                
-                """.format(", ".join(ppl_items), stem))
-            os.system("timeout 30s pyxplot {0}.ppl".format(stem))
+set key ycentre right
+set binwidth {bin_width}
+col_scale(z) = hsb(0.75 * z, 1, 1)
+
+set fontsize 1.3
+set xlabel "$\Delta$ {label_name}"
+set ylabel "Number of stars per unit {label_name}"
+set xrange [{x_min}:{x_max}]
+
+{make_histograms}
+
+plot {plot_items}
+
+                              """.format(
+                                  bin_width=label_info["offset_max"] / 60.,
+                                  label_name=label_info["latex"],
+                                  x_min=-label_info["offset_max"] * 1.2,
+                                  x_max=label_info["offset_max"] * 1.2,
+                                  make_histograms="".join([""""
+histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}
+                                  """.format(j, abscissa_value, plot_item, column)
+                                                           for k, (abscissa_value, plot_items) in
+                                                           enumerate(sorted(data_set_items.iteritems()))
+                                                           for j, (plot_item, snr_scaling, column) in
+                                                           enumerate(plot_items)
+                                                           ]),
+                                  plot_items=plot_items
+                              )
+                              )
 
 
 if __name__ == "__main__":

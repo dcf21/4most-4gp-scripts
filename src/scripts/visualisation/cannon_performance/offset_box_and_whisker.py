@@ -179,9 +179,10 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # Subsequent columns are various percentiles (see above)
-            np.savetxt(fname=file_name, X=y, header=
-            "# Abscissa_(probably_SNR)     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile\n\n"
-                       )
+            np.savetxt(fname=file_name, X=y, header="""
+# Abscissa_(probably_SNR)     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile
+
+""")
 
             plot_precision[i].append([
                 "\"{}\" using 1:2".format(file_name),
@@ -198,10 +199,11 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
             file_name = "{}data_whiskers_{:d}_{:d}.dat".format(output_figure_stem, i, data_set_counter)
 
             with open(file_name, "w") as f:
-                f.write(
-                    "# Each block within this file represents a rectangular region to shade on a box-and-whisker plot\n"
-                    "# x y\n\n"
-                )
+                f.write("""
+# Each block within this file represents a rectangular region to shade on a box-and-whisker plot
+# x y
+
+""")
                 for j, datum in enumerate(y):
                     if abscissa_label.startswith("SNR"):
                         w1 = 1.2
@@ -236,44 +238,35 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
         # Create a new pyxplot script for box and whisker plots
         for data_set_counter, plot_items in enumerate(plot_box_whiskers[i]):
-            stem = "{}whiskers_{:d}_{:d}".format(output_figure_stem, i, data_set_counter)
-            with open("{}.ppl".format(stem), "w") as ppl:
-                ppl.write("""
-            
-                set width {0}
-                set size ratio {1}
-                set term dpi 400
-                set nokey
-                set nodisplay ; set multiplot
-                set label 1 "\\parbox{{{5}cm}}{{ {2}; {3} }}" page 0.2, page {4}
-                
-                """.format(plot_width, aspect, label_info["latex"], data_set_titles[data_set_counter],
-                           plot_width * aspect + 0.2, plot_width * 0.5))
+            plotter.make_plot(output_filename="{}whiskers_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
+                              caption="""
+{label_name}; {data_set_title}
+                              """.format(
+                                  label_name=label_info["latex"],
+                                  data_set_title=data_set_titles[data_set_counter]
+                              ).strip(),
+                              pyxplot_script="""
+set nokey
+set fontsize 1.3
+set ylabel "$\Delta$ {label_name}"
+set xlabel "{x_label}"
+set yrange [{y_min}:{y_max}]
+{set_log}
+{set_x_range}
 
-                ppl.write("set fontsize 1.3\n")  # 1.6
-                ppl.write("set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"]))
-                ppl.write("set xlabel \"{0}\"\n".format(abscissa_info[1]))
-
-                # Set axis limits
-                ppl.write("set yrange [{}:{}]\n".format(-2 * label_info["offset_max"],
-                                                        2 * label_info["offset_max"]))
-
-                if abscissa_info[2]:
-                    ppl.write("set log x\n")
-
-                if common_x_limits is not None:
-                    ppl.write("set xrange [{}:{}]\n".format(common_x_limits[0], common_x_limits[1]))
-
-                ppl.write("plot {}\n".format(",".join(plot_items)))
-
-                ppl.write("""
-                
-                set term eps ; set output '{0}.eps' ; set display ; refresh
-                set term png ; set output '{0}.png' ; set display ; refresh
-                set term pdf ; set output '{0}.pdf' ; set display ; refresh
-                
-                """.format(stem))
-            os.system("pyxplot {}.ppl".format(stem))
+plot {plot_items}
+      
+                              """.format(
+                                  label_name=label_info["latex"],
+                                  x_label=abscissa_info[1],
+                                  y_min=-2 * label_info["offset_max"],
+                                  y_max=2 * label_info["offset_max"],
+                                  set_log=("set log x" if abscissa_info[2] else ""),
+                                  set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
+                                               if common_x_limits is not None else ""),
+                                  plot_items=",".join(plot_items)
+                              )
+                              )
 
 
 if __name__ == "__main__":

@@ -177,9 +177,10 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # 1st column is RMS.
-            np.savetxt(fname=file_name, X=y, header=
-            "# Abscissa_(probably_SNR)     RMS_offset\n\n"
-                       )
+            np.savetxt(fname=file_name, X=y, header="""
+# Abscissa_(probably_SNR)     RMS_offset
+
+            """)
 
             plot_precision[i].append([
                 "\"{}\" using 1:2".format(file_name),
