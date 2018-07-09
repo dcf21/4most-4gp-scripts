@@ -20,10 +20,10 @@ import argparse
 import numpy as np
 import json
 
-from lib.multiplotter import make_multiplot
+from lib.multiplotter import PyxplotDriver
 from lib.label_information import LabelInformation
 from lib.abscissa_information import AbcissaInformation
-from lib import plot_settings
+from lib.compute_cannon_offsets import CannonAccuracyCalculator
 
 
 class PlotLabelPrecision:
@@ -653,7 +653,7 @@ class PlotLabelPrecision:
             os.system("rm -f {}*.eps".format(self.output_figure_stem))
 
 
-def generate_set_of_plots(data_sets, abscissa_label, plot_width,
+def generate_set_of_plots(data_sets, abscissa_label, assume_scaled_solar,
                           compare_against_reference_labels, output_figure_stem, run_title, date_stamp=True,
                           abundances_over_h=True):
     """
@@ -702,6 +702,8 @@ Create a set of plots of a number of Cannon runs.
 
     label_info = LabelInformation().label_info
 
+    abscissa_info = AbcissaInformation().abscissa_labels
+
     # Work out list of labels to plot, based on first data set we're provided with
     data_set_0 = json.loads(open(data_sets[0]['cannon_output']).read())
     label_names = [item for item in data_set_0['labels'] if item in label_info]
@@ -715,16 +717,7 @@ Create a set of plots of a number of Cannon runs.
                 if test.group(1) != "Fe":
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
-    # Instantiate plotter
-    plotter = PlotLabelPrecision(label_names=label_names,
-                                 abscissa_label=abscissa_label,
-                                 plot_width=plot_width,
-                                 number_data_sets=len(data_sets),
-                                 output_figure_stem=output_figure_stem,
-                                 date_stamp=date_stamp)
-
-    abscissa_info = plotter.abscissa_labels[abscissa_label]
-    plotter.common_x_limits = abscissa_info[3]
+    common_x_limits = abscissa_info[3]
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
@@ -735,104 +728,16 @@ Create a set of plots of a number of Cannon runs.
         if data_set['title'] is None:
             data_set['title'] = data['description']
 
-        # Fetch Cannon output
-        test_items = data['stars']
+        # Calculate the accuracy of the Cannon's abundance determinations
+        accuracy_calculator = CannonAccuracyCalculator(
+            cannon_json_output=data,
+            label_names=label_names,
+            compare_against_reference_labels=compare_against_reference_labels,
+            assume_scaled_solar=assume_scaled_solar)
 
-        # Sort Cannon runs by star name
-        test_items_by_star = {}
-        for index, test_item in enumerate(test_items):
-            object_name = test_items[index]['Starname']
-            abscissa_value = test_item[abscissa_info[0]]
-            if object_name not in test_items_by_star:
-                test_items_by_star[object_name] = {}
-            if abscissa_value not in test_items_by_star[object_name]:
-                test_items_by_star[object_name][abscissa_value] = []
-            test_items_by_star[object_name][abscissa_value].append(index)
+        stars_which_meet_filter = accuracy_calculator.filter_test_stars(constraints=data_set['filters'].split(";"))
 
-        # We now create a look-up table of the target / reference values for each label for each star
-        data_set['reference_values'] = {}
-
-        # Loop over all the stars the Cannon tried to fit
-        for star_name in test_items_by_star:
-            # Create a list of all the available abscissa values for this star
-            abscissa_values = test_items_by_star[star_name].keys()
-            abscissa_values.sort()
-
-            # Fetch the metadata from the run at the highest abscissa value
-            reference_run_index = test_items_by_star[star_name][abscissa_values[-1]][0]
-            reference_run = test_items[reference_run_index]
-
-            # Create dictionary of reference values
-            reference_values = {}
-            for label in label_names:
-                label_info = plotter.label_info[label]
-                cannon_label = label_info["cannon_label"]
-                if compare_against_reference_labels:
-                    # Use values that were used to synthesise this spectrum
-                    key = "target_{}".format(cannon_label)
-                    if key in reference_run:
-                        reference_values[label] = reference_run[key]
-                    #elif "target_[Fe/H]" in reference_run:
-                    #    reference_values[label] = reference_run["target_[Fe/H]"]  # Assume scales with [Fe/H]
-                    else:
-                        reference_values[label] = np.nan
-
-                    # If we are plotting abundance over Fe, then [X/Fe] = [X/H] / [Fe/H]
-                    if label_info["over_fe"]:
-                        reference_values[label] = reference_values[label] - reference_run["target_[Fe/H]"]
-                else:
-                    # Use the values produced by the Cannon at the highest SNR as the target values for each star
-                    reference_values[label] = reference_run[cannon_label]
-
-                    # If we are plotting abundance over Fe, then [X/Fe] = [X/H] / [Fe/H]
-                    if label_info["over_fe"]:
-                        reference_values[label] = reference_values[label] - reference_run["[Fe/H]"]
-
-            data_set['reference_values'][star_name] = reference_values
-
-        # Free up memory
-        del test_items_by_star
-
-        # Select only those stars which meet filtering criteria
-        test_items_output = []  # A list of Cannon output for stars which meet the filter criteria
-        for test_item in test_items:
-            star_name = test_item['Starname']
-            reference_values = data_set['reference_values'][star_name]
-
-            meets_filters = np.all(np.isfinite(reference_values.values()))
-            for constraint in data_set['filters'].split(";"):
-                constraint = constraint.strip()
-                if constraint == "":
-                    continue
-                constraint_label = re.split("[<=>]", constraint)[0]
-                constraint_value_string = re.split("[<=>]", constraint)[-1]
-                constraint_value = constraint_value_string
-                try:
-                    constraint_value = float(constraint_value)
-                except ValueError:
-                    pass
-
-                if constraint_label in reference_values:
-                    # Can filter either on stellar parameters / abundances set for each unique star
-                    reference_value = reference_values[constraint_label]
-                else:
-                    # or on parameters like SNR and e_bv which are set spectrum by spectrum
-                    reference_value = test_item[constraint_label]
-
-                if constraint == "{}={}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_value == constraint_value)
-                elif constraint == "{}<={}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_value <= constraint_value)
-                elif constraint == "{}<{}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_value < constraint_value)
-                elif constraint == "{}>={}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_value >= constraint_value)
-                elif constraint == "{}>{}".format(constraint_label, constraint_value_string):
-                    meets_filters = meets_filters and (reference_value > constraint_value)
-                else:
-                    assert False, "Could not parse constraint <{}>.".format(constraint)
-            if meets_filters:
-                test_items_output.append(test_item)
+        accuracy_calculator.calculate_cannon_offsets(filter_on_indices=stars_which_meet_filter)
 
         # Add data set to plot
         legend_label = data_set['title']  # Read the title which was supplied on the command line for this dataset
@@ -866,10 +771,22 @@ if __name__ == "__main__":
                         help="A list of semi-colon-separated label constraints on the target label values.")
     parser.add_argument('--dataset-colour', action="append", dest='data_set_colour',
                         help="A list of colours with which to plot each run of the Cannon.")
-    parser.add_argument('--dataset-linetype', action="append", dest='data_set_linetype',
+    parser.add_argument('--dataset-line-type', action="append", dest='data_set_line_type',
                         help="A list of Pyxplot line types with which to plot Cannon runs.")
     parser.add_argument('--output', default="/tmp/cannon_performance_plot", dest='output_file',
                         help="Data file to write output to.")
+    parser.add_argument('--assume-scaled-solar',
+                        action='store_true',
+                        dest="assume_scaled_solar",
+                        help="Assume scaled solar abundances for test stars which don't have abundances individually "
+                             "specified. This will match what was assumed when synthesising spectra with incomplete "
+                             "abundances, but may not lead to very physically plausible parameter distributions.")
+    parser.add_argument('--no-assume-scaled-solar',
+                        action='store_false',
+                        dest="assume_scaled_solar",
+                        help="Do not assume scaled solar abundances; do not test whether the Cannon reproduces scaled "
+                             "solar abundances for abundances which have missing values.")
+    parser.set_defaults(assume_scaled_solar=False)
     parser.add_argument('--use-reference-labels',
                         action='store_true',
                         dest="use_reference_labels",
@@ -891,29 +808,34 @@ if __name__ == "__main__":
     parser.set_defaults(abundances_over_h=True)
     args = parser.parse_args()
 
-    # If titles, colours, etc, are not supplied for Cannon runs, we use the descriptions stored in the JSON files
+    # If titles are not supplied for Cannon runs, we use the descriptions stored in the JSON files
     if (args.data_set_label is None) or (len(args.data_set_label) == 0):
         args.data_set_label = [None for i in args.cannon_output]
 
+    # If we have not been supplied with filter constraints to specify which stars to use from each test set, create a
+    # blank constraint to allow all stars through.
     if (args.data_set_filter is None) or (len(args.data_set_filter) == 0):
         args.data_set_filter = ["" for i in args.cannon_output]
 
+    # If colours have not been specified for each data set, use a list of default colours
     if (args.data_set_colour is None) or (len(args.data_set_colour) == 0):
-        # List of default colours
         colour_list = ("red", "blue", "orange", "green")
-
         args.data_set_colour = [colour_list[i % len(colour_list)] for i in range(len(args.cannon_output))]
 
-    if (args.data_set_linetype is None) or (len(args.data_set_linetype) == 0):
-        args.data_set_linetype = [1 for i in args.cannon_output]
+    # If a line type has not been specified for each data set, use a solid line for everything
+    if (args.data_set_line_type is None) or (len(args.data_set_line_type) == 0):
+        args.data_set_line_type = [1 for i in args.cannon_output]
 
     # Check that we have a matching number of labels and sets of Cannon output
     assert len(args.cannon_output) == len(args.data_set_label), \
         "Must have a matching number of libraries and data set labels."
+
     assert len(args.cannon_output) == len(args.data_set_filter), \
         "Must have a matching number of libraries and data set filters."
+
     assert len(args.cannon_output) == len(args.data_set_colour), \
         "Must have a matching number of libraries and data set colours."
+
     assert len(args.cannon_output) == len(args.data_set_linetype), \
         "Must have a matching number of libraries and data set line types."
 
@@ -924,7 +846,7 @@ if __name__ == "__main__":
                 args.data_set_label,
                 args.data_set_filter,
                 args.data_set_colour,
-                args.data_set_linetype):
+                args.data_set_line_type):
 
         # Read the JSON file which we dumped after running the Cannon
         if not os.path.exists(cannon_output):
@@ -941,7 +863,7 @@ if __name__ == "__main__":
 
     generate_set_of_plots(data_sets=cannon_outputs,
                           abundances_over_h=args.abundances_over_h,
-                          plot_width=plot_settings.plot_width,
+                          assume_scaled_solar=args.assume_scaled_solar,
                           abscissa_label=args.abscissa_label,
                           compare_against_reference_labels=args.use_reference_labels,
                           output_figure_stem=args.output_file,
