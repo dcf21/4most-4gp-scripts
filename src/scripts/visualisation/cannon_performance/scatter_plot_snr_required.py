@@ -21,6 +21,7 @@ import numpy as np
 
 from lib.label_information import LabelInformation
 from lib.pyxplot_driver import PyxplotDriver
+from lib.plot_settings import snr_defined_at_wavelength
 from lib.snr_conversion import SNRConverter
 
 # Read input parameters
@@ -90,7 +91,7 @@ star_names = sorted(set(star_names))
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
 snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
-                             snr_at_wavelength=6100)
+                             snr_at_wavelength=snr_defined_at_wavelength)
 
 # Loop over stars, calculating offsets for the label we're colour-coding
 offsets = {}  # offsets[star_name][SNR] = dictionary of label names and absolute offsets

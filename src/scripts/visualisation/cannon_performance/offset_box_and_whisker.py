@@ -20,6 +20,8 @@ from lib.pyxplot_driver import PyxplotDriver
 from lib.label_information import LabelInformation
 from lib.abscissa_information import AbcissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.snr_conversion import SNRConverter
 
 from offset_cmd_line_interface import fetch_command_line_arguments
 
@@ -69,7 +71,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     label_info = LabelInformation().label_info
 
     # Metadata data about all of the horizontal axes that we can plot precision against
-    abscissa_info = AbcissaInformation().abscissa_labels
+    abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
@@ -95,20 +97,20 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                 if test.group(1) != "Fe":
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
-    common_x_limits = abscissa_info[3]
+    common_x_limits = abscissa_info["axis_range"]
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
 
-        data = json.loads(open(data_set['cannon_output']).read())
+        cannon_output = json.loads(open(data_set['cannon_output']).read())
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:
-            data_set['title'] = data['description']
+            data_set['title'] = cannon_output['description']
 
         # Calculate the accuracy of the Cannon's abundance determinations
         accuracy_calculator = CannonAccuracyCalculator(
-            cannon_json_output=data,
+            cannon_json_output=cannon_output,
             label_names=label_names,
             compare_against_reference_labels=compare_against_reference_labels,
             assume_scaled_solar=assume_scaled_solar)
@@ -123,10 +125,10 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
             legend_label += " ({})".format(run_title)  # Possibly append a run title to the end, if supplied
 
         # add data set
-        # Convert SNR/pixel to SNR/A at 6000A
-        raster = np.array(cannon_json['wavelength_raster'])
-        raster_diff = np.diff(raster[raster > 6000])
-        pixels_per_angstrom = 1.0 / raster_diff[0]
+
+        # Work out multiplication factor to convert SNR/pixel to SNR/A
+        snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
+                                     snr_at_wavelength=snr_defined_at_wavelength)
 
         data_set_titles.append(legend_label)
 
@@ -134,35 +136,30 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
         labels_info = [label_info[ln] for ln in label_names]
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_info = abscissa_labels[abscissa_label]
-        abscissa_values = [item[abscissa_info[0]] for item in cannon_stars]
+        abscissa_values = [item[abscissa_info["field"]] for item in cannon_stars]
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
         if common_x_limits is not None:
             if abscissa_values[0] > common_x_limits[1]:
                 common_x_limits[1] = abscissa_values[0]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[0])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[0])
             if abscissa_values[-1] < common_x_limits[0]:
                 common_x_limits[0] = abscissa_values[-1]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[-1])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[-1])
 
         data_set_counter += 1
 
         # Construct a data file listing the RMS and percentiles of the offset distribution for each label
         for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
-            scale = np.sqrt(pixels_per_angstrom)
-
             y = []
-            for k, xk in enumerate(abscissa_values):
-                snr_per_a = None
-                if abscissa_label.startswith("SNR"):
-                    snr_per_a = xk * scale
-
-                keyword = snr_per_a if abscissa_label == "SNR/A" else xk
+            for abscissa_index, abscissa_value in enumerate(abscissa_values):
+                displayed_abscissa_value = abscissa_value
+                if abscissa_label == "SNR/A":
+                    displayed_abscissa_value = snr_converter.per_pixel(abscissa_value).per_a()
 
                 # List of offsets
-                diffs = label_offset[xk][label_name]
+                diffs = label_offset[abscissa_value][label_name]
 
                 # Sort list
                 diffs.sort()
@@ -171,7 +168,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                     return diffs[int(fraction / 100. * len(diffs))]
 
                 y.append([])
-                y[-1].extend([keyword])
+                y[-1].extend([displayed_abscissa_value])
                 y[-1].extend([percentile(5), percentile(25), percentile(50), percentile(75), percentile(95)])
 
             # Filename for data containing statistics on percentiles of the offset distributions
@@ -179,17 +176,12 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # Subsequent columns are various percentiles (see above)
-            np.savetxt(fname=file_name, X=y, header="""
+            np.savetxt(fname=file_name,
+                       X=y,
+                       header="""
 # Abscissa_(probably_SNR)     5th_percentile     25th_percentile    Median    75th_percentile     95th_percentile
 
 """)
-
-            plot_precision[i].append([
-                "\"{}\" using 1:2".format(file_name),
-                legend_label,
-                "with lp pt 17 col {} lt {:d}".format(colour, int(line_type)),
-                len(star_names),
-            ])
 
             plot_box_whiskers[i][data_set_counter] = [
                 "\"{}\" using 1:5:3:7 with yerrorrange col black".format(file_name)
@@ -220,14 +212,12 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                         insert(0, "\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".
                                format(file_name, j))
 
-        del data
+        del cannon_output
 
-    # make plots
+    # Now plot the data
 
     # LaTeX strings to use to label each stellar label on graph axes
     labels_info = [label_info[ln] for ln in label_names]
-
-    abscissa_info = abscissa_labels[abscissa_label]
 
     # Create pyxplot script to produce this plot
     plotter = PyxplotDriver(multiplot_filename="whiskers_multiplot".format(output_figure_stem),
@@ -258,10 +248,10 @@ plot {plot_items}
       
                               """.format(
                                   label_name=label_info["latex"],
-                                  x_label=abscissa_info[1],
+                                  x_label=abscissa_info["latex"],
                                   y_min=-2 * label_info["offset_max"],
                                   y_max=2 * label_info["offset_max"],
-                                  set_log=("set log x" if abscissa_info[2] else ""),
+                                  set_log=("set log x" if abscissa_info["log_axis"] else ""),
                                   set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
                                                if common_x_limits is not None else ""),
                                   plot_items=",".join(plot_items)

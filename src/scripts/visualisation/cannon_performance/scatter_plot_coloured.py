@@ -21,6 +21,8 @@ from label_tabulator import tabulate_labels
 
 from lib.label_information import LabelInformation
 from lib.pyxplot_driver import PyxplotDriver
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.snr_conversion import SNRConverter
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -74,10 +76,9 @@ for label in label_list:
 # Create data files listing parameter values
 snr_list = tabulate_labels(args.output_stub, [i['name'] for i in label_names], args.cannon)
 
-# Convert SNR/pixel to SNR/A at 6000A
-raster = np.array(cannon_output['wavelength_raster'])
-raster_diff = np.diff(raster[raster > 6000])
-pixels_per_angstrom = 1.0 / raster_diff[0]
+# Work out multiplication factor to convert SNR/pixel to SNR/A
+snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
+                             snr_at_wavelength=snr_defined_at_wavelength)
 
 # Create pyxplot script to produce this plot
 plotter = PyxplotDriver(multiplot_filename="{0}_multiplot".format(args.output_stub),
@@ -89,7 +90,7 @@ for snr in snr_list:
 {description} \newline {{\bf {label_latex} }} \newline SNR/\AA={snr_a:.1f} \newline SNR/pixel={snr_pixel:.1f}
                       """.format(description=description,
                                  label_latex=args.label_axis_latex[2],
-                                 snr_a=snr["snr"] * np.sqrt(pixels_per_angstrom),
+                                 snr_a=snr_converter.per_pixel(snr["snr"]).per_a(),
                                  snr_pixel=snr["snr"]
                                  ).strip(),
                       pyxplot_script="""

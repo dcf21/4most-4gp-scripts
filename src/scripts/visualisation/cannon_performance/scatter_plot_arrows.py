@@ -20,6 +20,8 @@ import numpy as np
 from label_tabulator import tabulate_labels
 
 from lib.pyxplot_driver import PyxplotDriver
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.snr_conversion import SNRConverter
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -63,10 +65,9 @@ if not os.path.exists(args.cannon):
 cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
 
-# Convert SNR/pixel to SNR/A at 6000A
-raster = np.array(cannon_output['wavelength_raster'])
-raster_diff = np.diff(raster[raster > 6000])
-pixels_per_angstrom = 1.0 / raster_diff[0]
+# Work out multiplication factor to convert SNR/pixel to SNR/A
+snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
+                             snr_at_wavelength=snr_defined_at_wavelength)
 
 # Create pyxplot script to produce this plot
 plotter = PyxplotDriver(multiplot_filename="{filename}_multiplot".format(filename=args.output_stub),
@@ -91,7 +92,7 @@ plot "{filename}" title "Cannon output -$>$ Synthesised values at SNR/\\AA={snr_
            x_range=label_list[0]["range"],
            y_range=label_list[1]["range"],
            filename=snr["filename"],
-           snr_per_a=snr["snr"] * np.sqrt(pixels_per_angstrom)  # Convert SNR/pixel to SNR/A
+           snr_per_a=snr_converter.per_pixel(snr["snr"]).per_a()  # Convert SNR/pixel to SNR/A
            )
                       )
 

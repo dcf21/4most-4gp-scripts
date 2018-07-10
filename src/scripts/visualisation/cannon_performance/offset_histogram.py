@@ -20,6 +20,8 @@ from lib.pyxplot_driver import PyxplotDriver
 from lib.label_information import LabelInformation
 from lib.abscissa_information import AbcissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.snr_conversion import SNRConverter
 
 from offset_cmd_line_interface import fetch_command_line_arguments
 
@@ -69,7 +71,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
     label_info = LabelInformation().label_info
 
     # Metadata data about all of the horizontal axes that we can plot precision against
-    abscissa_info = AbcissaInformation().abscissa_labels
+    abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
@@ -95,20 +97,20 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                 if test.group(1) != "Fe":
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
-    common_x_limits = abscissa_info[3]
+    common_x_limits = abscissa_info["axis_range"]
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
 
-        data = json.loads(open(data_set['cannon_output']).read())
+        cannon_output = json.loads(open(data_set['cannon_output']).read())
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:
-            data_set['title'] = data['description']
+            data_set['title'] = cannon_output['description']
 
         # Calculate the accuracy of the Cannon's abundance determinations
         accuracy_calculator = CannonAccuracyCalculator(
-            cannon_json_output=data,
+            cannon_json_output=cannon_output,
             label_names=label_names,
             compare_against_reference_labels=compare_against_reference_labels,
             assume_scaled_solar=assume_scaled_solar)
@@ -124,10 +126,9 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
         # add data set
 
-        # Convert SNR/pixel to SNR/A at 6000A
-        raster = np.array(cannon_json['wavelength_raster'])
-        raster_diff = np.diff(raster[raster > 6000])
-        pixels_per_angstrom = 1.0 / raster_diff[0]
+        # Work out multiplication factor to convert SNR/pixel to SNR/A
+        snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
+                                     snr_at_wavelength=snr_defined_at_wavelength)
 
         data_set_titles.append(legend_label)
 
@@ -135,67 +136,58 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
         labels_info = [label_info[ln] for ln in label_names]
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_info = abscissa_labels[abscissa_label]
-        abscissa_values = [item[abscissa_info[0]] for item in cannon_stars]
+        abscissa_values = [item[abscissa_info["field"]] for item in cannon_stars]
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
         if common_x_limits is not None:
             if abscissa_values[0] > common_x_limits[1]:
                 common_x_limits[1] = abscissa_values[0]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[0])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[0])
             if abscissa_values[-1] < common_x_limits[0]:
                 common_x_limits[0] = abscissa_values[-1]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[-1])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[-1])
 
         data_set_counter += 1
 
         # Construct a datafile listing all the offsets for each label, for each abscissa value
         # This full list of data points is used to make histograms
-        scale = np.sqrt(pixels_per_angstrom)
-        for k, xk in enumerate(abscissa_values):
-            snr_per_a = None
-            if abscissa_label.startswith("SNR"):
-                snr_per_a = xk * scale
-
-            keyword = snr_per_a if abscissa_label == "SNR/A" else xk
+        for abscissa_index, abscissa_value in enumerate(abscissa_values):
+            displayed_abscissa_value = abscissa_value
+            if abscissa_label == "SNR/A":
+                displayed_abscissa_value = snr_converter.per_pixel(abscissa_value).per_a()
 
             y = []
             for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
                 # List of offsets
-                diffs = label_offset[xk][label_name]
+                diffs = label_offset[abscissa_value][label_name]
                 y.append(diffs)
 
-                # Filename for data file containing all offsets
-                data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
-                                                                          data_set_counter,
-                                                                          keyword)
-
                 # Output histogram of label mismatches at this abscissa value
-                plot_histograms[i][data_set_counter][keyword] = [
-                    (data_file, scale, i + 1)  # Pyxplot counts columns starting from 1, not 0
-                ]
+                # i+1 is because Pyxplot counts columns starting from 1, not 0
+                plot_histograms[i][data_set_counter][displayed_abscissa_value] = [ (data_file, i + 1) ]
+
+            # Filename for data file containing all offsets
+            data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
+                                                                      data_set_counter,
+                                                                      displayed_abscissa_value)
 
             # Output data file of label mismatches at this abscissa value
-            np.savetxt(fname=data_file, X=np.transpose(y), header="""
+            np.savetxt(fname=data_file,
+                       X=np.transpose(y),
+                       header="""
 # Each row represents a star
-# {0}
+# {column_headings}
 
-""".format("     ".join(["offset_{}".format(x) for x in label_names]))
+""".format(column_headings="     ".join(["offset_{}".format(x) for x in label_names]))
                        )
 
-            # Output scatter plots of label cross-correlations at this abscissa value
-            if correlation_plots:
-                plot_cross_correlations[data_set_counter][keyword] = (data_file, scale)
+        del cannon_output
 
-        del data
-
-    # make plots
+    # Now plot the data
 
     # LaTeX strings to use to label each stellar label on graph axes
     labels_info = [label_info[ln] for ln in label_names]
-
-    abscissa_info = abscissa_labels[abscissa_label]
 
     # Create pyxplot script to produce this plot
     plotter = PyxplotDriver(multiplot_filename="histogram_multiplot".format(output_figure_stem),
@@ -212,20 +204,22 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
             if k_max < 1:
                 k_max = 1.
 
-            for k, (abscissa_value, items) in enumerate(sorted(data_set_items.iteritems())):
-                for j, (plot_item, snr_scaling, column) in enumerate(items):
+            for abscissa_index, (displayed_abscissa_value, items) in enumerate(sorted(data_set_items.iteritems())):
+                for j, (plot_item, column) in enumerate(items):
 
                     if abscissa_label == "SNR/A":
+                        snr = snr_converter.per_a(displayed_abscissa_value)
                         caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                            format(abscissa_value, abscissa_value / snr_scaling)
+                            format(snr.per_a(), snr.per_pixel())
                     elif abscissa_label == "SNR/pixel":
+                        snr = snr_converter.per_pixel(displayed_abscissa_value)
                         caption = "SNR/A {0:.1f}; SNR/pixel {1:.1f}". \
-                            format(abscissa_value * snr_scaling, abscissa_value)
+                            format(snr.per_a(), snr.per_pixel())
                     else:
-                        caption = "{0} {1}".format(abscissa_info[1], abscissa_value)
+                        caption = "{0} {1}".format(abscissa_info["latex"], displayed_abscissa_value)
 
                     plot_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) title '{2:s}'".
-                                      format(j, abscissa_value, caption, k / k_max))
+                                      format(j, displayed_abscissa_value, caption, abscissa_index / k_max))
 
             plotter.make_plot(output_filename="{}histogram_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
                               caption="""
@@ -257,10 +251,10 @@ plot {plot_items}
                                   x_max=label_info["offset_max"] * 1.2,
                                   make_histograms="".join([""""
 histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}
-                                  """.format(j, abscissa_value, plot_item, column)
-                                                           for k, (abscissa_value, plot_items) in
+                                  """.format(j, displayed_abscissa_value, plot_item, column)
+                                                           for abscissa_index, (displayed_abscissa_value, plot_items) in
                                                            enumerate(sorted(data_set_items.iteritems()))
-                                                           for j, (plot_item, snr_scaling, column) in
+                                                           for j, (plot_item, column) in
                                                            enumerate(plot_items)
                                                            ]),
                                   plot_items=plot_items

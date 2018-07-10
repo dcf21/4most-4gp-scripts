@@ -106,11 +106,6 @@ training_library, training_library_items = [training_spectra_info[i] for i in ("
 training_library_ids = [i["specId"] for i in training_library_items]
 training_spectra = training_library.open(ids=training_library_ids)
 
-# Convert SNR/pixel to SNR/A at 6000A
-raster = np.array(cannon_output['wavelength_raster'])
-raster_diff = np.diff(raster[raster > 6000])
-pixels_per_angstrom = 1.0 / raster_diff[0]
-
 # Recreate a Cannon instance, using the saved state
 censoring_masks = cannon_output["censoring_mask"]
 if censoring_masks is not None:

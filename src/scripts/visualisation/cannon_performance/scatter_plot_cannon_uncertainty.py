@@ -19,6 +19,8 @@ import numpy as np
 from label_tabulator import tabulate_labels
 
 from lib.pyxplot_driver import PyxplotDriver
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.snr_conversion import SNRConverter
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -38,10 +40,9 @@ if not os.path.exists(args.cannon):
 cannon_output = json.loads(open(args.cannon).read())
 description = cannon_output['description']
 
-# Convert SNR/pixel to SNR/A at 6000A
-raster = np.array(cannon_output['wavelength_raster'])
-raster_diff = np.diff(raster[raster > 6000])
-pixels_per_angstrom = 1.0 / raster_diff[0]
+# Work out multiplication factor to convert SNR/pixel to SNR/A
+snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
+                             snr_at_wavelength=snr_defined_at_wavelength)
 
 # Look up list of labels the Cannon was fitting
 label_names = cannon_output['labels']
@@ -81,7 +82,7 @@ plot {plot_items}
                       column_x=2 * label_count + index + 1,
                       column_y_1=index + 1,
                       column_y_2=label_count + index + 1,
-                      snr=snr["snr"] * np.sqrt(pixels_per_angstrom),
+                      snr=snr_converter.per_pixel(snr["snr"]).per_a(),
                       colour_value=index2 / max(float(len(snr_list) - 1), 1)).strip()
                        for index2, snr in enumerate(snr_list)
                        ]))

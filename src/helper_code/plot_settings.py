@@ -8,3 +8,5 @@ output_dpi = 400
 
 include_author = True
 include_caption = True
+
+snr_defined_at_wavelength = 6100

@@ -20,6 +20,8 @@ from lib.pyxplot_driver import PyxplotDriver
 from lib.label_information import LabelInformation
 from lib.abscissa_information import AbcissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.snr_conversion import SNRConverter
 
 from offset_cmd_line_interface import fetch_command_line_arguments
 
@@ -69,7 +71,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     label_info = LabelInformation().label_info
 
     # Metadata data about all of the horizontal axes that we can plot precision against
-    abscissa_info = AbcissaInformation().abscissa_labels
+    abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
@@ -95,20 +97,20 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
                 if test.group(1) != "Fe":
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
-    common_x_limits = abscissa_info[3]
+    common_x_limits = abscissa_info["axis_range"]
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
 
-        data = json.loads(open(data_set['cannon_output']).read())
+        cannon_output = json.loads(open(data_set['cannon_output']).read())
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:
-            data_set['title'] = data['description']
+            data_set['title'] = cannon_output['description']
 
         # Calculate the accuracy of the Cannon's abundance determinations
         accuracy_calculator = CannonAccuracyCalculator(
-            cannon_json_output=data,
+            cannon_json_output=cannon_output,
             label_names=label_names,
             compare_against_reference_labels=compare_against_reference_labels,
             assume_scaled_solar=assume_scaled_solar)
@@ -124,10 +126,9 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
         # add data set
 
-        # Convert SNR/pixel to SNR/A at 6000A
-        raster = np.array(cannon_json['wavelength_raster'])
-        raster_diff = np.diff(raster[raster > 6000])
-        pixels_per_angstrom = 1.0 / raster_diff[0]
+        # Work out multiplication factor to convert SNR/pixel to SNR/A
+        snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
+                                     snr_at_wavelength=snr_defined_at_wavelength)
 
         data_set_titles.append(legend_label)
 
@@ -135,41 +136,36 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
         labels_info = [label_info[ln] for ln in label_names]
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_info = abscissa_labels[abscissa_label]
-        abscissa_values = [item[abscissa_info[0]] for item in cannon_stars]
+        abscissa_values = [item[abscissa_info["field"]] for item in cannon_stars]
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
         if common_x_limits is not None:
             if abscissa_values[0] > common_x_limits[1]:
                 common_x_limits[1] = abscissa_values[0]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[0])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[0])
             if abscissa_values[-1] < common_x_limits[0]:
                 common_x_limits[0] = abscissa_values[-1]
-                print "Rescaling x-axis to include {.1f}".format(abscissa_values[-1])
+                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[-1])
 
         data_set_counter += 1
 
         # Construct a data file listing the RMS and percentiles of the offset distribution for each label
         for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
-            scale = np.sqrt(pixels_per_angstrom)
-
             y = []
-            for k, xk in enumerate(abscissa_values):
-                snr_per_a = None
-                if abscissa_label.startswith("SNR"):
-                    snr_per_a = xk * scale
-
-                keyword = snr_per_a if abscissa_label == "SNR/A" else xk
+            for abscissa_index, abscissa_value in enumerate(abscissa_values):
+                displayed_abscissa_value = abscissa_value
+                if abscissa_label == "SNR/A":
+                    displayed_abscissa_value = snr_converter.per_pixel(abscissa_value).per_a()
 
                 # List of offsets
-                diffs = label_offset[xk][label_name]
+                diffs = label_offset[abscissa_value][label_name]
 
                 # Sort list
                 diffs.sort()
 
                 y.append([])
-                y[-1].extend([keyword])
+                y[-1].extend([displayed_abscissa_value])
                 y[-1].extend([metric(diffs)])
 
             # Filename for data containing statistics on the RMS, and percentiles of the offset distributions
@@ -177,7 +173,9 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # 1st column is RMS.
-            np.savetxt(fname=file_name, X=y, header="""
+            np.savetxt(fname=file_name,
+                       X=y,
+                       header="""
 # Abscissa_(probably_SNR)     RMS_offset
 
             """)
@@ -189,14 +187,12 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
                 len(star_names),
             ])
 
-        del data
+        del cannon_output
 
-    # make plots
+    # Now plot the data
 
     # LaTeX strings to use to label each stellar label on graph axes
     labels_info = [label_info[ln] for ln in label_names]
-
-    abscissa_info = abscissa_labels[abscissa_label]
 
     # Create pyxplot script to produce this plot
     plotter_all = PyxplotDriver(multiplot_filename="precision_all_multiplot".format(output_figure_stem),
@@ -227,9 +223,9 @@ set yrange [0:0.5]
 
 plot {plot_items}
                               """.format(
-                                  keypos="right" if abscissa_info[0] == "SNR" else "left",
+                                  keypos="right" if abscissa_info["field"] == "SNR" else "left",
                                   x_label=abscissa_info["latex"],
-                                  set_log=("set log x" if abscissa_info[2] else ""),
+                                  set_log=("set log x" if abscissa_info["log_axis"] else ""),
                                   set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
                                                if common_x_limits is not None else ""),
                                   plot_items=", ".join(["""
@@ -254,7 +250,7 @@ plot {plot_items}
 
     # Create a new pyxplot script for precision plots
     for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
-        plotter_all.make_plot(output_filename="{}precision_{:d}".format(output_figure_stem, i),
+        plotter.make_plot(output_filename="{}precision_{:d}".format(output_figure_stem, i),
                               caption=label_info["latex"],
                               pyxplot_script="""
                                   
@@ -270,7 +266,7 @@ plot {plot_items}
 
                                   """.format(
                                   set_key=("set key top {}".format("right"
-                                                                   if abscissa_info[0] == "SNR"
+                                                                   if abscissa_info["field"] == "SNR"
                                                                    else "left")
                                            if (len(plot_precision[i]) > 1)
                                            else "set nokey"),
@@ -278,7 +274,7 @@ plot {plot_items}
                                   y_label=label_info["latex"],
                                   y_min=label_info["offset_min"],
                                   y_max=label_info["offset_max"],
-                                  set_log=("set log x" if abscissa_info[2] else ""),
+                                  set_log=("set log x" if abscissa_info["log_axis"] else ""),
                                   set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
                                                if common_x_limits is not None else ""),
                                   plot_items=", ".join(["""
