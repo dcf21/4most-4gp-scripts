@@ -1,7 +1,15 @@
-#!/usr/bin/env bash
-# -*- coding: utf-8 -*-
+#!/bin/bash
 
+# A little bit of scripting magic so that whatever directory this script is
+# run from, we always find the python scripts and data we need.
+cd "$(dirname "$0")"
+cwd=`pwd`/..
+cd ${cwd}
+
+# Activate python virtual environment
 source ../../virtualenv/bin/activate
+
+# Now do some work
 
 # Randomly split a library into two parts, taking only spectra at SNR/pixel 100
 python2.7 rearrange.py --input-library 4fs_demo_stars_lrs[SNR=100] \

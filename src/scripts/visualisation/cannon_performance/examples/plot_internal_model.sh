@@ -1,8 +1,20 @@
 #!/bin/bash
 
-# This scripts produces plots of the Cannon's internal model of how a region of the spectrum changes with [Fe/H]
+# This scripts produces plots of the Cannon's internal model of how a region of
+# the spectrum changes with [Fe/H]
 
-source ../../../virtualenv/bin/activate
+# ---
+
+# A little bit of scripting magic so that whatever directory this script is
+# run from, we always find the python scripts and data we need.
+cd "$(dirname "$0")"
+cwd=`pwd`/..
+cd ${cwd}
+
+# Activate python virtual environment
+source ../../virtualenv/bin/activate
+
+# ---
 
 # Create directories where plots get held
 mkdir -p ../../output_plots/cannon_performance/internal_model

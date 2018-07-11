@@ -1,8 +1,19 @@
 #!/bin/bash
 
-source ../../../virtualenv/bin/activate
-
 # This is the graveyard where we put ancient plots
+
+# ---
+
+# A little bit of scripting magic so that whatever directory this script is
+# run from, we always find the python scripts and data we need.
+cd "$(dirname "$0")"
+cwd=`pwd`/..
+cd ${cwd}
+
+# Activate python virtual environment
+source ../../virtualenv/bin/activate
+
+# ---
 
 # Create directories where plots get held
 mkdir -p ../../output_plots/cannon_performance/arrows
