@@ -46,7 +46,7 @@ args = parser.parse_args()
 
 # Set path to workspace where we create libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
 os.system("mkdir -p {}".format(workspace))
 
 # Create new SpectrumLibrary

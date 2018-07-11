@@ -22,10 +22,10 @@ from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 # Path to where we find Keith Hawkins's <4MOST_testspectra>
 our_path = os_path.split(os_path.abspath(__file__))[0]
-test_spectra_path = os_path.join(our_path, "..", "..", "4MOST_testspectra")
+test_spectra_path = os_path.join(our_path, "../../4MOST_testspectra")
 
 # Set path to workspace where we create libraries of spectra
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = os_path.join(our_path, "../../../workspace")
 os.system("mkdir -p {}".format(workspace))
 
 

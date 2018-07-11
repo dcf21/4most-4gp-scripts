@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
-root_path = os_path.join(our_path, "..", "..")
+root_path = os_path.join(our_path, "../..")
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--abundance-target', action="append", dest='targets',
                     help="Abundances we're trying to recover with a given precision target.")
@@ -48,7 +48,7 @@ parser.add_argument('--output', default="/tmp/cannon_estimates_", dest='output_s
 args = parser.parse_args()
 
 # Set path to workspace where we create libraries of spectra
-workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../../workspace")
 
 # Read Cannon output
 if not os.path.exists(args.cannon):

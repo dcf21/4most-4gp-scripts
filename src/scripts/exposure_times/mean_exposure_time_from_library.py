@@ -20,7 +20,7 @@ from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_fourfs import FourFS
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
-root_path = os_path.join(our_path, "..", "..")
+root_path = os_path.join(our_path, "../..")
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -87,7 +87,7 @@ logger = logging.getLogger(__name__)
 logger.info("Calculating magnitudes and exposure times for templates")
 
 # Set path to workspace where we create libraries of spectra
-workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
 
 # For calculating exposure times, assume a specified magnitude
 magnitude = float(args.magnitude)

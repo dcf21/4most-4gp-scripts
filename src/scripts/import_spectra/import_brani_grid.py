@@ -26,7 +26,7 @@ from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 # Path to where we find Brani's <4MOST_forward_modeling>
 our_path = os_path.split(os_path.abspath(__file__))[0]
-brani_code_path = os_path.join(our_path, "..", "..", "forwardModelling", "4MOST_forward_modeling")
+brani_code_path = os_path.join(our_path, "../../forwardModelling/4MOST_forward_modeling")
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 logger.info("Importing grid of template spectra for Brani's RV code")
 
 # Set path to workspace where we create libraries of spectra
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = os_path.join(our_path, "../../../workspace")
 target_library_name = "brani_rv_grid"
 os.system("mkdir -p {}".format(workspace))
 

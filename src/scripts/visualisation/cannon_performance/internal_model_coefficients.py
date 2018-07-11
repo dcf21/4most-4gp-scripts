@@ -34,7 +34,7 @@ args = parser.parse_args()
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "..", "..", "workspace")
+workspace = os_path.join(our_path, "../../../../workspace")
 
 # Fetch title for this Cannon run
 cannon_output = json.loads(open(args.cannon + ".json").read())

@@ -35,7 +35,7 @@ def tabulate_labels(library_list, label_list, output_file, workspace=None):
     # Set path to workspace where we expect to find libraries of spectra
     if workspace is None:
         our_path = os_path.split(os_path.abspath(__file__))[0]
-        workspace = os_path.join(our_path, "..", "..", "workspace")
+        workspace = os_path.join(our_path, "../../../../workspace")
 
     # Open output data file
     with open(output_file, "w") as output:

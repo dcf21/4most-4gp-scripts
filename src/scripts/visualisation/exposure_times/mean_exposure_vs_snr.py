@@ -32,7 +32,7 @@ args = parser.parse_args()
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "..", "..", "workspace")
+workspace = os_path.join(our_path, "../../../../workspace")
 
 # Construct list of exposure times at each SNR/pixel
 exposures_by_snr = {}

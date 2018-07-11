@@ -30,7 +30,7 @@ args = parser.parse_args()
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "..", "..", "workspace")
+workspace = os_path.join(our_path, "../../../../workspace")
 
 # Open library we're going to examine
 spectra = SpectrumLibrarySqlite.open_and_search(library_spec=args.library,

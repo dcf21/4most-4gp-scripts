@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
-root_path = os_path.join(our_path, "..", "..")
+root_path = os_path.join(our_path, "../..")
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--library-lrs', default="pepsi_4fs_lrs", dest='library_lrs',
@@ -60,7 +60,7 @@ args = parser.parse_args()
 
 # Set path to workspace where we create libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = args.workspace if args.workspace else os_path.join(our_path, "..", "workspace")
+workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
 os.system("mkdir -p {}".format(workspace))
 
 # Create new LRS SpectrumLibrary

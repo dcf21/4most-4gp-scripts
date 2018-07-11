@@ -58,7 +58,7 @@ logger.info("Testing fourgp_rv")
 
 # Set path to workspace where we expect to find a library of template spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "..", "workspace")
+workspace = os_path.join(our_path, "../../../workspace")
 target_library_name = args.template_library
 library_path = os_path.join(workspace, target_library_name)
 
