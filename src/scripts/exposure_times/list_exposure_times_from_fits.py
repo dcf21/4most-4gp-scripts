@@ -171,7 +171,7 @@ for template_index, template in enumerate(templates):
     # Pass template to 4FS
     degraded_spectra = etc_wrapper.process_spectra(
         spectra_list=((spectrum, None),)
-    ))
+    )
 
     # Process degraded spectra
     for mode in degraded_spectra:
