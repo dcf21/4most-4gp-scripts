@@ -6,6 +6,7 @@ cat $0
 export item=$1
 export WRK_NB=$1
 
+# activate conda python environment
 source activate myenv
 
 # create worker-private subdirectory in $SNIC_TMP
@@ -24,7 +25,7 @@ source activate myenv
 # cd $WRK_DIR
 
 # run the program
-cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/synthesize_grids
+cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/src/scripts/synthesize_grids
 
 echo Temporary directory: ${TMPDIR}/workspace
 mkdir ${TMPDIR}/workspace
@@ -32,10 +33,10 @@ mkdir ${TMPDIR}/workspace
 python synthesize_ges_dwarfs_perturbed.py --every 80 --skip ${item} --create \
                                           --workspace "${TMPDIR}/workspace" \
                                           --output-library turbospec_ges_dwarfs_perturbed_${item} \
-                                          --log-dir ../output_data/logs/turbospec_ges_dwarfs_perturbed_${item}
+                                          --log-dir ../../../output_data/logs/turbospec_ges_dwarfs_perturbed_${item}
 
 echo Starting rsync: `date`
-rsync -a ${TMPDIR}/workspace/turbospec_* ../workspace
+rsync -a ${TMPDIR}/workspace/turbospec_* ../../../workspace
 echo Rsync done: `date`
 
 # rescue the results back to job directory

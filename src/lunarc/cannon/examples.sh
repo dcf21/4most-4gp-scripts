@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python launcher.py --job_list ../../test_cannon/examples.sh
+python launcher.py --job_list ../../scripts/test_cannon/examples/examples.sh

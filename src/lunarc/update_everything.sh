@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # This script is designed to be run on aurora.lunarc.lu.se
-# It installs the Cannon and 4GP in Dominic's home directory
+
+# It installs the Cannon and 4GP in a conda python environment in Dominic's home directory
 
 module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
 

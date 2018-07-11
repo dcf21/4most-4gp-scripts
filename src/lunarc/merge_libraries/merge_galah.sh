@@ -12,9 +12,12 @@ cat $0
 
 module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
 
+# activate conda python environment
 source activate myenv
 
-cd /projects/astro3/nobackup/dominic/iwg7_pipeline/4most-4gp-scripts/lunarc/merge_libraries
+# rsync all the libraries we're going to merge onto temporary local storage
+# this is hideously wasteful, but lunarc breaks otherwise
+cd /projects/astro3/nobackup/dominic/iwg7_pipeline/4most-4gp-scripts/src/lunarc/merge_libraries
 echo Starting rsync: `date`
 echo Temporary directory: ${TMPDIR}/workspace
 mkdir ${TMPDIR}/workspace
@@ -22,9 +25,10 @@ rsync -a ../../workspace/turbospec_galah_v2_* ${TMPDIR}/workspace/
 echo Rsync done: `date`
 echo Running 4fs script: `date`
 
+# do the merger
 python2.7 merge_libraries.py --workspace "${TMPDIR}/workspace" --input-library turbospec_galah_v2
 
+# rsync the result back to where we want it
 echo Starting rsync: `date`
 rsync -a ${TMPDIR}/workspace/turbospec_galah_v2 ../../workspace
 echo Rsync done: `date`
-

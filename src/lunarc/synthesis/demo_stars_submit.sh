@@ -15,6 +15,7 @@ cat $0
 
 module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
 
+# activate python environment
 source activate myenv
 
 # set the number of jobs - change for your requirements

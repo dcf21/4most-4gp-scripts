@@ -8,10 +8,11 @@ sbatch ges_dwarfs_submit.sh
 These typically use a total of 80 cores (4 nodes x 20 cores per node) on
 Aurora.
 
-Each core synthesises its spectra into a separate spectrum library, because
-sqlite3 tends to break if it has 80 cores attempting to access the same
-database. Consequently, the output from the 80 cores needs to be merged into a
-single spectrum library at the end. This is done with the script <merge.py>:
+Each of these 80 cores synthesises its spectra into a separate spectrum
+library, because sqlite3 tends to break if it has 80 cores attempting to access
+the same database. Consequently, the output from the 80 cores needs to be
+merged into a single spectrum library at the end. This is done by subsequently
+running the script <../merge_libraries/merge.py>, e.g.:
 
 python merge_libraries.py --input-library demo_stars
 

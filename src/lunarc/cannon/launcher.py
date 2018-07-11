@@ -7,14 +7,16 @@
 # <python launcher.py>, but <./launcher.py> will not work.
 
 """
-Take a list of training sets and test sets, and run the Cannon on them all using the SLURM job management system on
-lunarc.
 
-Note that before running this you may want to remove "diagnostics" from the list of modules imported by
-<AnniesLasso/AnniesLasso/__init__.py>, as this requires matplotlib to be installed.
+Take a shell script which runs a load of tests through the Cannon, using <cannon_test.py>, and run all the tests in
+parallel using the SLURM job management system on lunarc.
 
-We do not allow the Cannon to run in multi-threaded mode, is empirically this causes us to exceed the memory limits
-imposed on Aurora.
+We parse the contents of the shell script, removing any commands which aren't running python, and piecing together
+python commands which have been split over many lines.
+
+Owing to aurora/lunarc being a temperamental heap of junk, it is very necessary to run this in exclusive mode, otherwise
+the out of memory killer tends to kill your jobs. Well, it probably will do that anyway.
+
 """
 
 import argparse
@@ -29,7 +31,7 @@ logger = logging.getLogger(__name__)
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--job_list', action="append", dest='jobs',
-                    help="List of spectrum libraries we should run the Cannon on.")
+                    help="List of shell scripts containing python commands which run tests on the Cannon.")
 args = parser.parse_args()
 
 uid = os.getpid()
@@ -43,22 +45,22 @@ slurm_script = """#!/bin/sh
 #SBATCH -t 150:00:00
 #
 # job name and output file names
-#SBATCH -J cannon_{4}
-#SBATCH -o stdout_cannon_{4}_%j.out
-#SBATCH -e stderr_cannon_{4}_%j.out
+#SBATCH -J cannon_{destination_name}
+#SBATCH -o stdout_cannon_{destination_name}_%j.out
+#SBATCH -e stderr_cannon_{destination_name}_%j.out
 cat $0
 
 module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
 
 source activate myenv
 
-cd {0}
+cd {python_directory}
 echo Starting rsync: `date`
-echo Temporary directory: {1}
-mkdir {1}
-{2}
+echo Temporary directory: {temporary_directory}
+mkdir {temporary_directory}
+{rsync_commands}
 echo Rsync done: `date`
-python cannon_test.py --workspace \"{1}\" {3}
+python cannon_test.py --workspace "{temporary_directory}" {python_arguments}
 
 """
 
@@ -66,11 +68,15 @@ os.system("mkdir -p ../../output_data/cannon")
 
 counter = 0
 for job in args.jobs:
-    config_path = os.path.split(os.path.abspath(job))[0]
+    # This is the parent directory of where the shell script is. If the shell script is in the <examples> subdirectory
+    # of <test_cannon>, then we find the <cannon_test.py> python script up one level
+    config_path = os.path.split(os.path.abspath(job + "/../"))[0]
+
     line_buffer = ""
     destination = ""
     libraries = []
 
+    # Start piecing together the python command line to run this job
     start_string = "python2.7 cannon_test.py"
 
     for line in open(job):
@@ -105,15 +111,15 @@ for job in args.jobs:
         # If file product already exists, don't need to recreate it
         destination = os.path.join(config_path, destination) + ".json"
         if os.path.exists(destination):
-            print "Product <{}> already exists".format(destination)
+            print "-  Product <{}> already exists".format(destination)
             continue
         else:
-            print "Product <{}> needs making".format(destination)
+            print "++ Product <{}> needs making".format(destination)
 
         # Create rsync command to copy spectrum libraries to node local storage
         run_id = "{}_{}".format(uid, counter)
-        tmp_dir ="${{TMPDIR}}/cannon_{}".format(run_id)
-        rsyncs = ["rsync -a ../workspace/{} {}/".format(library, tmp_dir) for library in libraries]
+        tmp_dir = "${{TMPDIR}}/cannon_{}".format(run_id)
+        rsyncs = ["rsync -a ../../../workspace/{} {}/".format(library, tmp_dir) for library in libraries]
         rsync_commands = "\n".join(rsyncs)
         libraries = []
 
@@ -121,8 +127,13 @@ for job in args.jobs:
         counter += 1
         slurm_tmp_filename = "tmp_{}.sh".format(run_id)
 
+        # Write a slurm job description file
         with open(slurm_tmp_filename, "w") as f:
-            f.write(slurm_script.format(config_path, tmp_dir, rsync_commands, command, os.path.split(destination)[1]))
+            f.write(slurm_script.format(python_directory=config_path,
+                                        temporary_directory=tmp_dir,
+                                        rsync_commands=rsync_commands,
+                                        python_arguments=command,
+                                        destination_name=os.path.split(destination)[1]))
 
+        # This line submits the job to slurm, but I usuaully choose to do this manually
         # os.system("sbatch {}".format(slurm_tmp_filename))
-

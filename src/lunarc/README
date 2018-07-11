@@ -1,7 +1,8 @@
-The scripts in this directory are used for running Turbospectrum on the LUNARC
-aurora cluster, using the slurm job submission system.
+The scripts in this directory are used for running 4GP on the LUNARC aurora
+cluster, using the slurm job submission system.
 
-To use this, simply run:
+For example, to synthesize spectra using Turbospectrum on aurora, go into the
+<synthesis> directory and run:
 
 sbatch demo_stars_submit.sh
 sbatch marcs_submit.sh
