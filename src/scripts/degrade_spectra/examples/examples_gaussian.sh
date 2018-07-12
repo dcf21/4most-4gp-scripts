@@ -7,7 +7,7 @@ cwd=`pwd`/..
 cd ${cwd}
 
 # Activate python virtual environment
-source ../../virtualenv/bin/activate
+source ../../../../virtualenv/bin/activate
 
 # Now do some work
 python2.7 degrade_library_with_gaussian.py --input-library demo_stars \

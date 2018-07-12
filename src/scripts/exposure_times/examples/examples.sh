@@ -7,8 +7,7 @@ cwd=`pwd`/..
 cd ${cwd}
 
 # Activate python virtual environment
-source ../../virtualenv/bin/activate
+source ../../../../virtualenv/bin/activate
 
 # Now do some work
 python2.7 list_exposure_times_from_fits.py --input "/media/dcf21/LOUISEUSB/templates_S4_*/*.fits"
-

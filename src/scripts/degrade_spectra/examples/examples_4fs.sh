@@ -7,7 +7,7 @@ cwd=`pwd`/..
 cd ${cwd}
 
 # Activate python virtual environment
-source ../../virtualenv/bin/activate
+source ../../../../virtualenv/bin/activate
 
 # Now do some work
 python2.7 degrade_library_with_4fs.py --input-library turbospec_demo_stars \
@@ -36,10 +36,10 @@ python2.7 degrade_library_with_4fs.py --input-library galah_test_sample_turbospe
                                       --output-library-hrs galah_test_sample_4fs_s4red_hrs
 
 
-#for all in ../workspace/turbospec_*
+#for all in ../../../workspace/turbospec_*
 #do
 #
-#run_name=$(echo ${all} | sed 's@../workspace/turbospec_\(.*\)@\1@g')
+#run_name=$(echo ${all} | sed 's@../../../workspace/turbospec_\(.*\)@\1@g')
 #
 #python2.7 degrade_library_with_4fs.py --input-library turbospec_${run_name} \
 #                                      --output-library-lrs 4fs_${run_name}_lrs \

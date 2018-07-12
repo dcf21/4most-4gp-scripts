@@ -23,7 +23,7 @@ from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 from fourgp_fourfs import FourFS
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
-root_path = os_path.join(our_path, "../..")
+root_path = os_path.join(our_path, "../../../..")
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -42,49 +42,63 @@ parser.add_argument('--binary-path',
                     default=root_path,
                     dest="binary_path",
                     help="Specify a directory where 4FS package is installed.")
+parser.add_argument('--snr-definition',
+                    action="append",
+                    dest="snr_definitions",
+                    help="Specify a way of defining SNR, in the form 'name,minimum,maximum', meaning we calculate the "
+                         "median SNR per pixel between minimum and maximum wavelengths in Angstrom.")
 parser.add_argument('--snr-list',
                     required=False,
-                    default="100",
+                    default="10,12,14,16,18,20,23,26,30,35,40,45,50,80,100,130,180,250",
                     dest="snr_list",
                     help="Specify a comma-separated list of the SNRs that 4FS is to degrade spectra to.")
 parser.add_argument('--snr-definitions-lrs',
                     required=False,
                     default="",
                     dest="snr_definitions_lrs",
-                    help="Specify the SNR definitions to use for the R, G and B bands of 4MOST LRS.")
+                    help="Specify the SNR definition to use for LRS. For example, 'GalDiskHR_536NM' to use the S4 "
+                         "green definition of SNR. You can even specify three comma-separated definitions, e.g. "
+                         "'GalDiskHR_536NM,GalDiskHR_536NM,GalDiskHR_536NM' to use different SNR metrics for the "
+                         "RGB arms within 4MOST LRS, though this is a pretty weird thing to want to do.")
 parser.add_argument('--snr-definitions-hrs',
                     required=False,
-                    default="GalDiskHR_545NM",
+                    default="",
                     dest="snr_definitions_hrs",
-                    help="Specify the SNR definitions to use for the R, G and B bands of 4MOST HRS.")
+                    help="Specify the SNR definition to use for HRS. For example, 'GalDiskHR_536NM' to use the S4 "
+                         "green definition of SNR. You can even specify three comma-separated definitions, e.g. "
+                         "'GalDiskHR_536NM,GalDiskHR_536NM,GalDiskHR_536NM' to use different SNR metrics for the "
+                         "RGB arms within 4MOST HRS, though this is a pretty weird thing to want to do.")
 parser.add_argument('--run-hrs',
                     action='store_true',
                     dest="run_hrs",
-                    help="Set 4FS to produce output for 4MOST HRS")
+                    help="Set 4FS to produce output for 4MOST HRS [default].")
 parser.add_argument('--no-run-hrs',
                     action='store_false',
                     dest="run_hrs",
-                    help="Set 4FS not to produce output for 4MOST HRS")
+                    help="Set 4FS not to produce output for 4MOST HRS. Setting this will make us run quicker.")
 parser.set_defaults(run_hrs=True)
 parser.add_argument('--run-lrs',
                     action='store_true',
                     dest="run_lrs",
-                    help="Set 4FS to produce output for 4MOST LRS")
+                    help="Set 4FS to produce output for 4MOST LRS [default].")
 parser.add_argument('--no-run-lrs',
                     action='store_false',
                     dest="run_lrs",
-                    help="Set 4FS not to produce output for 4MOST LRS")
-parser.set_defaults(run_lrs=False)
+                    help="Set 4FS not to produce output for 4MOST LRS. Setting this will make us run quicker.")
+parser.set_defaults(run_lrs=True)
 parser.add_argument('--photometric-band',
                     required=False,
                     default="SDSS_r",
                     dest="photometric_band",
-                    help="The name of the photometric band in which the magnitude is specified.")
-parser.add_argument('--magnitude',
+                    help="The name of the photometric band in which the magnitudes in --mag-list are specified. This "
+                         "must match a band which is recognised by the pyphot python package.")
+parser.add_argument('--mag-list',
                     required=False,
                     default="15",
-                    dest="magnitude",
-                    help="The magnitude to assume when calculating exposure times for each object.")
+                    dest="mag_list",
+                    help="Specify a comma-separated list of the magnitudes to assume when simulating observations "
+                         "of each object. If multiple magnitudes are specified, than each input spectrum we be "
+                         "output multiple times, once at each magnitude.")
 args = parser.parse_args()
 
 # Start logger
@@ -97,90 +111,111 @@ logger.info("Calculating magnitudes and exposure times for templates")
 workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
 os.system("mkdir -p {}".format(workspace))
 
-# Turn set of templates into a SpectrumLibrary with path specified above
+# Turn set of templates into a spectrum library with path specified above
 library_path = os_path.join(workspace, args.library)
 library = SpectrumLibrarySqlite(path=library_path, create=True)
 
+# Fetch a list of all the input template spectra which match the supplied filename wildcard
 templates = glob.glob(args.input)
 templates.sort()
 
-# For calculating exposure times, assume a specified magnitude
-magnitude = float(args.magnitude)
+# Parse any definitions of SNR we were supplied on the command line
+if (args.snr_definitions is None) or (len(args.snr_definitions) < 1):
+    snr_definitions = None
+else:
+    snr_definitions = []
+    for snr_definition in args.snr_definitions:
+        words = snr_definition.split(",")
+        snr_definitions.append([words[0], float(words[1]), float(words[2])])
 
-# Definitions of SNR
+# Look up what definition of SNR is user specified we should use for 4MOST LRS
 if len(args.snr_definitions_lrs) < 1:
+    # Case 1: None was specified, so we use default
     snr_definitions_lrs = None
 else:
     snr_definitions_lrs = args.snr_definitions_lrs.split(",")
+    # Case 2: A single definition was supplied which we use for all three arms
     if len(snr_definitions_lrs) == 1:
         snr_definitions_lrs *= 3
+    # Case 3: Three definitions were supplied, one for each arm
     assert len(snr_definitions_lrs) == 3
 
+# Look up what definition of SNR is user specified we should use for 4MOST HRS
 if len(args.snr_definitions_hrs) < 1:
+    # Case 1: None was specified, so we use default
     snr_definitions_hrs = None
 else:
     snr_definitions_hrs = args.snr_definitions_hrs.split(",")
+    # Case 2: A single definition was supplied which we use for all three arms
     if len(snr_definitions_hrs) == 1:
         snr_definitions_hrs *= 3
+    # Case 3: Three definitions were supplied, one for each arm
     assert len(snr_definitions_hrs) == 3
 
-# List of SNRs we are to degrade spectra to
+# Parse the list of SNRs that the user specified on the command line
 snr_list = [float(item.strip()) for item in args.snr_list.split(",")]
 
-# Instantiate 4FS wrapper
-# NB: Here we are requiring SNR/pixel=100 in GalDiskHR_545NM
-etc_wrapper = FourFS(
-    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
-    magnitude=magnitude,
-    magnitude_unreddened=False,
-    photometric_band=args.photometric_band,
-    run_lrs=args.run_lrs,
-    run_hrs=args.run_hrs,
-    lrs_use_snr_definitions=snr_definitions_lrs,
-    hrs_use_snr_definitions=snr_definitions_hrs,
-    snr_list=snr_list,
-    snr_per_pixel=False
-)
+# Parse the list of magnitudes that the user specified on the command line
+mag_list = [float(item.strip()) for item in args.mag_list.split(",")]
 
-for template_index, template in enumerate(templates):
-    name = "template_{:08d}".format(template_index)
+# Loop over all the magnitudes we are to simulate for each object
+for magnitude in mag_list:
 
-    # Open fits spectrum
-    f = fits.open(template)
-    data = f[1].data
-    wavelengths = data['LAMBDA']
-    fluxes = data['FLUX']
-
-    # Open ASCII spectrum
-    # f = np.loadtxt(template).T
-    # wavelengths = f[0]
-    # fluxes = f[1]
-
-    # Create 4GP spectrum object
-    spectrum = Spectrum(wavelengths=wavelengths,
-                        values=fluxes,
-                        value_errors=np.zeros_like(wavelengths),
-                        metadata={
-                            "Starname": name,
-                            "imported_from": template
-                        })
-
-    # Work out magnitude
-    mag_intrinsic = spectrum.photometry(args.photometric_band)
-
-    # Pass template to 4FS
-    degraded_spectra = etc_wrapper.process_spectra(
-        spectra_list=((spectrum, None),)
+    # Instantiate 4FS wrapper
+    # NB: Here we are requiring SNR/pixel=100 in GalDiskHR_545NM
+    etc_wrapper = FourFS(
+        path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
+        snr_definitions=snr_definitions,
+        magnitude=magnitude,
+        magnitude_unreddened=False,
+        photometric_band=args.photometric_band,
+        run_lrs=args.run_lrs,
+        run_hrs=args.run_hrs,
+        lrs_use_snr_definitions=snr_definitions_lrs,
+        hrs_use_snr_definitions=snr_definitions_hrs,
+        snr_list=snr_list,
+        snr_per_pixel=False
     )
 
-    # Process degraded spectra
-    for mode in degraded_spectra:
-        for index in degraded_spectra[mode]:
-            for snr in degraded_spectra[mode][index]:
-                exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]  # seconds
+    for template_index, template in enumerate(templates):
+        name = "template_{:08d}".format(template_index)
 
-                # Print output
-                print "{:100s} {:6s} {:6.1f} {:6.3f} {:6.3f}".format(template, mode, snr, mag_intrinsic, exposure_time)
+        # Open fits spectrum
+        f = fits.open(template)
+        data = f[1].data
+        wavelengths = data['LAMBDA']
+        fluxes = data['FLUX']
 
-    # Insert spectrum object into spectrum library
-    library.insert(spectra=spectrum, filenames=os_path.split(template)[1])
+        # Open ASCII spectrum
+        # f = np.loadtxt(template).T
+        # wavelengths = f[0]
+        # fluxes = f[1]
+
+        # Create 4GP spectrum object
+        spectrum = Spectrum(wavelengths=wavelengths,
+                            values=fluxes,
+                            value_errors=np.zeros_like(wavelengths),
+                            metadata={
+                                "Starname": name,
+                                "imported_from": template
+                            })
+
+        # Work out magnitude
+        mag_intrinsic = spectrum.photometry(args.photometric_band)
+
+        # Pass template to 4FS
+        degraded_spectra = etc_wrapper.process_spectra(
+            spectra_list=((spectrum, None),)
+        )
+
+        # Process degraded spectra
+        for mode in degraded_spectra:
+            for index in degraded_spectra[mode]:
+                for snr in degraded_spectra[mode][index]:
+                    exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]  # seconds
+
+                    # Print output
+                    print "{:100s} {:6s} {:6.1f} {:6.3f} {:6.3f}".format(template, mode, snr, mag_intrinsic, exposure_time)
+
+        # Insert spectrum object into spectrum library
+        library.insert(spectra=spectrum, filenames=os_path.split(template)[1])

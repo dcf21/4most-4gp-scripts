@@ -1,3 +1,6 @@
+# This is the raster of wavelengths at which mock 4MOST LRS observations are returned.
+# Source: 4FS ETC
+
 # import numpy as np
 # x = np.loadtxt("raster_hrs.txt")
 # y = x.transpose()
