@@ -208,14 +208,23 @@ for magnitude in mag_list:
             spectra_list=((spectrum, None),)
         )
 
-        # Process degraded spectra
+        # Loop over LRS and HRS
         for mode in degraded_spectra:
+            # Loop over the spectra we simulated (there was only one!)
             for index in degraded_spectra[mode]:
+                # Loop over the various SNRs we simulated
                 for snr in degraded_spectra[mode][index]:
-                    exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]  # seconds
+                    # Extract the exposure time returned by 4FS from the metadata associated with this Spectrum object
+                    # The exposure time is recorded in seconds
+                    exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]
 
                     # Print output
-                    print "{:100s} {:6s} {:6.1f} {:6.3f} {:6.3f}".format(template, mode, snr, mag_intrinsic, exposure_time)
+                    print "{name:100s} {mode:6s} {snr:6.1f} {magnitude:6.3f} {exposure:6.3f}". \
+                        format(name=name,
+                               mode=mode,
+                               snr=snr,
+                               magnitude=mag_intrinsic,
+                               exposure=exposure_time)
 
         # Insert spectrum object into spectrum library
         library.insert(spectra=spectrum, filenames=os_path.split(template)[1])
