@@ -56,14 +56,14 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(fi
 logger = logging.getLogger(__name__.strip())
 logger.info("Importing APOKASC sample of spectra")
 
-# Table supplies list of stars in the APOKASC training set, giving the stellar labels for each star in the training set
+# Open table which lists stellar labels for each star in the training set
 training_set = Table.read(args.training_set, format="ascii")
 
-# Table supplies list of stellar labels for each star in the test set
+# Open table which lists stellar labels for each star in the test set
 expected_test_output = Table.read(args.test_set, format="ascii")
 expected_test_output_dict = dict([(star['Starname'], astropy_row_to_dict(star)) for star in expected_test_output])
 
-# Import high-resolution and low-resolution training sets into SpectrumLibraries
+# Import high- and low-resolution training sets into spectrum libraries
 for training_set_dir, out_library in (("APOKASC_trainingset/HRS", "hawkins_apokasc_training_set_hrs"),
                                       ("APOKASC_trainingset/LRS", "hawkins_apokasc_training_set_lrs")):
 
