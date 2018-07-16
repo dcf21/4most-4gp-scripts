@@ -7,8 +7,11 @@
 # <python rearrange.py>, but <./rearrange.py> will not work.
 
 """
-Take a library (or libraries) of spectra, and rearrange them. Either merge multiple libraries into one, split one
-input library in multiple outputs, add contamination
+Take a library (or libraries) of spectra, and rearrange the spectra within them. For example, we can merge multiple
+input libraries into one output library, or split one input library randomly between multiple outputs. We can slice
+an input library based on some metadata constraints, and store only a subset of the input spectra.
+
+We can also contaminate the input spectra with some fraction of light from a contaminating spectrum.
 """
 
 import argparse
@@ -33,14 +36,16 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--input-library',
                     action="append",
                     dest="input_library",
-                    help="The name of the SpectrumLibrary we are to read input spectra from. Stars may be filtered by "
-                         "parameters by placing a comma-separated list of constraints in [] brackets after the name of "
-                         "the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify a "
-                         "range. Multiple inputs can be specified on one command line to merge libraries.")
+                    help="The name of the spectrum library(s) we are to read input spectra from. A subset of the stars "
+                         "in the input library may optionally be selected by suffixing its name with a comma-separated "
+                         "list of constraints in [] brackets. Use the syntax my_library[Teff=3000] to demand equality, "
+                         "or [0<[Fe/H]<0.2] to specify a range. We do not currently support other operators like "
+                         "[Teff>5000], but such ranges are easy to recast is a range, e.g. [5000<Teff<9999]. "
+                         "Multiple inputs can be specified on one command line to merge libraries.")
 parser.add_argument('--output-library',
                     action="append",
                     dest="output_library",
-                    help="The name of the SpectrumLibrary we are to feed output into. Multiple output destinations "
+                    help="The name of the spectrum library we are to feed output into. Multiple output destinations "
                          "can be specified on one command line, in which case the --output-fraction setting should "
                          "be used to randomly direct spectra into the various destinations with specified "
                          "probabilities.")
@@ -49,31 +54,33 @@ parser.add_argument('--workspace', dest='workspace', default="",
 parser.add_argument('--contamination-library',
                     action="append",
                     dest="contamination_library",
-                    help="Contaminate output spectra with a randomly chosen spectrum from this library. Stars may be "
-                         "filtered by parameters by placing a comma-separated list of constraints in [] brackets after "
-                         "the name of the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to "
-                         "specify a range. Multiple contamination libraries can be specified.")
+                    help="Contaminate output spectra with a randomly chosen spectrum from this library. A subset of "
+                         "the stars in the input library may optionally be selected by suffixing its name with a "
+                         "comma-separated  list of constraints in [] brackets. Use the syntax my_library[Teff=3000] "
+                         "to demand equality, or [0<[Fe/H]<0.2] to specify a range. We do not currently support "
+                         "other operators like [Teff>5000], but such ranges are easy to recast is a range, e.g. "
+                         "[5000<Teff<9999]. Multiple contamination libraries can be specified, in which case a "
+                         "contaminating source is picked at random from one of the libraries.")
 parser.add_argument('--contamination-fraction',
                     action="append",
                     dest="contamination_fraction",
                     help="The fraction of photons which should come from contaminating sources. Multiple values can "
                          "be specified on one command line, in which case each input spectrum turns into multiple "
-                         "output spectra, contaminated with each contamination fraction in turn.")
+                         "output spectra, contaminated with each contamination fraction in turn. Default is zero.")
 parser.add_argument('--output-fraction',
                     action="append",
                     dest="output_fraction",
                     help="If multiple output libraries are specified, the input spectra are randomly split between "
                          "them. Specify the fraction to end up in each output library.")
 parser.add_argument('--create',
-                    required=False,
                     action='store_true',
                     dest="create",
-                    help="Create a clean SpectrumLibrary to feed synthesized spectra into")
+                    help="Create a clean spectrum library to feed output spectra into. Will throw an error if "
+                         "a spectrum library already exists with the same name.")
 parser.add_argument('--no-create',
-                    required=False,
                     action='store_false',
                     dest="create",
-                    help="Do not create a clean SpectrumLibrary to feed synthesized spectra into")
+                    help="Do not create a clean spectrum library to feed output spectra into.")
 parser.set_defaults(create=True)
 parser.add_argument('--log-file',
                     required=False,
@@ -82,9 +89,8 @@ parser.add_argument('--log-file',
                     help="Specify a log file where we log our progress.")
 args = parser.parse_args()
 
-logger.info("Running rearrange on spectra with arguments <{}> <{}> <{}>".format(args.input_library,
-                                                                                args.output_library,
-                                                                                args.contamination_library))
+logger.info("Running rearrange on spectra from <{}>, going into <{}>, contaminating with <{}>".
+            format(args.input_library, args.output_library, args.contamination_library))
 
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
@@ -112,7 +118,7 @@ def make_weighted_choice(weights):
     return selected_index
 
 
-# Open input SpectrumLibrary(s)
+# Open input spectrum library(s), and fetch a list of all the flux-normalised spectra within each
 input_libraries = []
 
 if args.input_library is not None:
@@ -122,10 +128,11 @@ if args.input_library is not None:
                                                              )
                        for item in args.input_library]
 
+# Report to user how many spectra we have just found
 logger.info("Opening {:d} input libraries. These contain {:s} spectra.".
             format(len(input_libraries), [len(x['items']) for x in input_libraries]))
 
-# Open contaminating SpectrumLibrary(s)
+# Open contaminating spectrum library(s), if any, and fetch a list of all the flux-normalised spectra within each
 contamination_libraries = []
 if args.contamination_library is not None:
     contamination_libraries = [SpectrumLibrarySqlite.open_and_search(library_spec=item,

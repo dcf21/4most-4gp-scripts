@@ -32,15 +32,14 @@ parser.add_argument('--filename', required=True, dest='filename',
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--create',
-                    required=False,
                     action='store_true',
                     dest="create",
-                    help="Create a clean SpectrumLibrary to feed synthesized spectra into")
+                    help="Create a clean spectrum library to feed output spectra into. Will throw an error if "
+                         "a spectrum library already exists with the same name.")
 parser.add_argument('--no-create',
-                    required=False,
                     action='store_false',
                     dest="create",
-                    help="Do not create a clean SpectrumLibrary to feed synthesized spectra into")
+                    help="Do not create a clean spectrum library to feed output spectra into.")
 parser.set_defaults(create=True)
 args = parser.parse_args()
 
@@ -49,7 +48,7 @@ our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
 os.system("mkdir -p {}".format(workspace))
 
-# Create new SpectrumLibrary
+# Create new spectrum library
 library_name = re.sub("/", "_", args.library)
 library_path = os_path.join(workspace, library_name)
 library = SpectrumLibrarySqlite(path=library_path, create=args.create)

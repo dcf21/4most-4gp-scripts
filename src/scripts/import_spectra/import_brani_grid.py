@@ -7,12 +7,9 @@
 # <python import_brani_grid.py>, but <./import_brani_grid.py> will not work.
 
 """
-Take the 3x3x3 grid of template spectra used by Brani's RV code, and turn it into a SpectrumLibrary for use in
-4MOST 4GP.
+Take the grid of template spectra used by Brani's RV code, and turn it into a spectrum library for use in 4MOST 4GP.
 
 To run this script, you need to have a copy of the file <templates.npy> which is part of Brani's RV code.
-
-The path to it is hard-coded below in the variable <template_spectra_path>, which you will need to change.
 """
 
 import os
@@ -26,13 +23,13 @@ from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 # Path to where we find Brani's <4MOST_forward_modeling>
 our_path = os_path.split(os_path.abspath(__file__))[0]
-brani_code_path = os_path.join(our_path, "../../forwardModelling/4MOST_forward_modeling")
+default_brani_code_path = os_path.join(our_path, "../../../../forwardModelling/4MOST_forward_modeling")
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--brani-code-path',
                     required=False,
-                    default=brani_code_path,
+                    default=default_brani_code_path,
                     dest="brani_code_path",
                     help="Specify the path where we can find the original data files for Brani's RV code.")
 args = parser.parse_args()
@@ -76,11 +73,11 @@ grid_axis_values = [np.arange(axis[1][0], axis[1][1], axis[1][2]) for axis in gr
 grid_axis_indices = [range(int((axis[1][1] - axis[1][0]) / axis[1][2])) for axis in grid_axes]
 grid_axis_index_combinations = itertools.product(*grid_axis_indices)
 
-# Turn Brani's set of templates into a SpectrumLibrary with path specified above
+# Turn Brani's set of templates into a spectrum library with path specified above
 library_path = os_path.join(workspace, target_library_name)
 library = SpectrumLibrarySqlite(path=library_path, create=True)
 
-# Brani's template spectra do not have any error vectors associated with them
+# Brani's template spectra do not have any error vectors associated with them, so add an array of zeros
 errors_dummy = np.zeros_like(wavelength_raster)
 
 # Import each template spectrum in turn
