@@ -136,7 +136,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
         labels_info = [label_info[ln] for ln in label_names]
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_values = [item[abscissa_info["field"]] for item in cannon_stars]
+        abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
@@ -159,14 +159,17 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
                     displayed_abscissa_value = snr_converter.per_pixel(abscissa_value).per_a()
 
                 # List of offsets
-                diffs = label_offset[abscissa_value][label_name]
+                diffs = accuracy_calculator.label_offsets[abscissa_value][label_name]
 
                 # Sort list
                 diffs.sort()
 
+                # Create a blank row in output data table to receive this entry
                 y.append([])
+
+                # Compute root mean square offset
                 y[-1].extend([displayed_abscissa_value])
-                y[-1].extend([metric(diffs)])
+                y[-1].extend([np.sqrt(np.mean(np.square(diffs)))])
 
             # Filename for data containing statistics on the RMS, and percentiles of the offset distributions
             file_name = "{}data_offsets_rms_{:d}_{:d}.dat".format(output_figure_stem, i, data_set_counter)
@@ -183,8 +186,8 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
             plot_precision[i].append([
                 "\"{}\" using 1:2".format(file_name),
                 legend_label,
-                "with lp pt 17 col {} lt {:d}".format(colour, int(line_type)),
-                len(star_names),
+                "with lp pt 17 col {} lt {:d}".format(data_set["colour"], int(data_set["line_type"])),
+                len(stars_which_meet_filter),
             ])
 
         del cannon_output

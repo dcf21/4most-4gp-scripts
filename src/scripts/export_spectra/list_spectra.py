@@ -59,11 +59,6 @@ for i in range(len(library_spectra)):
     # may be None rather than NaN if the field exists in the database but has no value set.
     if metadata.get("exposure", np.nan) is None:
         metadata["exposure"] = np.nan
-    exposure = float(metadata.get("exposure", np.nan))
-    mag_4fs = float(metadata.get("magnitude", np.nan))
-
-    # The reddening field is only set if the spectrum has passed through <degrade_spectra/redden_library.py>
-    reddening = float(metadata.get("e_bv", np.nan))
 
     # The SNR field is only set on spectra which have had synthetic noise added
     snr = float(metadata.get("SNR", np.nan))
@@ -90,7 +85,13 @@ for i in range(len(library_spectra)):
 
     # Write out a row of data
     line = "{:15s} {:8.1f} {:8.2f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.1f} {:10s}". \
-        format(name, exposure, mag_4fs, reddening, metadata["Teff"], metadata["logg"], metadata["[Fe/H]"],
+        format(name,
+               float(metadata.get("exposure", np.nan)),
+               float(metadata.get("magnitude", np.nan)),
+               float(metadata.get("e_bv", np.nan)),  # Only set if passed through <degrade_spectra/redden_library.py>
+               float(metadata.get("Teff", np.nan)),
+               float(metadata.get("logg", np.nan)),
+               float(metadata.get("[Fe/H]", np.nan)),
                snr, snr_defn)
     line += " {:8.3f} {:8.3f} {:8.3f}".format(r, g, u)
     print line

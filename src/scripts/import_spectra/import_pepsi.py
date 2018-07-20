@@ -68,13 +68,13 @@ for line_count, line in enumerate(open(ascii_table_filename)):
     if (len(line) < 1) or (line[0] == "#"):
         continue
 
-    # First line contains column headings
+    # First line contains tab-separated column headings
     if line_count == 0:
-        column_headings = line.split()
+        column_headings = line.split("\t")
         continue
 
-    # Subsequent lines contain known abundances for objects
-    data = line.split()
+    # Subsequent lines contain tab-separated known abundances for objects
+    data = line.split("\t")
     star_name = data[column_headings.index("star")]
 
     # If we've not seen this star before, create an empty record for it in <abundance_data>
@@ -124,14 +124,19 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
     # Open FITS file
     f = fits.open(item)
 
-    # Extract headers
+    # Extract headers and import them as metadata in SpectrumLibrary
     headers = f[0].header
 
     header_dictionary = {'Starname': filename,
                          'original_filename': filename
                          }
+
+    # Truncate each FITS header to only the first line. Also, omit various fields, otherwise we get hundreds of fields
+    # we don't need.
     for key in headers:
-        header_dictionary[key] = str(headers[key])
+        if ((not key.startswith("BCOL")) and (not key.startswith("GAIN")) and
+                (not key.startswith("IMASEC")) and (not key.startswith("RON"))):
+            header_dictionary[key] = str(headers[key]).strip().split("\n")[0]
 
     # Extract name of object
     star_name = header_dictionary['OBJECT'].strip()

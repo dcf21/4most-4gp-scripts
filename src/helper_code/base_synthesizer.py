@@ -21,13 +21,13 @@ from fourgp_specsynth import TurboSpectrum
 
 class Synthesizer:
 
-    # Convenience function: it would've been too helpful for astropy to actually provide dictionary access to rows
+    # Convenience function to provide dictionary access to rows of an astropy table
     @staticmethod
     def astropy_row_to_dict(x):
         return dict([(i, x[i]) for i in x.columns])
 
     # Read input parameters
-    def __init__(self, library_name, logger, docstring, root_path="..", spectral_resolution=50000):
+    def __init__(self, library_name, logger, docstring, root_path="../..", spectral_resolution=50000):
         self.logger = logger
         self.our_path = os_path.split(os_path.abspath(__file__))[0]
         self.root_path = os_path.join(self.our_path, root_path, "..")

@@ -136,7 +136,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
         labels_info = [label_info[ln] for ln in label_names]
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_values = [item[abscissa_info["field"]] for item in cannon_stars]
+        abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
@@ -159,7 +159,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                     displayed_abscissa_value = snr_converter.per_pixel(abscissa_value).per_a()
 
                 # List of offsets
-                diffs = label_offset[abscissa_value][label_name]
+                diffs = accuracy_calculator.label_offsets[abscissa_value][label_name]
 
                 # Sort list
                 diffs.sort()
@@ -209,8 +209,8 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                     f.write("{} {}\n\n\n".format((datum[0] + w1) * w2, datum[3]))
 
                     plot_box_whiskers[i][data_set_counter]. \
-                        insert(0, "\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".
-                               format(file_name, j))
+                        insert(0, ("\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".
+                                   format(file_name, j)))
 
         del cannon_output
 

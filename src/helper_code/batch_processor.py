@@ -4,8 +4,10 @@
 A class which allows us to run batches of shell commands in parallel.
 """
 
+import os
 from os import path as os_path
 import sys
+import multiprocessing as mp
 
 
 class BatchProcessor:
@@ -150,4 +152,12 @@ class BatchProcessor:
             None
         """
         # Now run the shell commands
-        pass
+        def worker(job_item):
+            os.system(job_item)
+
+        # Set up the parallel task pool to use all available processors
+        count = mp.cpu_count()
+        pool = mp.Pool(processes=count)
+
+        # Run the jobs
+        pool.map(worker, self.list_shell_commands())

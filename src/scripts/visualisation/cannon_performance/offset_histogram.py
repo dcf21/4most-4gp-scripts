@@ -136,7 +136,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
         labels_info = [label_info[ln] for ln in label_names]
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_values = [item[abscissa_info["field"]] for item in cannon_stars]
+        abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
@@ -157,20 +157,20 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
             if abscissa_label == "SNR/A":
                 displayed_abscissa_value = snr_converter.per_pixel(abscissa_value).per_a()
 
-            y = []
-            for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
-                # List of offsets
-                diffs = label_offset[abscissa_value][label_name]
-                y.append(diffs)
-
-                # Output histogram of label mismatches at this abscissa value
-                # i+1 is because Pyxplot counts columns starting from 1, not 0
-                plot_histograms[i][data_set_counter][displayed_abscissa_value] = [ (data_file, i + 1) ]
-
             # Filename for data file containing all offsets
             data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
                                                                       data_set_counter,
                                                                       displayed_abscissa_value)
+
+            y = []
+            for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
+                # List of offsets
+                diffs = accuracy_calculator.label_offsets[abscissa_value][label_name]
+                y.append(diffs)
+
+                # Output histogram of label mismatches at this abscissa value
+                # i+1 is because Pyxplot counts columns starting from 1, not 0
+                plot_histograms[i][data_set_counter][displayed_abscissa_value] = [ (data_file, snr_converter, i + 1) ]
 
             # Output data file of label mismatches at this abscissa value
             np.savetxt(fname=data_file,
@@ -205,7 +205,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                 k_max = 1.
 
             for abscissa_index, (displayed_abscissa_value, items) in enumerate(sorted(data_set_items.iteritems())):
-                for j, (plot_item, column) in enumerate(items):
+                for j, (plot_item, snr_converter, column) in enumerate(items):
 
                     if abscissa_label == "SNR/A":
                         snr = snr_converter.per_a(displayed_abscissa_value)
@@ -254,7 +254,7 @@ histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}
                                   """.format(j, displayed_abscissa_value, plot_item, column)
                                                            for abscissa_index, (displayed_abscissa_value, plot_items) in
                                                            enumerate(sorted(data_set_items.iteritems()))
-                                                           for j, (plot_item, column) in
+                                                           for j, (plot_item, snr_converter, column) in
                                                            enumerate(plot_items)
                                                            ]),
                                   plot_items=plot_items

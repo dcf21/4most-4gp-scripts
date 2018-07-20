@@ -136,7 +136,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
         labels_info = [label_info[ln] for ln in label_names]
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_values = [item[abscissa_info["field"]] for item in cannon_stars]
+        abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
@@ -160,13 +160,13 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
             y = []
             for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
                 # List of offsets
-                diffs = label_offset[abscissa_value][label_name]
+                diffs = accuracy_calculator.label_offsets[abscissa_value][label_name]
                 y.append(diffs)
 
-                # Filename for data file containing all offsets
-                data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
-                                                                          data_set_counter,
-                                                                          displayed_abscissa_value)
+            # Filename for data file containing all offsets
+            data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
+                                                                      data_set_counter,
+                                                                      displayed_abscissa_value)
 
             # Output data file of label mismatches at this abscissa value
             np.savetxt(fname=data_file,
@@ -179,7 +179,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
                        )
 
             # Output scatter plots of label cross-correlations at this abscissa value
-            plot_cross_correlations[data_set_counter][displayed_abscissa_value] = (data_file, scale)
+            plot_cross_correlations[data_set_counter][displayed_abscissa_value] = (data_file, snr_converter)
 
         del cannon_output
 
@@ -192,7 +192,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
     item_width = 4  # centimetres
     for data_set_counter, data_set_items in enumerate(plot_cross_correlations):
         for abscissa_index, (displayed_abscissa_value, plot_item) in enumerate(sorted(data_set_items.iteritems())):
-            (data_filename, snr_scaling) = plot_item
+            data_filename, snr_converter = plot_item
 
             if abscissa_label == "SNR/A":
                 snr = snr_converter.per_a(displayed_abscissa_value)
