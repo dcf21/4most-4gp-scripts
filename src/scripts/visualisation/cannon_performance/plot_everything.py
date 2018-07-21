@@ -295,4 +295,4 @@ batch.report_status()
 batch.list_shell_commands_to_file("plotting.log")
 
 # Now run the shell commands
-# batch.run_jobs()
+batch.run_jobs()
