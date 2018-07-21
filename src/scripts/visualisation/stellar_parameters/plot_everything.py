@@ -1,4 +1,4 @@
-#!../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "../../workspace")
+workspace = os_path.join(our_path, "../../../../workspace")
 
 # Create a long list of all the shell commands we want to run
 batch = BatchProcessor(logger=logger,

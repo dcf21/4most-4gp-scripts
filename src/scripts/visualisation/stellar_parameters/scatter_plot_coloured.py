@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -14,7 +14,7 @@ import os
 import re
 import argparse
 
-from lib.multiplotter import PyxplotDriver
+from lib.pyxplot_driver import PyxplotDriver
 from label_tabulator import tabulate_labels
 
 # Read input parameters
@@ -75,7 +75,7 @@ for index, library in enumerate(args.libraries):
 plotter = PyxplotDriver()
 
 for mode in ["colour", "mono"]:
-    plotter.make_plot(output_filename="{}_{}".format(args.output, mono),
+    plotter.make_plot(output_filename="{}_{}".format(args.output, mode),
                       caption=r"\bf {}".format(r" \newline ".join(args.library_titles)),
                       pyxplot_script="""
 
@@ -105,10 +105,10 @@ plot {plot_items}
                                             using=args.using,
                                             colour=("col_scale({colour_exp})".format(colour_exp=args.colour_expression)
                                                     if mode == "colour"
-                                                    else "")
+                                                    else "black")
                                             ).strip()
-                                                       for index, library, title in enumerate(zip(args.libraries,
-                                                                                                  args.library_titles))
+                                                       for index, (library, title) in enumerate(zip(args.libraries,
+                                                                                                    args.library_titles))
                                                        ]),
                                  make_colour_scale=("""
 set noxlabel

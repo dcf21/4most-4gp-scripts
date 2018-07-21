@@ -109,9 +109,10 @@ class BatchProcessor:
 
         for item in self.job_list:
             if item["needs_doing"]:
-                shell_command = ("{python} {script} --output \"{output}\" ".
+                shell_command = ("{python} {script} --output \"{output_path}/{output}\" ".
                                  format(python=self.python,
                                         script=item["script"],
+                                        output_path=self.output_path,
                                         output=item["output"].format(**item["substitutions"])
                                         ))
 
@@ -151,13 +152,17 @@ class BatchProcessor:
         :return:
             None
         """
-        # Now run the shell commands
-        def worker(job_item):
-            os.system(job_item)
 
         # Set up the parallel task pool to use all available processors
         count = mp.cpu_count()
         pool = mp.Pool(processes=count)
 
         # Run the jobs
-        pool.map(worker, self.list_shell_commands())
+        pool.map(func=worker,
+                 iterable=self.list_shell_commands()
+                 )
+
+
+# Helper to run the shell commands. This has to be globally defined so all the threads can see it...
+def worker(job_item):
+    os.system(job_item)

@@ -11,7 +11,7 @@ import re
 class LabelInformation:
     def __init__(self):
 
-        self.label_info = {
+        self.label_metadata = {
             "Teff": {"latex": r"$T_{\rm eff}$ $[{\rm K}]$",
                      "cannon_label": "Teff",
                      "over_fe": False,
@@ -155,11 +155,11 @@ class LabelInformation:
         }
 
         # Allow abundance over Fe to also be plotted
-        for key in self.label_info.keys():
+        for key in self.label_metadata.keys():
             test = re.match("\[(.*)/H\]", key)
             if test is not None:
-                info = self.label_info[key].copy()
+                info = self.label_metadata[key].copy()
                 new_key = "[{}/Fe]".format(test.group(1))
                 info["over_fe"] = True
                 info["latex"] = re.sub("rm H}", "rm Fe}", info["latex"])
-                self.label_info[new_key] = info
+                self.label_metadata[new_key] = info

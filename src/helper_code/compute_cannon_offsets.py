@@ -69,7 +69,7 @@ class CannonAccuracyCalculator:
         self.assume_scaled_solar = assume_scaled_solar
         self.abscissa_field = abscissa_field
 
-        self.label_information = LabelInformation().label_info
+        self.label_metadata = LabelInformation().label_metadata
 
         # Fetch Cannon output
         self.test_items = cannon_json_output['stars']
@@ -102,7 +102,7 @@ class CannonAccuracyCalculator:
 
             # Loop over all of the labels we're computing the Cannon's accuracy for
             for label in label_names:
-                label_info = self.label_information[label]
+                label_info = self.label_metadata[label]
                 cannon_label = label_info["cannon_label"]
 
                 # Look up the target value for this label, which we're comparing the Cannon against
@@ -161,7 +161,7 @@ class CannonAccuracyCalculator:
 
             # Loop over all of the labels we're computing the Cannon's accuracy for
             for label in self.label_names:
-                label_info = self.label_information[label]
+                label_info = self.label_metadata[label]
                 cannon_label = label_info["cannon_label"]
 
                 # Now see how far the Cannon was away from this target value
@@ -196,10 +196,10 @@ class CannonAccuracyCalculator:
                     if label not in self.label_offsets[abscissa_value]:
                         self.label_offsets[abscissa_value][label] = []
 
-                    # Only file this offset if it is fine. It may be NaN if we couldn't find a reference
-                    # value to compare against.
-                    if np.isfinite(cannon_offset):
-                        self.label_offsets[abscissa_value][label].append(cannon_offset)
+                    # File this offset, even if it is NaN. This is vital as some codes require that we return a
+                    # consistent number of offsets for every label (for example, when making histograms, we record
+                    # the offsets for each star in a giant table, with one row per star).
+                    self.label_offsets[abscissa_value][label].append(cannon_offset)
 
     def filter_test_stars(self, constraints):
         """

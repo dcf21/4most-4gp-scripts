@@ -1,4 +1,4 @@
-#!../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -158,6 +158,7 @@ for mode in modes_4most:
                                        },
                                        substitutions={"mode": mode,
                                                       "sample": sample,
+                                                      "censoring": censoring,
                                                       "divisor": divisor,
                                                       "data_path": workspace,
                                                       "plots_path": "performance_vs_label"}
@@ -198,13 +199,13 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                        )
 
     # Now produce scatter plots of the SNR required to achieve the target precision in each label for each star
-    label_info = LabelInformation().label_info
+    label_metadata = LabelInformation().label_metadata
     cannon_output_data = json.loads(open(cannon_run_filename).read())
-    label_names = [item for item in cannon_output_data['labels'] if item in label_info]
+    label_names = [item for item in cannon_output_data['labels'] if item in label_metadata]
     for colour_by_label in label_names:
         # Figure out the target precision for each label, and units
-        target_accuracy = label_info[colour_by_label]['targets'][0]
-        target_unit = label_info[colour_by_label]['unit']
+        target_accuracy = label_metadata[colour_by_label]['targets'][0]
+        target_unit = label_metadata[colour_by_label]['unit']
 
         # Produce a version of each label which is safe to put in the filename of a file
         path_safe_label = re.sub(r"\[(.*)/H\]", r"\g<1>", colour_by_label)
@@ -294,4 +295,4 @@ batch.report_status()
 batch.list_shell_commands_to_file("plotting.log")
 
 # Now run the shell commands
-batch.run_jobs()
+# batch.run_jobs()

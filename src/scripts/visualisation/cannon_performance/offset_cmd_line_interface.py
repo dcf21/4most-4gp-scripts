@@ -90,7 +90,7 @@ def fetch_command_line_arguments():
     assert len(args.cannon_output) == len(args.data_set_colour), \
         "Must have a matching number of libraries and data set colours."
 
-    assert len(args.cannon_output) == len(args.data_set_linetype), \
+    assert len(args.cannon_output) == len(args.data_set_line_type), \
         "Must have a matching number of libraries and data set line types."
 
     # Assemble list of input Cannon output data files

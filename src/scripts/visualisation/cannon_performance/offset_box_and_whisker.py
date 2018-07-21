@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -68,7 +68,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     """
 
     # Metadata about all the labels which we can plot the Cannon's precision in estimating
-    label_info = LabelInformation().label_info
+    label_metadata = LabelInformation().label_metadata
 
     # Metadata data about all of the horizontal axes that we can plot precision against
     abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
@@ -79,7 +79,10 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
 
     # Filter out any labels where we don't have metadata about how to plot them
-    label_names = [item for item in unique_labels if item in label_info]
+    label_names = [item for item in unique_labels if item in label_metadata]
+
+    # LaTeX strings to use to label each stellar label on graph axes
+    labels_info = [label_metadata[ln] for ln in label_names]
 
     # Create directory to store output files in
     os.system("mkdir -p {}".format(output_figure_stem))
@@ -132,9 +135,6 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
         data_set_titles.append(legend_label)
 
-        # LaTeX strings to use to label each stellar label on graph axes
-        labels_info = [label_info[ln] for ln in label_names]
-
         # Create a sorted list of all the abscissa values we've got
         abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
@@ -161,6 +161,10 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                 # List of offsets
                 diffs = accuracy_calculator.label_offsets[abscissa_value][label_name]
 
+                # Remove non-finite offsets
+                diffs = np.asarray(diffs)
+                diffs = diffs[np.logical_not(np.isnan(diffs))]
+
                 # Sort list
                 diffs.sort()
 
@@ -184,11 +188,11 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 """)
 
             plot_box_whiskers[i][data_set_counter] = [
-                "\"{}\" using 1:5:3:7 with yerrorrange col black".format(file_name)
+                "\"{}\" using 1:4:2:6 with yerrorrange col black".format(file_name)
             ]
 
             # Filename for data used to make box-and-whisker diagrams, with boxes explicitly defined
-            file_name = "{}data_whiskers_{:d}_{:d}.dat".format(output_figure_stem, i, data_set_counter)
+            file_name = "{}/data_whiskers_{:d}_{:d}.dat".format(output_figure_stem, i, data_set_counter)
 
             with open(file_name, "w") as f:
                 f.write("""
@@ -216,11 +220,8 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
     # Now plot the data
 
-    # LaTeX strings to use to label each stellar label on graph axes
-    labels_info = [label_info[ln] for ln in label_names]
-
     # Create pyxplot script to produce this plot
-    plotter = PyxplotDriver(multiplot_filename="whiskers_multiplot".format(output_figure_stem),
+    plotter = PyxplotDriver(multiplot_filename="{}/whiskers_multiplot".format(output_figure_stem),
                             multiplot_aspect=6. / 8)
 
     # Create a new pyxplot script for precision plots
@@ -228,7 +229,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
         # Create a new pyxplot script for box and whisker plots
         for data_set_counter, plot_items in enumerate(plot_box_whiskers[i]):
-            plotter.make_plot(output_filename="{}whiskers_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
+            plotter.make_plot(output_filename="{}/whiskers_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
                               caption="""
 {label_name}; {data_set_title}
                               """.format(

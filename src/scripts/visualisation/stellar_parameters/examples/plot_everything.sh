@@ -1,6 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-source ../../../virtualenv/bin/activate
+# A little bit of scripting magic so that whatever directory this script is
+# run from, we always find the python scripts and data we need.
+cd "$(dirname "$0")"
+cwd=`pwd`/..
+cd ${cwd}
+
+# Activate python virtual environment
+source ../../../../../virtualenv/bin/activate
 
 mkdir -p ../../../../output_plots/stellar_parameters
 

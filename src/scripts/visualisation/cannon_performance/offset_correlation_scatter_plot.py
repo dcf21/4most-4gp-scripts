@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -68,7 +68,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
     """
 
     # Metadata about all the labels which we can plot the Cannon's precision in estimating
-    label_info = LabelInformation().label_info
+    label_metadata = LabelInformation().label_metadata
 
     # Metadata data about all of the horizontal axes that we can plot precision against
     abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
@@ -79,7 +79,10 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
     unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
 
     # Filter out any labels where we don't have metadata about how to plot them
-    label_names = [item for item in unique_labels if item in label_info]
+    label_names = [item for item in unique_labels if item in label_metadata]
+
+    # LaTeX strings to use to label each stellar label on graph axes
+    labels_info = [label_metadata[ln] for ln in label_names]
 
     # Create directory to store output files in
     os.system("mkdir -p {}".format(output_figure_stem))
@@ -132,9 +135,6 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
 
         data_set_titles.append(legend_label)
 
-        # LaTeX strings to use to label each stellar label on graph axes
-        labels_info = [label_info[ln] for ln in label_names]
-
         # Create a sorted list of all the abscissa values we've got
         abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
@@ -164,9 +164,9 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
                 y.append(diffs)
 
             # Filename for data file containing all offsets
-            data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
-                                                                      data_set_counter,
-                                                                      displayed_abscissa_value)
+            data_file = "{}/data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
+                                                                       data_set_counter,
+                                                                       displayed_abscissa_value)
 
             # Output data file of label mismatches at this abscissa value
             np.savetxt(fname=data_file,
@@ -214,7 +214,7 @@ set fontsize 1.6
 
             for i in range(len(label_names) - 1):
                 for j in range(i + 1, len(label_names)):
-                    label_info = label_info[label_names[j]]
+                    label_info = label_metadata[label_names[j]]
                     if i == 0:
                         ppl += "unset yformat\n"
                         ppl += "set ylabel \"$\Delta$ {}\"\n".format(label_info["latex"])
@@ -223,7 +223,7 @@ set fontsize 1.6
                     ppl += "set yrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
                                                          label_info["offset_max"] * 1.2)
 
-                    label_info = label_info[label_names[i]]
+                    label_info = label_metadata[label_names[i]]
                     if j == len(label_names) - 1:
                         ppl += "unset xformat\n"
                         ppl += "set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"])
@@ -236,13 +236,13 @@ set fontsize 1.6
 
                     ppl += "plot  \"{}\" using {}:{} w dots ps 2\n".format(data_filename, i + 1, j + 1)
 
-            plotter.make_plot(output_filename=("{}correlation_{:d}_{:d}".
+            plotter.make_plot(output_filename=("{}/correlation_{:d}_{:d}".
                                                format(output_figure_stem, abscissa_index, data_set_counter)),
                               caption=r"""
 {data_set_title} \newline {caption}
                               """.format(data_set_title=data_set_titles[data_set_counter],
                                          caption=caption
-                                         ),
+                                         ).strip(),
                               pyxplot_script=ppl
                               )
 

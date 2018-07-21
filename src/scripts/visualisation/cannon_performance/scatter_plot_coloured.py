@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -43,7 +43,7 @@ args = parser.parse_args()
 assert len(args.labels) == 2, "A scatter plot needs two labels to plot -- one on each axis."
 
 # Label information
-label_information = LabelInformation().label_info
+label_metadata = LabelInformation().label_metadata
 
 # Labels are supplied with ranges listed in {}. We extract the names to pass to label_tabulator.
 label_list = []
@@ -52,7 +52,7 @@ for item in args.labels + [args.colour_by_label]:
     assert test is not None, "Label names should take the form <name{:2}>, with range to plot in {}."
     label_list.append({
         "name": test.group(1),
-        "latex": label_information[test.group(1)]["latex"],
+        "latex": label_metadata[test.group(1)]["latex"],
         "range": test.group(2),
         "min": test.group(2).split(":")[0],
         "max": test.group(2).split(":")[1]

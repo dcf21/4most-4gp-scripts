@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -12,6 +12,7 @@ Take a SpectrumLibrary and tabulate a list of the stellar parameters of the star
 
 import argparse
 from os import path as os_path
+import re
 
 from fourgp_speclib import SpectrumLibrarySqlite
 
@@ -39,20 +40,45 @@ def tabulate_labels(library_list, label_list, output_file, workspace=None):
 
     # Open output data file
     with open(output_file, "w") as output:
-        # Open spectrum libraries in turn
+        # Loop over each spectrum library in turn
         for library in library_list:
-            library_path = os_path.join(workspace, library)
+
+            # Extract name of spectrum library we are to open. Filter off any constraints which follow the name in []
+            test = re.match("([^\[]*)\[(.*)\]$", library)
+            if test is None:
+                library_name = library
+            else:
+                library_name = test.group(1)
+
+            # Open spectrum library and extract list of metadata fields which are defined on this library
+            library_path = os_path.join(workspace, library_name)
             library_object = SpectrumLibrarySqlite(path=library_path, create=False)
+            metadata_fields = library_object.list_metadata_fields()
+
+            # Now search library for spectra matching any input constraints, with additional constraint on only
+            # returning continuum normalised spectra, if that field is defined for this library
+            constraints = {}
+            if "continuum_normalised" in metadata_fields:
+                constraints["continuum_normalised"] = 1
+
+            library_spectra = SpectrumLibrarySqlite.open_and_search(
+                library_spec=library,
+                workspace=workspace,
+                extra_constraints=constraints
+            )
+
+            # Write column headers at the top of the output
+            columns = label_list if label_list is not None else library_object.list_metadata_fields()
+            output.write("# ")
+            for label in columns:
+                output.write("{} ".format(label))
+            output.write("\n")
 
             # Loop over objects in each spectrum library
-            # If we're running on 4FS output, we might want to insert a constraint on SNR here as well, but assume we
-            # usually run on Turbospectrum output with only one spectrum per star
-            constraints = {"continuum_normalised": 1}
-
-            for item in library_object.search(**constraints):
+            for item in library_spectra["items"]:
                 metadata = library_object.get_metadata(ids=item['specId'])[0]
 
-                for label in (label_list if label_list is not None else library_object.list_metadata_fields()):
+                for label in columns:
                     output.write("{} ".format(metadata.get(label, "-")))
                 output.write("\n")
 

@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -68,7 +68,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     """
 
     # Metadata about all the labels which we can plot the Cannon's precision in estimating
-    label_info = LabelInformation().label_info
+    label_metadata = LabelInformation().label_metadata
 
     # Metadata data about all of the horizontal axes that we can plot precision against
     abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
@@ -79,7 +79,10 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
 
     # Filter out any labels where we don't have metadata about how to plot them
-    label_names = [item for item in unique_labels if item in label_info]
+    label_names = [item for item in unique_labels if item in label_metadata]
+
+    # LaTeX strings to use to label each stellar label on graph axes
+    labels_info = [label_metadata[ln] for ln in label_names]
 
     # Create directory to store output files in
     os.system("mkdir -p {}".format(output_figure_stem))
@@ -132,9 +135,6 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
         data_set_titles.append(legend_label)
 
-        # LaTeX strings to use to label each stellar label on graph axes
-        labels_info = [label_info[ln] for ln in label_names]
-
         # Create a sorted list of all the abscissa values we've got
         abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
@@ -161,8 +161,9 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
                 # List of offsets
                 diffs = accuracy_calculator.label_offsets[abscissa_value][label_name]
 
-                # Sort list
-                diffs.sort()
+                # Remove non-finite offsets
+                diffs = np.asarray(diffs)
+                diffs = diffs[np.logical_not(np.isnan(diffs))]
 
                 # Create a blank row in output data table to receive this entry
                 y.append([])
@@ -172,7 +173,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
                 y[-1].extend([np.sqrt(np.mean(np.square(diffs)))])
 
             # Filename for data containing statistics on the RMS, and percentiles of the offset distributions
-            file_name = "{}data_offsets_rms_{:d}_{:d}.dat".format(output_figure_stem, i, data_set_counter)
+            file_name = "{}/data_offsets_rms_{:d}_{:d}.dat".format(output_figure_stem, i, data_set_counter)
 
             # Output table of statistical measures of label-mismatch-distribution as a function of abscissa
             # 1st column is RMS.
@@ -183,35 +184,32 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
             """)
 
-            plot_precision[i].append([
-                "\"{}\" using 1:2".format(file_name),
-                legend_label,
-                "with lp pt 17 col {} lt {:d}".format(data_set["colour"], int(data_set["line_type"])),
-                len(stars_which_meet_filter),
-            ])
+            plot_precision[i].append({
+                "plot_item": "\"{}\" using 1:2".format(file_name),
+                "title": legend_label,
+                "style": "with lp pt 17 col {} lt {:d}".format(data_set["colour"], int(data_set["line_type"])),
+                "star_count": len(stars_which_meet_filter),
+            })
 
         del cannon_output
 
     # Now plot the data
 
-    # LaTeX strings to use to label each stellar label on graph axes
-    labels_info = [label_info[ln] for ln in label_names]
-
     # Create pyxplot script to produce this plot
-    plotter_all = PyxplotDriver(multiplot_filename="precision_all_multiplot".format(output_figure_stem),
+    plotter_all = PyxplotDriver(multiplot_filename="{}/precision_all_multiplot".format(output_figure_stem),
                                 multiplot_aspect=6. / 8)
 
-    plotter = PyxplotDriver(multiplot_filename="precision_multiplot".format(output_figure_stem),
+    plotter = PyxplotDriver(multiplot_filename="{}/precision_multiplot".format(output_figure_stem),
                             multiplot_aspect=6. / 8)
 
     # Create a new pyxplot script for precision in all elements in one plot
     for j in range(len(plot_precision[0])):
-        plotter_all.make_plot(output_filename="{}precisionall_{:d}".format(output_figure_stem, j),
+        plotter_all.make_plot(output_filename="{}/precisionall_{:d}".format(output_figure_stem, j),
                               caption=r"""
 {title} ({star_count} stars)
                               """.format(
-                                  title=plot_precision[2][j][1],
-                                  star_count=plot_precision[2][j][3]
+                                  title=plot_precision[2][j]["title"],
+                                  star_count=plot_precision[2][j]["star_count"]
                               ).strip(),
                               pyxplot_script="""
 
@@ -234,7 +232,7 @@ plot {plot_items}
                                   plot_items=", ".join(["""
 {filename} title "{title}" w lp pt {point_type}
                                       """.format(
-                                      filename=plot_precision[i][j],
+                                      filename=plot_precision[i][j]["plot_item"],
                                       title=label_info["latex"][:-13],  # Remove string "[dex]" from end of label
                                       point_type=16 + (i - 2)
                                   ).strip()
@@ -253,9 +251,9 @@ plot {plot_items}
 
     # Create a new pyxplot script for precision plots
     for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
-        plotter.make_plot(output_filename="{}precision_{:d}".format(output_figure_stem, i),
-                              caption=label_info["latex"],
-                              pyxplot_script="""
+        plotter.make_plot(output_filename="{}/precision_{:d}".format(output_figure_stem, i),
+                          caption=label_info["latex"],
+                          pyxplot_script="""
                                   
 {set_key}
 set fontsize 1.3
@@ -268,34 +266,34 @@ set yrange [{y_min}:{y_max}]
 plot {plot_items}
 
                                   """.format(
-                                  set_key=("set key top {}".format("right"
-                                                                   if abscissa_info["field"] == "SNR"
-                                                                   else "left")
-                                           if (len(plot_precision[i]) > 1)
-                                           else "set nokey"),
-                                  x_label=abscissa_info["latex"],
-                                  y_label=label_info["latex"],
-                                  y_min=label_info["offset_min"],
-                                  y_max=label_info["offset_max"],
-                                  set_log=("set log x" if abscissa_info["log_axis"] else ""),
-                                  set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
-                                               if common_x_limits is not None else ""),
-                                  plot_items=", ".join(["""
-{filename} title "{title} ({star_count} stars)" {style}
+                              set_key=("set key top {}".format("right"
+                                                               if abscissa_info["field"] == "SNR"
+                                                               else "left")
+                                       if (len(plot_precision[i]) > 1)
+                                       else "set nokey"),
+                              x_label=abscissa_info["latex"],
+                              y_label=label_info["latex"],
+                              y_min=label_info["offset_min"],
+                              y_max=label_info["offset_max"],
+                              set_log=("set log x" if abscissa_info["log_axis"] else ""),
+                              set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
+                                           if common_x_limits is not None else ""),
+                              plot_items=", ".join(["""
+{plot_item} title "{title} ({star_count} stars)" {style}
                                       """.format(
-                                      **item
-                                  ).strip()
-                                                        for item in plot_precision[i]
-                                                        ] + ["""
+                                  **item
+                              ).strip()
+                                                    for item in plot_precision[i]
+                                                    ] + ["""
 {target} with lines col grey(0.75) notitle
                                       """.format(
-                                      target=target_value
-                                  ).strip()
-                                                             for target_value in label_info["targets"]
-                                                             ])
+                                  target=target_value
+                              ).strip()
+                                                         for target_value in label_info["targets"]
+                                                         ])
 
-                              )
-                              )
+                          )
+                          )
 
 
 if __name__ == "__main__":

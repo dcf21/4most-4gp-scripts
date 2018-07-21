@@ -104,7 +104,7 @@ unset fontsize
             image_formats.append('eps')
 
         # Create a copy of this plot in all requested image formats
-        for image_format in plot_settings.output_formats:
+        for image_format in image_formats:
             pyxplot_input += """
             
 set term {format}

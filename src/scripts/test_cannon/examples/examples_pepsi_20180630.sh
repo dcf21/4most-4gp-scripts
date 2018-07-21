@@ -7,7 +7,7 @@ cwd=`pwd`/..
 cd ${cwd}
 
 # Activate python virtual environment
-source ../../virtualenv/bin/activate
+source ../../../../virtualenv/bin/activate
 
 # Now do some work
 mkdir -p ../output_data/cannon

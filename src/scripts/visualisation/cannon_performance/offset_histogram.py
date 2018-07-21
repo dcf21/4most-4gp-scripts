@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -68,7 +68,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
     """
 
     # Metadata about all the labels which we can plot the Cannon's precision in estimating
-    label_info = LabelInformation().label_info
+    label_metadata = LabelInformation().label_metadata
 
     # Metadata data about all of the horizontal axes that we can plot precision against
     abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
@@ -79,7 +79,10 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
     unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
 
     # Filter out any labels where we don't have metadata about how to plot them
-    label_names = [item for item in unique_labels if item in label_info]
+    label_names = [item for item in unique_labels if item in label_metadata]
+
+    # LaTeX strings to use to label each stellar label on graph axes
+    labels_info = [label_metadata[ln] for ln in label_names]
 
     # Create directory to store output files in
     os.system("mkdir -p {}".format(output_figure_stem))
@@ -132,9 +135,6 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
         data_set_titles.append(legend_label)
 
-        # LaTeX strings to use to label each stellar label on graph axes
-        labels_info = [label_info[ln] for ln in label_names]
-
         # Create a sorted list of all the abscissa values we've got
         abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
@@ -158,9 +158,9 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                 displayed_abscissa_value = snr_converter.per_pixel(abscissa_value).per_a()
 
             # Filename for data file containing all offsets
-            data_file = "{}data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
-                                                                      data_set_counter,
-                                                                      displayed_abscissa_value)
+            data_file = "{}/data_offsets_all_{:d}_{:06.1f}.dat".format(output_figure_stem,
+                                                                       data_set_counter,
+                                                                       displayed_abscissa_value)
 
             y = []
             for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
@@ -170,7 +170,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
                 # Output histogram of label mismatches at this abscissa value
                 # i+1 is because Pyxplot counts columns starting from 1, not 0
-                plot_histograms[i][data_set_counter][displayed_abscissa_value] = [ (data_file, snr_converter, i + 1) ]
+                plot_histograms[i][data_set_counter][displayed_abscissa_value] = [(data_file, snr_converter, i + 1)]
 
             # Output data file of label mismatches at this abscissa value
             np.savetxt(fname=data_file,
@@ -186,11 +186,8 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
     # Now plot the data
 
-    # LaTeX strings to use to label each stellar label on graph axes
-    labels_info = [label_info[ln] for ln in label_names]
-
     # Create pyxplot script to produce this plot
-    plotter = PyxplotDriver(multiplot_filename="histogram_multiplot".format(output_figure_stem),
+    plotter = PyxplotDriver(multiplot_filename="{}/histogram_multiplot".format(output_figure_stem),
                             multiplot_aspect=6. / 8)
 
     # Create a new pyxplot script for precision plots
@@ -221,7 +218,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                     plot_items.append("f_{0:d}_{1:.0f}(x) with lines colour col_scale({3}) title '{2:s}'".
                                       format(j, displayed_abscissa_value, caption, abscissa_index / k_max))
 
-            plotter.make_plot(output_filename="{}histogram_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
+            plotter.make_plot(output_filename="{}/histogram_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
                               caption="""
                               
 {label_name}; {data_set_title}
@@ -249,15 +246,15 @@ plot {plot_items}
                                   label_name=label_info["latex"],
                                   x_min=-label_info["offset_max"] * 1.2,
                                   x_max=label_info["offset_max"] * 1.2,
-                                  make_histograms="".join([""""
+                                  make_histograms="".join(["""
 histogram f_{0:d}_{1:.0f}() \"{2}\" using {3}
-                                  """.format(j, displayed_abscissa_value, plot_item, column)
-                                                           for abscissa_index, (displayed_abscissa_value, plot_items) in
+                                  """.format(j, displayed_abscissa_value, data_item, column)
+                                                           for abscissa_index, (displayed_abscissa_value, data_items) in
                                                            enumerate(sorted(data_set_items.iteritems()))
-                                                           for j, (plot_item, snr_converter, column) in
-                                                           enumerate(plot_items)
+                                                           for j, (data_item, snr_converter, column) in
+                                                           enumerate(data_items)
                                                            ]),
-                                  plot_items=plot_items
+                                  plot_items=",".join(plot_items)
                               )
                               )
 

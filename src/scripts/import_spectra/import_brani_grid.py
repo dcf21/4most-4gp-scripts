@@ -65,8 +65,8 @@ wavelength_raster = wavelength_raster[wavelength_filter]
 # The stellar parameters which each grid axis samples are not specified in Brani's <templates.npy> file.
 # They are as follows...
 grid_axes = [["Teff", (4000, 8250, 250)],
-             ["Fe/H", (0.5, 3.0, 0.5)],
-             ["log_g", (1.5, 5.5, 0.5)]
+             ["[Fe/H]", (0.5, 3.0, 0.5)],
+             ["logg", (1.5, 5.5, 0.5)]
              ]
 
 grid_axis_values = [np.arange(axis[1][0], axis[1][1], axis[1][2]) for axis in grid_axes]

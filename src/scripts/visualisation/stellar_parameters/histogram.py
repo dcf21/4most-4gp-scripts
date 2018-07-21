@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python2.7
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -14,7 +14,7 @@ import os
 import re
 import argparse
 
-from lib.multiplotter import PyxplotDriver
+from lib.pyxplot_driver import PyxplotDriver
 from label_tabulator import tabulate_labels
 
 # Read input parameters
@@ -117,9 +117,9 @@ h{index:06d}_{counter:03d}(x) title "{title}" with histeps colour {colour}
                           title=title,
                           colour=colour
                           ).strip()
-                                     for index, library, title, colour in enumerate(zip(args.libraries,
-                                                                                        args.library_titles,
-                                                                                        args.library_colours))
+                                     for index, (library, title, colour) in enumerate(zip(args.libraries,
+                                                                                          args.library_titles,
+                                                                                          args.library_colours))
                                      ])
                )
                       )
