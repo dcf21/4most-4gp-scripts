@@ -59,7 +59,7 @@ for index, label in enumerate(label_names):
     plotter.make_plot(output_filename="{0}_{1}".format(args.output_stub, index),
                       caption=r"""
 {description} \newline {{\bf {label_name} }}
-""".format(description=description, label_name=label),
+""".format(description=description, label_name=label).strip(),
                       pyxplot_script="""
 
 col_scale(z) = hsb(0.75 * z, 1, 1)
