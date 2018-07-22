@@ -180,7 +180,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
         batch.register_job(script=offset_script,
                            output="{plots_path}/{cannon_run_name}",
                            arguments={
-                               "cannon_output": cannon_run_filename
+                               "cannon-output": cannon_run_filename
                            },
                            substitutions={
                                "cannon_run_name": cannon_run_name,
@@ -216,12 +216,12 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                            output="{plots_path}/{cannon_run_name}/{path_safe_label}",
                            arguments={
                                "label": ["Teff{{7000:3400}}", "logg{{5:0}}"],
-                               "colour-by-label": colour_by_label,
+                               "colour-by-label": "{}{{{{:}}}}".format(colour_by_label),
                                "target-accuracy": target_accuracy,
                                "colour-range-min": 30,
                                "colour-range-max": 120,
                                "cannon-output": cannon_run_filename,
-                               "accuracy_unit": target_unit
+                               "accuracy-unit": target_unit
                            },
                            substitutions={
                                "cannon_run_name": cannon_run_name,
@@ -236,12 +236,12 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                            output="{plots_path}/{cannon_run_name}/{path_safe_label}",
                            arguments={
                                "label": ["[Fe/H]{{1:-3}}", "logg{{5:0}}"],
-                               "colour-by-label": colour_by_label,
+                               "colour-by-label": "{}{{{{:}}}}".format(colour_by_label),
                                "target-accuracy": target_accuracy,
                                "colour-range-min": 30,
                                "colour-range-max": 120,
                                "cannon-output": cannon_run_filename,
-                               "accuracy_unit": target_unit
+                               "accuracy-unit": target_unit
                            },
                            substitutions={
                                "cannon_run_name": cannon_run_name,
@@ -256,9 +256,9 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                            output="{plots_path}/{cannon_run_name}/A_{path_safe_label}",
                            arguments={
                                "label": ["Teff{{7000:3400}}", "logg{{5:0}}"],
-                               "colour-by-label": colour_by_label,
-                               "colour-range-min": -3 * target_accuracy,
-                               "colour-range-max": 3 * target_accuracy,
+                               "colour-by-label": "{0}{{{{{1}:{2}}}}}".format(colour_by_label,
+                                                                              -3 * target_accuracy,
+                                                                              3 * target_accuracy),
                                "cannon-output": cannon_run_filename
                            },
                            substitutions={
@@ -274,9 +274,9 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                            output="{plots_path}/{cannon_run_name}/B_{path_safe_label}",
                            arguments={
                                "label": ["[Fe/H]{{1:-3}}", "logg{{5:0}}"],
-                               "colour-by-label": colour_by_label,
-                               "colour-range-min": -3 * target_accuracy,
-                               "colour-range-max": 3 * target_accuracy,
+                               "colour-by-label": "{0}{{{{{1}:{2}}}}}".format(colour_by_label,
+                                                                              -3 * target_accuracy,
+                                                                              3 * target_accuracy),
                                "cannon-output": cannon_run_filename
                            },
                            substitutions={

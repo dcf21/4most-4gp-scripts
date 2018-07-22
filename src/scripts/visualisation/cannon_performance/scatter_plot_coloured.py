@@ -74,7 +74,7 @@ for label in label_list:
         sys.exit()
 
 # Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, [i['name'] for i in label_names], args.cannon)
+snr_list = tabulate_labels(args.output_stub, [i['name'] for i in label_list], args.cannon)
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
 snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
@@ -89,7 +89,7 @@ for snr in snr_list:
                       caption=r"""
 {description} \newline {{\bf {label_latex} }} \newline SNR/\AA={snr_a:.1f} \newline SNR/pixel={snr_pixel:.1f}
                       """.format(description=description,
-                                 label_latex=args.label_axis_latex[2],
+                                 label_latex=label_list[2]['latex'],
                                  snr_a=snr_converter.per_pixel(snr["snr"]).per_a(),
                                  snr_pixel=snr["snr"]
                                  ).strip(),

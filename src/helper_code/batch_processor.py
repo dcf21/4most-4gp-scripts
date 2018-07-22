@@ -153,8 +153,8 @@ class BatchProcessor:
             None
         """
 
-        # Set up the parallel task pool to use all available processors
-        count = mp.cpu_count()
+        # Set up the parallel task pool to use half the available processors
+        count = mp.cpu_count() / 2
         pool = mp.Pool(processes=count)
 
         # Run the jobs
