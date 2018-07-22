@@ -123,7 +123,7 @@ class BatchProcessor:
                         argument_values = [argument_values]
 
                     for value in argument_values:
-                        shell_command += ("--{name}=\"{value}\" ".
+                        shell_command += ("--{name} \"{value}\" ".
                                           format(name=argument_name.format(**item["substitutions"]),
                                                  value=str(value).format(**item["substitutions"])
                                                  ))
