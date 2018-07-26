@@ -100,7 +100,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                 if test.group(1) != "Fe":
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
-    common_x_limits = abscissa_info["axis_range"]
+    common_x_limits = list(abscissa_info["axis_range"])
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):

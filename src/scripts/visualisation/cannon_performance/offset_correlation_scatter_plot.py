@@ -100,8 +100,6 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
                 if test.group(1) != "Fe":
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
-    common_x_limits = abscissa_info["axis_range"]
-
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
     for counter, data_set in enumerate(data_sets):
 
@@ -138,15 +136,6 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
         # Create a sorted list of all the abscissa values we've got
         abscissa_values = accuracy_calculator.label_offsets.keys()
         abscissa_values = sorted(set(abscissa_values))
-
-        # If all abscissa values are off the range of the x axis, rescale axis
-        if common_x_limits is not None:
-            if abscissa_values[0] > common_x_limits[1]:
-                common_x_limits[1] = abscissa_values[0]
-                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[0])
-            if abscissa_values[-1] < common_x_limits[0]:
-                common_x_limits[0] = abscissa_values[-1]
-                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[-1])
 
         data_set_counter += 1
 
@@ -229,6 +218,7 @@ set fontsize 1.6
                         ppl += "set xlabel \"$\Delta$ {}\"\n".format(label_info["latex"])
                     else:
                         ppl += "set xformat '' ; set xlabel ''\n"
+
                     ppl += "set xrange [{}:{}]\n".format(-label_info["offset_max"] * 1.2,
                                                          label_info["offset_max"] * 1.2)
 
