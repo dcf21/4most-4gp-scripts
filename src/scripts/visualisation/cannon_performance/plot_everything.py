@@ -121,7 +121,7 @@ for mode in modes_4most:
                                                          "Dwarfs; [Fe/H]$<-1$"],
                                        "dataset-colour": ["purple", "magenta", "blue", "red",
                                                           "cyan", "orange", "green", "brown"],
-                                       "dataset-linetype": [1] * 8,
+                                       "dataset-line-type": [1] * 8,
                                        "abundances-over-{divisor}": None
                                    },
                                    substitutions={"mode": mode,
@@ -153,7 +153,7 @@ for mode in modes_4most:
                                                              "10 parameters; uncensored",
                                                              "12 parameters; uncensored"],
                                            "dataset-colour": ["green", "blue", "orange", "red", "purple"],
-                                           "dataset-linetype": [1] * 5,
+                                           "dataset-line-type": [1] * 5,
                                            "abundances-over-{divisor}": None
                                        },
                                        substitutions={"mode": mode,
