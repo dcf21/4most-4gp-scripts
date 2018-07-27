@@ -141,6 +141,9 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
     # Extract name of object
     star_name = header_dictionary['OBJECT'].strip()
 
+    # Extract radial velocity of object -- units m/s, with receding velocity being positive
+    radial_velocity = float(header_dictionary['RADVEL'])
+
     # Remove spaces to match the names in the ASCII table of abundances
     star_name = re.sub(" ", "", star_name)
 
@@ -162,9 +165,15 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
                               value_errors=flux_errors,
                               metadata=header_dictionary)
 
+    # Correct radial velocity
+    # pepsi_spectrum_rest_frame = pepsi_spectrum.correct_radial_velocity(radial_velocity)
+
+    # Don't need to do the above, because the spectra are already RV corrected
+    pepsi_spectrum_rest_frame = pepsi_spectrum
+
     # Process spectra through 4FS
     degraded_spectra = etc_wrapper.process_spectra(
-        spectra_list=((pepsi_spectrum, pepsi_spectrum),)
+        spectra_list=((pepsi_spectrum_rest_frame, pepsi_spectrum_rest_frame),)
     )
 
     # Import degraded spectra into output spectrum library
