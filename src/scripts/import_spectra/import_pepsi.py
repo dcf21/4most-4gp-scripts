@@ -15,6 +15,7 @@ much extra noise into them.
 import argparse
 import os
 from os import path as os_path
+import numpy as np
 import glob
 import hashlib
 import logging
@@ -114,7 +115,7 @@ for mode, output_library in (("LRS", args.library_lrs), ("HRS", args.library_hrs
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
     magnitude=13,
-    snr_list=[1000]
+    snr_list=[250]
 )
 
 # Open fits spectrum
@@ -171,9 +172,17 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
     # Don't need to do the above, because the spectra are already RV corrected
     pepsi_spectrum_rest_frame = pepsi_spectrum
 
+    # Make model of pure continuum
+    continuum_model = Spectrum(wavelengths=wavelengths,
+                               values=np.ones_like(flux),
+                               value_errors=flux_errors,
+                               metadata=header_dictionary)
+
     # Process spectra through 4FS
     degraded_spectra = etc_wrapper.process_spectra(
-        spectra_list=((pepsi_spectrum_rest_frame, pepsi_spectrum_rest_frame),)
+        spectra_list=((pepsi_spectrum_rest_frame.copy(),
+                       pepsi_spectrum_rest_frame.copy()),),
+        resolution=220000
     )
 
     # Import degraded spectra into output spectrum library
