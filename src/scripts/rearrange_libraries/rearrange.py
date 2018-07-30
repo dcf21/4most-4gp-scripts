@@ -248,15 +248,15 @@ with open(args.log_to, "w") as result_log:
                     contamination_integral = contamination_spectrum.integral()
 
                     # Interpolate the contamination spectrum onto the observed spectrum's wavelength
-                    interpolator = fourgp_degrade.SpectrumInterpolator(contamination_spectrum)
-                    contamination_resampled = interpolator.match_to_other_spectrum(other=input_spectrum,
+                    resampler = fourgp_degrade.SpectrumResampler(contamination_spectrum)
+                    contamination_resampled = resampler.match_to_other_spectrum(other=input_spectrum,
+                                                                                interpolate_errors=False,
+                                                                                interpolate_mask=False)
+
+                    resampler = fourgp_degrade.SpectrumResampler(contamination_spectrum_continuum_normalised)
+                    contamination_cn_resampled = resampler.match_to_other_spectrum(other=input_spectrum,
                                                                                    interpolate_errors=False,
                                                                                    interpolate_mask=False)
-
-                    interpolator = fourgp_degrade.SpectrumInterpolator(contamination_spectrum_continuum_normalised)
-                    contamination_cn_resampled = interpolator.match_to_other_spectrum(other=input_spectrum,
-                                                                                      interpolate_errors=False,
-                                                                                      interpolate_mask=False)
 
                     # Renormalise contaminating spectrum to same integrated flux as input spectrum
                     contamination_resampled.values *= input_integral / contamination_integral

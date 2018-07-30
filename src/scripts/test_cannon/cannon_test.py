@@ -51,12 +51,12 @@ def select_cannon(continuum_normalisation):
     return cannon_class, continuum_normalised_testing, continuum_normalised_training
 
 
-def interpolate_spectrum(spectrum, training_spectra):
-    from fourgp_degrade.interpolate import SpectrumInterpolator
+def resample_spectrum(spectrum, training_spectra):
+    from fourgp_degrade.resample import SpectrumResampler
 
     first_training_spectrum = training_spectra.extract_item(0)
-    interpolator = SpectrumInterpolator(spectrum)
-    spectrum_new = interpolator.match_to_other_spectrum(first_training_spectrum)
+    resampler = SpectrumResampler(spectrum)
+    spectrum_new = resampler.match_to_other_spectrum(first_training_spectrum)
     spectrum_new.metadata = spectrum.metadata
     return spectrum_new
 
@@ -397,7 +397,7 @@ def main():
 
             # If requested, interpolate the test set onto the same raster as the training set. DANGEROUS!
             if args.interpolate:
-                spectrum = interpolate_spectrum(spectrum=spectrum, training_spectra=training_spectra)
+                spectrum = resample_spectrum(spectrum=spectrum, training_spectra=training_spectra)
 
             # Pass spectrum to the Cannon
             labels, cov, meta = model.fit_spectrum(spectrum=spectrum)

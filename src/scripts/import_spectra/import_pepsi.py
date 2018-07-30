@@ -60,43 +60,47 @@ parser.set_defaults(create=True)
 args = parser.parse_args()
 
 # Open ASCII table which lists the measured abundances of the PEPSI stars
-ascii_table_filename = os_path.join(args.fits_path, "benchmark_stars_overview.txt")
-column_headings = []
-abundance_data = {}
-for line_count, line in enumerate(open(ascii_table_filename)):
-    # Ignore blank lines and comment lines
-    line = line.strip()
-    if (len(line) < 1) or (line[0] == "#"):
-        continue
-
-    # First line contains tab-separated column headings
-    if line_count == 0:
-        column_headings = line.split("\t")
-        continue
-
-    # Subsequent lines contain tab-separated known abundances for objects
-    data = line.split("\t")
-    star_name = data[column_headings.index("star")]
-
-    # If we've not seen this star before, create an empty record for it in <abundance_data>
-    if star_name not in abundance_data:
-        abundance_data[star_name] = {}
-
-    # Transfer data from table into <abundance_data>
-    for column_number, column_name in enumerate(column_headings):
-        column_value = str(data[column_number])
-        # Ignore NaNs
-        if column_value == "NaN":
+for ascii_table, split_character in [("2015A&A...582A..49H_table_1.txt", None),
+                                     ("2015A&A...582A..49H_table_10.txt", None),
+                                      ("benchmark_stars_overview.txt", "/t")
+                                     ]:
+    ascii_table_filename = os_path.join(args.fits_path, ascii_table)
+    column_headings = []
+    abundance_data = {}
+    for line_count, line in enumerate(open(ascii_table_filename)):
+        # Ignore blank lines and comment lines
+        line = line.strip()
+        if (len(line) < 1) or (line[0] == "#"):
             continue
 
-        # See if column contains numeric data
-        try:
-            column_value = float(column_value)
-        except ValueError:
-            pass
+        # First line contains tab-separated column headings
+        if line_count == 0:
+            column_headings = line.split(split_character)
+            continue
 
-        # Add data to <abundance_data>
-        abundance_data[star_name][column_name] = column_value
+        # Subsequent lines contain tab-separated known abundances for objects
+        data = line.split(split_character)
+        star_name = data[column_headings.index("star")]
+
+        # If we've not seen this star before, create an empty record for it in <abundance_data>
+        if star_name not in abundance_data:
+            abundance_data[star_name] = {}
+
+        # Transfer data from table into <abundance_data>
+        for column_number, column_name in enumerate(column_headings):
+            column_value = str(data[column_number])
+            # Ignore NaNs
+            if column_value in ("NaN", "-"):
+                continue
+
+            # See if column contains numeric data
+            try:
+                column_value = float(column_value)
+            except ValueError:
+                pass
+
+            # Add data to <abundance_data>
+            abundance_data[star_name][column_name] = column_value
 
 # Set path to workspace where we create libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -128,7 +132,10 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
     # Extract headers and import them as metadata in SpectrumLibrary
     headers = f[0].header
 
-    header_dictionary = {'Starname': filename,
+    # Extract name of object
+    star_name = str(headers['OBJECT'].strip())
+
+    header_dictionary = {'Starname': star_name,
                          'original_filename': filename
                          }
 
@@ -138,9 +145,6 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
         if ((not key.startswith("BCOL")) and (not key.startswith("GAIN")) and
                 (not key.startswith("IMASEC")) and (not key.startswith("RON"))):
             header_dictionary[key] = str(headers[key]).strip().split("\n")[0]
-
-    # Extract name of object
-    star_name = header_dictionary['OBJECT'].strip()
 
     # Extract radial velocity of object -- units m/s, with receding velocity being positive
     radial_velocity = float(header_dictionary['RADVEL'])
