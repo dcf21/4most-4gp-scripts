@@ -23,6 +23,7 @@ import re
 from astropy.io import fits
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
+from fourgp_degrade import SpectrumResampler
 from fourgp_fourfs import FourFS
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
@@ -60,13 +61,13 @@ parser.set_defaults(create=True)
 args = parser.parse_args()
 
 # Open ASCII table which lists the measured abundances of the PEPSI stars
+abundance_data = {}
 for ascii_table, split_character in [("2015A&A...582A..49H_table_1.txt", None),
                                      ("2015A&A...582A..49H_table_10.txt", None),
-                                      ("benchmark_stars_overview.txt", "/t")
+                                     ("benchmark_stars_overview.txt", "\t")
                                      ]:
     ascii_table_filename = os_path.join(args.fits_path, ascii_table)
     column_headings = []
-    abundance_data = {}
     for line_count, line in enumerate(open(ascii_table_filename)):
         # Ignore blank lines and comment lines
         line = line.strip()
@@ -158,7 +159,7 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
     else:
         header_dictionary.update(abundance_data[star_name])
 
-    # Extract continuum-normalised spectrum from FITS file
+    # 1. Extract continuum-normalised spectrum from FITS file
     data = f[1].data
 
     wavelengths = data['Arg']
@@ -170,23 +171,28 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
                               value_errors=flux_errors,
                               metadata=header_dictionary)
 
-    # Correct radial velocity
+    # 2. Correct radial velocity
     # pepsi_spectrum_rest_frame = pepsi_spectrum.correct_radial_velocity(radial_velocity)
 
     # Don't need to do the above, because the spectra are already RV corrected
     pepsi_spectrum_rest_frame = pepsi_spectrum
 
-    # Make model of pure continuum
-    continuum_model = Spectrum(wavelengths=wavelengths,
-                               values=np.ones_like(flux),
-                               value_errors=flux_errors,
-                               metadata=header_dictionary)
+    # 3. Resample spectrum onto a wavelength raster with fixed stride, as this is what 4FS requires
+    resampler = SpectrumResampler(input_spectrum=pepsi_spectrum_rest_frame)
+    lambda_min = wavelengths[0] + 10
+    lambda_max = wavelengths[-1] - 10
+    lambda_delta = 0.05
+    lambda_steps = (lambda_max - lambda_min) / lambda_delta
+    pepsi_spectrum_resampled = resampler.onto_raster(output_raster=np.linspace(start=lambda_min,
+                                                                               stop=lambda_max,
+                                                                               num=lambda_steps
+                                                                               ))
 
     # Process spectra through 4FS
     degraded_spectra = etc_wrapper.process_spectra(
-        spectra_list=((pepsi_spectrum_rest_frame.copy(),
-                       pepsi_spectrum_rest_frame.copy()),),
-        resolution=220000
+        spectra_list=((pepsi_spectrum_resampled.copy(),
+                       pepsi_spectrum_resampled.copy()),),
+        resolution=(lambda_max + lambda_min) / 2 / lambda_delta
     )
 
     # Import degraded spectra into output spectrum library
