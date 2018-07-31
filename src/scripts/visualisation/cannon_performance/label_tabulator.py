@@ -111,6 +111,7 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
             words = ["Target_{}".format(i) for i in labels]
             words.extend(["Cannon_output_{}".format(i) for i in labels])
             words.extend(["Cannon_uncertainty_{}".format(i) for i in labels])
+            words.append("Starname")
             output.write("# {}\n".format(" ".join(words)))
 
             # Loop over stars writing them into data file
@@ -129,6 +130,9 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
                     words.extend([str(i) for i in cannon_uncertainties[object_name][snr]])
                 else:
                     words.extend(["-" for i in labels])
+
+                # Add name of object
+                words.append(object_name)
 
                 # Write output line
                 line = " ".join(words)
