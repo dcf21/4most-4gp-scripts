@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 overwrite_plots = False
-plot_width = 14
+plot_width = 14 * 1.5
 show_date_and_author = False
 output_formats = [
     #  'eps',
@@ -9,6 +9,7 @@ output_formats = [
     #  'pdf'
 ]
 output_dpi = 200
+keep_data_files = False
 
 include_author = True
 include_caption = True

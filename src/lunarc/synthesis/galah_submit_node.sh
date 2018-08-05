@@ -25,7 +25,7 @@ source activate myenv
 # cd $WRK_DIR
 
 # run the program
-cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/src/scripts/synthesize_grids
+cd ${HOME}/iwg7_pipeline/4most-4gp-scripts/src/scripts/synthesize_samples
 
 echo Temporary directory: ${TMPDIR}/workspace
 mkdir ${TMPDIR}/workspace

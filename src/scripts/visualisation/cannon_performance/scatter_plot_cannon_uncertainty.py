@@ -28,7 +28,7 @@ parser.add_argument('--cannon-output',
                     required=True,
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output', default="/tmp/cannon_uncertainty_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/scatter_plot_cannon_uncertainty", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -49,14 +49,15 @@ label_names = cannon_output['labels']
 label_count = len(label_names)
 
 # Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
+snr_list = tabulate_labels("{}/table_".format(args.output_stub), label_names, args.cannon)
 
 # Create pyxplot script to produce this plot
 plotter = PyxplotDriver(multiplot_filename="{0}_multiplot".format(args.output_stub),
                         multiplot_aspect=6. / 8)
 
 for index, label in enumerate(label_names):
-    plotter.make_plot(output_filename="{0}_{1}".format(args.output_stub, index),
+    plotter.make_plot(output_filename="{0}/{1}".format(args.output_stub, index),
+                      data_files=[snr["filename"] for snr in snr_list],
                       caption=r"""
 {description} \newline {{\bf {label_name} }}
 """.format(description=description, label_name=label).strip(),

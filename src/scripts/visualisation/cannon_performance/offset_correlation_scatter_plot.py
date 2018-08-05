@@ -101,6 +101,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
+    data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
         cannon_output = json.loads(open(data_set['cannon_output']).read())
@@ -169,6 +170,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
 
             # Output scatter plots of label cross-correlations at this abscissa value
             plot_cross_correlations[data_set_counter][displayed_abscissa_value] = (data_file, snr_converter)
+            data_file_names.append(data_file)
 
         del cannon_output
 
@@ -226,8 +228,10 @@ set fontsize 1.6
 
                     ppl += "plot  \"{}\" using {}:{} w dots ps 2\n".format(data_filename, i + 1, j + 1)
 
-            plotter.make_plot(output_filename=("{}/correlation_{:d}_{:d}".
-                                               format(output_figure_stem, abscissa_index, data_set_counter)),
+            output_filename = "{}/correlation_{:d}_{:d}".format(output_figure_stem, abscissa_index, data_set_counter)
+
+            plotter.make_plot(output_filename=output_filename,
+                              data_files=data_file_names,
                               caption=r"""
 {data_set_title} \newline {caption}
                               """.format(data_set_title=data_set_titles[data_set_counter],

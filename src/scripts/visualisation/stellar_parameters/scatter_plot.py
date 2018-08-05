@@ -31,13 +31,12 @@ parser.add_argument('--label-axis-latex', required=True, action="append", dest='
                     help="Labels we should output values for.")
 parser.add_argument('--using', default="1:2", dest='using',
                     help="Pyxplot using statement.")
-parser.add_argument('--output', default="/tmp/label_values", dest='output',
-                    help="Filename to write output plot to.")
+parser.add_argument('--output', default="/tmp/label_values", dest='output_stem',
+                    help="Directory to write plot to")
 args = parser.parse_args()
 
 # Create output directory
-output_figure_stem = os.path.split(args.output)[0]
-os.system("mkdir -p {}".format(output_figure_stem))
+os.system("mkdir -p {}".format(args.output_stem))
 
 # If no titles are supplied, default to the names of the libraries
 if (args.library_titles is None) or (len(args.library_titles) == 0):
@@ -66,13 +65,15 @@ for item in args.labels:
 for index, library in enumerate(args.libraries):
     tabulate_labels(library_list=[library],
                     label_list=[item['name'] for item in label_list],
-                    output_file="{output}_{index}.dat".format(output=args.output, index=index)
+                    output_file="{output}/{index}.dat".format(output=args.output_stem, index=index)
                     )
 
 # Create pyxplot script to produce this plot
 plotter = PyxplotDriver()
 
-plotter.make_plot(output_filename=args.output,
+plotter.make_plot(output_filename="{}/scatter".format(args.output),
+                  data_files=["{output}/{index}.dat".format(output=args.output_stem, index=index)
+                              for index in range(len(args.libraries))],
                   pyxplot_script="""
                   
 set key top left
@@ -87,8 +88,8 @@ plot {plot_items}
                   """.format(x_label=args.label_axis_latex[0], x_range=label_list[0]["range"],
                              y_label=args.label_axis_latex[1], y_range=label_list[1]["range"],
                              plot_items=", ".join(["""
-"{output}_{index}.dat" title "{title}" using {using} with dots colour {colour} ps 8
-                             """.format(output=args.output,
+"{output}/{index}.dat" title "{title}" using {using} with dots colour {colour} ps 8
+                             """.format(output=args.output_stem,
                                         index=index,
                                         using=args.using,
                                         title=title,

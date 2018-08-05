@@ -34,7 +34,7 @@ parser.add_argument('--cannon-output',
                     default="",
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output', default="/tmp/cannon_estimates_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/scatter_plot_arrows", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -55,7 +55,7 @@ for item in args.labels:
     label_names.append(test.group(1))
 
 # Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, label_names, args.cannon)
+snr_list = tabulate_labels("{}/table_".format(args.output_stub), label_names, args.cannon)
 
 # Fetch title for this Cannon run
 if not os.path.exists(args.cannon):
@@ -74,7 +74,10 @@ plotter = PyxplotDriver(multiplot_filename="{filename}_multiplot".format(filenam
                         multiplot_aspect=5.1 / 8)
 
 for snr in snr_list:
-    plotter.make_plot(output_filename=snr["filename"], caption=description, pyxplot_script="""
+    plotter.make_plot(output_filename=snr["filename"],
+                      data_files=[snr["filename"]],
+                      caption=description,
+                      pyxplot_script="""
     
 set key top left
 set linewidth 0.4

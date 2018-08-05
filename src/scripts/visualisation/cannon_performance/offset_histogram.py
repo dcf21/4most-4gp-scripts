@@ -101,6 +101,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                     label_names[j] = "[{}/Fe]".format(test.group(1))
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
+    data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
         cannon_output = json.loads(open(data_set['cannon_output']).read())
@@ -171,6 +172,8 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 """.format(column_headings="     ".join(["offset_{}".format(x) for x in label_names]))
                        )
 
+            data_file_names.append(data_file)
+
         del cannon_output
 
     # Now plot the data
@@ -208,6 +211,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                                       format(j, displayed_abscissa_value, caption, abscissa_index / k_max))
 
             plotter.make_plot(output_filename="{}/histogram_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
+                              data_files=data_file_names,
                               caption="""
                               
 {label_name}; {data_set_title}

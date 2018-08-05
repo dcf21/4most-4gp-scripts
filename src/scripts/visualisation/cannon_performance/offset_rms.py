@@ -103,6 +103,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     common_x_limits = list(abscissa_info["axis_range"])
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
+    data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
         cannon_output = json.loads(open(data_set['cannon_output']).read())
@@ -191,6 +192,8 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
                 "star_count": len(stars_which_meet_filter),
             })
 
+            data_file_names.append(file_name)
+
         del cannon_output
 
     # Now plot the data
@@ -205,6 +208,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     # Create a new pyxplot script for precision in all elements in one plot
     for j in range(len(plot_precision[0])):
         plotter_all.make_plot(output_filename="{}/precisionall_{:d}".format(output_figure_stem, j),
+                              data_files=data_file_names,
                               caption=r"""
 {title} ({star_count} stars)
                               """.format(
@@ -252,6 +256,7 @@ plot {plot_items}
     # Create a new pyxplot script for precision plots
     for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
         plotter.make_plot(output_filename="{}/precision_{:d}".format(output_figure_stem, i),
+                          data_files=data_file_names,
                           caption=label_info["latex"],
                           pyxplot_script="""
                                   

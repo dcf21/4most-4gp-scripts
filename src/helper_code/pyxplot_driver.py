@@ -53,7 +53,7 @@ class PyxplotDriver:
         self.user_name = pwd.getpwuid(os.getuid()).pw_gecos.split(",")[0]
         self.plot_creator = "{}, {}".format(self.user_name, time.strftime("%d %b %Y"))
 
-    def make_plot(self, pyxplot_script, output_filename, caption="", add_to_multiplot=True):
+    def make_plot(self, pyxplot_script, output_filename, data_files, caption="", add_to_multiplot=True):
         """
         Use Pyxplot to produce a plot.
 
@@ -62,6 +62,8 @@ class PyxplotDriver:
             format yourself, as we automatically deal with generating this boiler plate code.
         :param output_filename:
             The filename for the plot we're going to make. Omit the file format suffix, as this gets added later.
+        :param data_files:
+            A list of data files which we use to make this plot, and which we may want to clean up afterwards.
         :param caption:
             Possible caption to put in the top-left corner of the plot.
         :param add_to_multiplot:
@@ -79,7 +81,7 @@ set term dpi {dpi}
 set nodisplay
 
 set textvalign top
-set label 1 "\parbox{{{width}cm}}{{ {description} }}" at page 0.5, page {description_y}
+set label 1 "\parbox{{{width_caption}cm}}{{ {description} }}" at page 0.5, page {description_y}
 
 
 set fontsize 0.8
@@ -90,6 +92,7 @@ unset fontsize
 {pyxplot_script}
 
 """.format(width=self.width, aspect=self.aspect, dpi=self.dpi,
+           width_caption=self.width * 0.6,
            description=caption if plot_settings.include_caption else "",
            description_y=self.width * self.aspect - 0.3,
            plot_creator=self.plot_creator if plot_settings.include_author else "",
@@ -118,6 +121,10 @@ refresh
         p = os.popen("pyxplot", "w")
         p.write(pyxplot_input)
         p.close()
+
+        # If we are not keeping the data files, add them to the list of things for the garbage collector to delete
+        if not plot_settings.keep_data_files:
+            self.files_to_delete_on_exit.extend(data_files)
 
         # If requested, add this plot to multiplot
         if add_to_multiplot:

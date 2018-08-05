@@ -10,6 +10,7 @@
 Take an output file from the Cannon, and plot the Cannon's predictive model coefficients.
 """
 
+import os
 from os import path as os_path
 import argparse
 import json
@@ -35,6 +36,9 @@ args = parser.parse_args()
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "../../../../workspace")
+
+# Create directory to store output files in
+os.system("mkdir -p {}".format(args.output_stub))
 
 # Fetch title for this Cannon run
 cannon_output = json.loads(open(args.cannon + ".json").read())

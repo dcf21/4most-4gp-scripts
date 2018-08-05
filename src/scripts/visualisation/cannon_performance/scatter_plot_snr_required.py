@@ -42,7 +42,7 @@ parser.add_argument('--cannon-output',
                     default="",
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output', default="/tmp/cannon_estimates_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/scatter_plot_snr_required", dest='output_stub',
                     help="Data file to write output to.")
 parser.add_argument('--accuracy-unit', default="apples", dest='accuracy_unit',
                     help="Unit to put after target accuracy we're aiming to achieve in label")
@@ -132,11 +132,11 @@ for star_name in star_names:
         output.append(label_values[star_name] + [snr_required_per_a])
 
 # Make sure that output directory exists
-os.system("mkdir -p {}".format(os_path.split(args.output_stub)[0]))
+os.system("mkdir -p {}".format(args.output_stub))
 
 # Write values to data files
 # Each line is in the format <x  y  SNR/A>
-filename = "{}.dat".format(args.output_stub)
+filename = "{}/snr_required.dat".format(args.output_stub)
 with open(filename, "w") as f:
     for line in output:
         f.write("%16s %16s %16s\n" % tuple(line))
@@ -145,6 +145,7 @@ with open(filename, "w") as f:
 plotter = PyxplotDriver()
 
 plotter.make_plot(output_filename=filename,
+                  data_files=[filename],
                   caption=cannon_output['description'],
                   pyxplot_script="""
 

@@ -33,13 +33,12 @@ parser.add_argument('--using', action="append", dest='using',
                     help="Pyxplot using statement.")
 parser.add_argument('--bin-width', action="append", dest='bin_width',
                     help="Widths of bins to use in histogram.")
-parser.add_argument('--output', default="/tmp/label_values", dest='output',
-                    help="Filename to write output plot to.")
+parser.add_argument('--output', default="/tmp/label_values", dest='output_stem',
+                    help="Directory to write plot to.")
 args = parser.parse_args()
 
 # Create output directory
-output_figure_stem = os.path.split(args.output)[0]
-os.system("mkdir -p {}".format(output_figure_stem))
+os.system("mkdir -p {}".format(args.output_stem))
 
 # If no titles are supplied, default to the names of the libraries
 if (args.library_titles is None) or (len(args.library_titles) == 0):
@@ -76,15 +75,17 @@ for item in args.labels:
 for index, library in enumerate(args.libraries):
     tabulate_labels(library_list=[library],
                     label_list=[item['name'] for item in label_list],
-                    output_file="{output}_{index}.dat".format(output=args.output, index=index)
+                    output_file="{output}/{index}.dat".format(output=args.output_stem, index=index)
                     )
 
 # Create pyxplot script to produce each histogram in turn
-plotter = PyxplotDriver(multiplot_filename="{0}_multiplot".format(args.output),
+plotter = PyxplotDriver(multiplot_filename="{0}/multiplot".format(args.output_stem),
                         multiplot_aspect=5.5 / 8)
 
 for counter, using_expression in enumerate(args.using):
-    plotter.make_plot(output_filename="{output}_{counter}".format(output=args.output, counter=counter),
+    plotter.make_plot(output_filename="{output}/{counter}".format(output=args.output_stem, counter=counter),
+                      data_files=["{output}/{index}.dat".format(output=args.output_stem, index=index)
+                                  for index in range(len(args.libraries))],
                       pyxplot_script="""
     
 set nokey # key top right
@@ -103,10 +104,10 @@ plot {plot_items}
                x_range=label_list[counter]["range"],
                bin_width=args.bin_width[counter],
                make_histograms="\n".join(["""
-histogram h{index:06d}_{counter:03d}() "{output}_{index}.dat" using {using}
+histogram h{index:06d}_{counter:03d}() "{output}/{index}.dat" using {using}
                """.format(index=index,
                           counter=counter,
-                          output=args.output,
+                          output=args.output_stem,
                           using=using_expression)
                                           for index, library in enumerate(args.libraries)
                                           ]),

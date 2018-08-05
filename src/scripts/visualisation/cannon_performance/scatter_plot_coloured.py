@@ -35,7 +35,7 @@ parser.add_argument('--cannon-output',
                     default="",
                     dest='cannon',
                     help="Cannon output file we should analyse.")
-parser.add_argument('--output', default="/tmp/cannon_estimates_", dest='output_stub',
+parser.add_argument('--output', default="/tmp/scatter_plot_coloured", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
@@ -74,7 +74,7 @@ for label in label_list:
         sys.exit()
 
 # Create data files listing parameter values
-snr_list = tabulate_labels(args.output_stub, [i['name'] for i in label_list], args.cannon)
+snr_list = tabulate_labels("{}/table_".format(args.output_stub), [i['name'] for i in label_list], args.cannon)
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
 snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
@@ -86,6 +86,7 @@ plotter = PyxplotDriver(multiplot_filename="{0}_multiplot".format(args.output_st
 
 for snr in snr_list:
     plotter.make_plot(output_filename=snr["filename"],
+                      data_files=[snr["filename"]],
                       caption=r"""
 {description} \newline {{\bf {label_latex} }} \newline SNR/\AA={snr_a:.1f} \newline SNR/pixel={snr_pixel:.1f}
                       """.format(description=description,

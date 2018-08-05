@@ -11,6 +11,7 @@ Take an output file from the Cannon, and plot the Cannon's predictive model of h
 varies with one of the variables.
 """
 
+import os
 from os import path as os_path
 import argparse
 import re
@@ -74,6 +75,9 @@ for item in args.fixed_label:
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "../../../../workspace")
+
+# Create directory to store output files in
+os.system("mkdir -p {}".format(args.output_stub))
 
 # Open spectrum library we're going to plot
 input_library_info = SpectrumLibrarySqlite.open_and_search(
@@ -171,7 +175,7 @@ for i in range(n_steps):
     })
 
 # Write data file for PyXPlot to plot
-with open("{}.dat".format(args.output_stub), "w") as f:
+with open("{}/internal_model_one_wavelength.dat".format(args.output_stub), "w") as f:
     for snr in sorted(stars.keys()):
         for datum in stars[snr]:
             f.write("{} {} {}\n".format(datum["value"], datum["flux"], datum["flux_error"]))
@@ -185,18 +189,21 @@ plot_items = []
 index_counter = 0
 for snr in sorted(stars.keys()):
     plot_items.append("""
-"{0}.dat" index {1} title "4FS output at SNR/pixel {2:.1f}" with p pt 1 """.
+"{0}/internal_model_one_wavelength.dat" index {1} title "4FS output at SNR/pixel {2:.1f}" with p pt 1 """.
                       format(args.output_stub, index_counter, snr).strip())
     index_counter += 1
 
 plot_items.append("""
-"{0}.dat" index {1} title "Cannon internal model" with line color red lw 2 """.
+"{0}/internal_model_one_wavelength.dat" index {1} title "Cannon internal model" with line color red lw 2 """.
                   format(args.output_stub, index_counter).strip())
 
 # Create pyxplot script to produce this plot
 plotter = PyxplotDriver()
 
-plotter.make_plot(output_filename=args.output_stub, caption=description, pyxplot_script="""
+plotter.make_plot(output_filename="{}/internal_model_one_wavelength".format(args.output_stub),
+                  data_files=["{}/internal_model_one_wavelength.dat".format(args.output_stub)],
+                  caption=description,
+                  pyxplot_script="""
 
 set key below
 set linewidth 0.4
@@ -212,7 +219,7 @@ plot {plot_items}
            wavelength=args.wavelength,
            plot_items=", ".join([
                                     """
-"{filename}.dat" index {index} title "4FS output at SNR/pixel {snr:.1f}" with p pt 1
+"{filename}/internal_model_one_wavelength.dat" index {index} title "4FS output at SNR/pixel {snr:.1f}" with p pt 1
     """.format(filename=args.output_stub,
                index=index_counter,
                snr=snr
@@ -220,7 +227,7 @@ plot {plot_items}
                                     for index_counter, snr in enumerate(sorted(stars.keys()))
                                 ] + [
                                     """
-"{filename}.dat" index {index} title "Cannon internal model" with line color red lw 2
+"{filename}/internal_model_one_wavelength.dat" index {index} title "Cannon internal model" with line color red lw 2
     """.format(filename=args.output_stub,
                index=len(stars)
                ).strip()

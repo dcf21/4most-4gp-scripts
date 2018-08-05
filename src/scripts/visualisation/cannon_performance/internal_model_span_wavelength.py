@@ -78,6 +78,9 @@ for item in args.fixed_label:
 our_path = os_path.split(os_path.abspath(__file__))[0]
 workspace = os_path.join(our_path, "../../../../workspace")
 
+# Create directory to store output files in
+os.system("mkdir -p {}".format(args.output_stub))
+
 # Open spectrum library we're going to plot
 input_library_info = SpectrumLibrarySqlite.open_and_search(
     library_spec=args.library,
@@ -165,7 +168,7 @@ for i in range(n_steps):
     })
 
 # Write data file for PyXPlot to plot
-with open("{}.dat".format(args.output_stub), "w") as f:
+with open("{}/internal_model_span_wavelength.dat".format(args.output_stub), "w") as f:
     for datum in stars:
         for i in range(len(raster_indices_1)):
             f.write("{} {} {} {}\n".format(library_spectra.wavelengths[raster_indices_1[i]],
@@ -183,11 +186,14 @@ with open("{}.dat".format(args.output_stub), "w") as f:
         f.write("\n\n\n\n")
 
 # Instantiate pyxplot
-plotter = PyxplotDriver(multiplot_filename="{}_multiplot".format(args.output_stub), multiplot_aspect=4.8 / 8)
+plotter = PyxplotDriver(multiplot_filename="{}/internal_model_span_wavelength_multiplot".format(args.output_stub),
+                        multiplot_aspect=4.8 / 8)
 
 # Make list of items we're going to plot
 for data_set_count, data_set in enumerate(["Synthesised", "Cannon model"]):
-    plotter.make_plot(output_filename="{}_{}".format(args.output_stub, data_set_count), pyxplot_script="""
+    plotter.make_plot(output_filename="{}/internal_model_span_wavelength_{}".format(args.output_stub, data_set_count),
+                      data_files=["{}/internal_model_span_wavelength.dat".format(args.output_stub)],
+                      pyxplot_script="""
 
 set key below
 set linewidth 0.4
@@ -200,8 +206,9 @@ set yrange [0.8:1.02]
 plot {plot_items}
 
 """.format(x_min=args.wavelength_min, x_max=args.wavelength_max,
-           plot_items=", ".join(["""
-"{filename}.dat" using 1:3 index {index} title "{data_set} {label_latex}={label_value:.2f}" with lines
+           plot_items=", ".join([r"""
+"{filename}/internal_model_span_wavelength.dat" using 1:3 index {index} \
+    title "{data_set} {label_latex}={label_value:.2f}" with lines
     """.format(filename=args.output_stub,
                index=i + data_set_count * len(stars),
                data_set=data_set,

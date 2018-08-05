@@ -103,6 +103,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     common_x_limits = list(abscissa_info["axis_range"])
 
     # Loop over the various Cannon runs we have, e.g. LRS and HRS
+    data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
         cannon_output = json.loads(open(data_set['cannon_output']).read())
@@ -213,8 +214,11 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                     f.write("{} {}\n\n\n".format((datum[0] + w1) * w2, datum[3]))
 
                     plot_box_whiskers[i][data_set_counter]. \
-                        insert(0, ("\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".
-                                   format(file_name, j)))
+                        insert(0,
+                        "\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".format(file_name, j)
+                                   )
+
+            data_file_names.append(file_name)
 
         del cannon_output
 
@@ -228,8 +232,9 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
 
         # Create a new pyxplot script for box and whisker plots
-        for data_set_counter, plot_items in enumerate(plot_box_whiskers[i]):
+        for data_set_counter, (plot_items, data_file_name) in enumerate(plot_box_whiskers[i]):
             plotter.make_plot(output_filename="{}/whiskers_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
+                              data_files=data_file_names,
                               caption="""
 {label_name}; {data_set_title}
                               """.format(
