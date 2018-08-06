@@ -197,8 +197,10 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
                 caption = "{0} {1}".format(abscissa_info["latex"], displayed_abscissa_value)
 
             ppl = """
+clear
 set width {width}
 set size square
+set multiplot
 set nokey
 set fontsize 1.6
                   """.format(width=item_width)
@@ -232,11 +234,11 @@ set fontsize 1.6
 
             plotter.make_plot(output_filename=output_filename,
                               data_files=data_file_names,
-                              caption=r"""
-{data_set_title} \newline {caption}
-                              """.format(data_set_title=data_set_titles[data_set_counter],
-                                         caption=caption
-                                         ).strip(),
+#                               caption=r"""
+# {data_set_title} \newline {caption}
+#                               """.format(data_set_title=data_set_titles[data_set_counter],
+#                                          caption=caption
+#                                          ).strip(),
                               pyxplot_script=ppl
                               )
 

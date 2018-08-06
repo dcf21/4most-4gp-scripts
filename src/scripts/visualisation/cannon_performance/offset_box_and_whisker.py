@@ -232,7 +232,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     for i, (label_name, label_info) in enumerate(zip(label_names, labels_info)):
 
         # Create a new pyxplot script for box and whisker plots
-        for data_set_counter, (plot_items, data_file_name) in enumerate(plot_box_whiskers[i]):
+        for data_set_counter, plot_items in enumerate(plot_box_whiskers[i]):
             plotter.make_plot(output_filename="{}/whiskers_{:d}_{:d}".format(output_figure_stem, i, data_set_counter),
                               data_files=data_file_names,
                               caption="""

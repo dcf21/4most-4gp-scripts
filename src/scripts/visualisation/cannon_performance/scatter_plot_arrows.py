@@ -55,7 +55,7 @@ for item in args.labels:
     label_names.append(test.group(1))
 
 # Create data files listing parameter values
-snr_list = tabulate_labels("{}/table_".format(args.output_stub), label_names, args.cannon)
+snr_list = tabulate_labels("{}/scatter_plot_arrows_snr_".format(args.output_stub), label_names, args.cannon)
 
 # Fetch title for this Cannon run
 if not os.path.exists(args.cannon):
@@ -70,7 +70,7 @@ snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster'])
                              snr_at_wavelength=snr_defined_at_wavelength)
 
 # Create pyxplot script to produce this plot
-plotter = PyxplotDriver(multiplot_filename="{filename}_multiplot".format(filename=args.output_stub),
+plotter = PyxplotDriver(multiplot_filename="{filename}/multiplot".format(filename=args.output_stub),
                         multiplot_aspect=5.1 / 8)
 
 for snr in snr_list:

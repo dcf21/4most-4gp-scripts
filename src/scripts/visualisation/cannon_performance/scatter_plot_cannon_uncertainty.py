@@ -49,14 +49,14 @@ label_names = cannon_output['labels']
 label_count = len(label_names)
 
 # Create data files listing parameter values
-snr_list = tabulate_labels("{}/table_".format(args.output_stub), label_names, args.cannon)
+snr_list = tabulate_labels("{}/uncertainty_snr_".format(args.output_stub), label_names, args.cannon)
 
 # Create pyxplot script to produce this plot
-plotter = PyxplotDriver(multiplot_filename="{0}_multiplot".format(args.output_stub),
+plotter = PyxplotDriver(multiplot_filename="{0}/uncertainty_multiplot".format(args.output_stub),
                         multiplot_aspect=6. / 8)
 
 for index, label in enumerate(label_names):
-    plotter.make_plot(output_filename="{0}/{1}".format(args.output_stub, index),
+    plotter.make_plot(output_filename="{0}/uncertainty_{1}".format(args.output_stub, index),
                       data_files=[snr["filename"] for snr in snr_list],
                       caption=r"""
 {description} \newline {{\bf {label_name} }}

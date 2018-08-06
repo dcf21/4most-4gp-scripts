@@ -74,14 +74,14 @@ for label in label_list:
         sys.exit()
 
 # Create data files listing parameter values
-snr_list = tabulate_labels("{}/table_".format(args.output_stub), [i['name'] for i in label_list], args.cannon)
+snr_list = tabulate_labels("{}/scatter_plot_coloured_snr_".format(args.output_stub), [i['name'] for i in label_list], args.cannon)
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
 snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
                              snr_at_wavelength=snr_defined_at_wavelength)
 
 # Create pyxplot script to produce this plot
-plotter = PyxplotDriver(multiplot_filename="{0}_multiplot".format(args.output_stub),
+plotter = PyxplotDriver(multiplot_filename="{0}/multiplot".format(args.output_stub),
                         multiplot_aspect=4.8 / 8)
 
 for snr in snr_list:
