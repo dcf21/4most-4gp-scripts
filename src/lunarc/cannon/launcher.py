@@ -64,7 +64,7 @@ python cannon_test.py --workspace "{temporary_directory}" {python_arguments}
 
 """
 
-os.system("mkdir -p ../../output_data/cannon")
+os.system("mkdir -p ../../../output_data/cannon")
 
 counter = 0
 for job in args.jobs:
@@ -109,7 +109,7 @@ for job in args.jobs:
             continue
 
         # If file product already exists, don't need to recreate it
-        destination = os.path.join(config_path, destination) + ".json"
+        destination = os.path.join(config_path, destination) + ".full.json.gz"
         if os.path.exists(destination):
             print "-  Product <{}> already exists".format(destination)
             continue
