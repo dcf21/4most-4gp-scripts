@@ -18,107 +18,343 @@ mkdir -p ../../../output_data/cannon
 python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
                          --test "galah_test_sample_4fs_hrs" \
                          --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Ca/H],[Mg/H],[Ti/H],[Si/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ca/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_0"
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_00"
 python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
                          --test "galah_test_sample_4fs_lrs" \
                          --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Ca/H],[Mg/H],[Ti/H],[Si/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ca/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_0"
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_00"
 
 python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
                          --test "galah_test_sample_4fs_hrs" \
                          --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                          --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Ca/H],[Mg/H],[Ti/H],[Si/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ca/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_0"
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_00"
 python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
                          --test "galah_test_sample_4fs_lrs" \
                          --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                          --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Ca/H],[Mg/H],[Ti/H],[Si/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ca/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_0"
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_00"
 
 # -----------------------------------------------------------------------------------------
-
 
 
 python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
                          --test "galah_test_sample_4fs_hrs" \
                          --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Na/H],[Ni/H],[Cr/H],[Ba/H]" \
+                         --labels "Teff,logg,[Fe/H],[Mg/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_1"
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_01"
 python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
                          --test "galah_test_sample_4fs_lrs" \
                          --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Na/H],[Ni/H],[Cr/H],[Ba/H]" \
+                         --labels "Teff,logg,[Fe/H],[Mg/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_1"
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_01"
 
 python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
                          --test "galah_test_sample_4fs_hrs" \
                          --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                          --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Na/H],[Ni/H],[Cr/H],[Ba/H]" \
+                         --labels "Teff,logg,[Fe/H],[Mg/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_1"
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_01"
 python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
                          --test "galah_test_sample_4fs_lrs" \
                          --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                          --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Na/H],[Ni/H],[Cr/H],[Ba/H]" \
+                         --labels "Teff,logg,[Fe/H],[Mg/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_1"
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_01"
 
 # -----------------------------------------------------------------------------------------
-
 
 
 python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
                          --test "galah_test_sample_4fs_hrs" \
                          --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Eu/H],[Li/H],[C/H]+[O/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ti/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_2"
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_02"
 python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
                          --test "galah_test_sample_4fs_lrs" \
                          --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Eu/H],[Li/H],[C/H]+[O/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ti/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_2"
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_02"
 
 python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
                          --test "galah_test_sample_4fs_hrs" \
                          --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                          --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Eu/H],[Li/H],[C/H]+[O/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ti/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_2"
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_02"
 python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
                          --test "galah_test_sample_4fs_lrs" \
                          --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
                          --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H]" \
-                         --labels-individual "[Eu/H],[Li/H],[C/H]+[O/H]" \
+                         --labels "Teff,logg,[Fe/H],[Ti/H]" \
                          --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_2"
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_02"
 
 # -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Si/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_03"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Si/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_03"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Si/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_03"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Si/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_03"
+
+# -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Na/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_04"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Na/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_04"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Na/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_04"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Na/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_04"
+
+# -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ni/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_05"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ni/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_05"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ni/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_05"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ni/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_05"
+
+# -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Cr/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_06"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Cr/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_06"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Cr/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_06"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Cr/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_06"
+
+# -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ba/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_07"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ba/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_07"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ba/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_07"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Ba/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_07"
+
+# -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Eu/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_08"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Eu/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_08"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Eu/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_08"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Eu/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_08"
+
+# -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Li/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_09"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Li/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_09"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Li/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_09"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[Li/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_09"
+
+# -----------------------------------------------------------------------------------------
+
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --description "4MOST HRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[C/H],[O/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_hrs_individual_10"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --description "4MOST LRS - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[C/H],[O/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_lrs_individual_10"
+
+python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_hrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST HRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[C/H],[O/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_individual_10"
+python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                         --test "galah_test_sample_4fs_lrs" \
+                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                         --description "4MOST LRS (censored) - 5+n labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                         --labels "Teff,logg,[Fe/H],[C/H],[O/H]" \
+                         --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
+                         --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_individual_10"
+
+# -----------------------------------------------------------------------------------------
+
+
 
 
