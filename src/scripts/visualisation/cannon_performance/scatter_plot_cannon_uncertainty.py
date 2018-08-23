@@ -20,7 +20,7 @@ from label_tabulator import tabulate_labels
 
 from lib.pyxplot_driver import PyxplotDriver
 from lib.plot_settings import snr_defined_at_wavelength
-from lib.snr_conversion import SNRConverter
+from fourgp_degrade import SNRConverter
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)

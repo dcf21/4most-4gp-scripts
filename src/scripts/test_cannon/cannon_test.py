@@ -19,30 +19,54 @@ pass this code continuum normalised spectra if you want scientifically meaningfu
 """
 
 import argparse
+import os
 from os import path as os_path
 import logging
 import json
 import time
+import gzip
 import numpy as np
 
 from fourgp_speclib import SpectrumLibrarySqlite
+from fourgp_degrade import SpectrumProperties
 from fourgp_cannon import \
+    __version__ as fourgp_version, \
     CannonInstance_2018_01_09, \
     CannonInstanceWithRunningMeanNormalisation_2018_01_09, \
     CannonInstanceWithContinuumNormalisation_2018_01_09
 
 
-def select_cannon(continuum_normalisation):
+def select_cannon(continuum_normalisation="none"):
+    """
+    Select which Cannon wrapper to use, based on whether we've been asked to do continuum normalisation or not.
+
+    :param continuum_normalisation:
+        String indicating the name of the continuum normalisation scheme we've been asked to use. It is recommended
+        to use "none", meaning that you've already done continuum normalisation.
+    :return:
+        A list of three items:
+
+        1. A class which wraps the Cannon.
+        2. Boolean flag indicating whether we want the training set already continuum normalised before input.
+        3. Boolean flag indicating whether we want the test set already continuum normalised before input.
+    """
     # Make sure that a valid continuum normalisation option is selected
     assert continuum_normalisation in ["none", "running_mean", "polynomial"]
+
+    # Running mean normalisation. We accept flux-normalised spectra, and normalised each pixel by the mean flux in
+    # a running window of pixels on either side of that pixel.
     if continuum_normalisation == "running_mean":
         cannon_class = CannonInstanceWithRunningMeanNormalisation_2018_01_09
         continuum_normalised_training = False
         continuum_normalised_testing = False
+    # Attempt to continuum normalise the spectra by fitting a polynomial to it. This implementation is really crude
+    # and doesn't really manage to fit the continuum at all, so the results are a disaster.
     elif continuum_normalisation == "polynomial":
         cannon_class = CannonInstanceWithContinuumNormalisation_2018_01_09
         continuum_normalised_training = True
         continuum_normalised_testing = False
+    # Assume that spectra have already been continuum normalised. You must use this option for now if you want
+    # sensible results.
     else:
         # FIXME Use old Cannon for now, because the new Cannon produces worse fits
         cannon_class = CannonInstance_2018_01_09
@@ -52,6 +76,17 @@ def select_cannon(continuum_normalisation):
 
 
 def resample_spectrum(spectrum, training_spectra):
+    """
+    Resample a test spectrum onto the same raster as the training spectra. This may be necessary if for some reason
+    the test spectra are on a different raster, but it's not generally a good idea.
+
+    :param spectrum:
+        The test spectrum which is on a different raster to the training spectra.
+    :param training_spectra:
+        A sample training spectra, demonstrating the raster that the test spectrum needs to be on.
+    :return:
+        A resampled version of the test spectrum.
+    """
     from fourgp_degrade.resample import SpectrumResampler
 
     first_training_spectrum = training_spectra.extract_item(0)
@@ -61,7 +96,17 @@ def resample_spectrum(spectrum, training_spectra):
     return spectrum_new
 
 
-def autocomplete_scaled_solar_abundances(input_spectra, label_list, input_spectrum_ids):
+def autocomplete_scaled_solar_abundances(input_spectra, label_list):
+    """
+    Where stars have elemental abundances missing, insert scaled-solar values.
+
+    :param input_spectra:
+        SpectrumArray containing the spectra we are to operate on.
+    :param label_list:
+        The list of the labels which must be set on every spectrum.
+    :return:
+        SpectrumArray with values filled in.
+    """
     global logger
     for index in range(len(input_spectra)):
         metadata = input_spectra.get_metadata(index)
@@ -69,13 +114,29 @@ def autocomplete_scaled_solar_abundances(input_spectra, label_list, input_spectr
             if (label not in metadata) or (metadata[label] is None) or (not np.isfinite(metadata[label])):
                 # print "Label {} in spectrum {} assumed as scaled solar.".format(label, index)
                 metadata[label] = metadata["[Fe/H]"]
-    output_spectrum_ids = input_spectrum_ids
     output_spectra = input_spectra
 
-    return output_spectrum_ids, output_spectra
+    return output_spectra
 
 
 def filter_training_spectra(input_spectra, label_list, input_library, input_spectrum_ids):
+    """
+    Filter the spectra in a SpectrumArray on the basis that they must have a list of metadata values defined.
+
+    :param input_spectra:
+        A SpectrumArray from which we are to select spectra.
+    :param label_list:
+        The list of labels which must be set in order for a spectrum to be accepted.
+    :param input_library:
+        The input spectrum library from which these spectra were loaded (used to reload only the selected spectra).
+    :param input_spectrum_ids:
+        A list of the spectrum IDs of the spectra in the SpectrumArray <input_spectra>.
+    :return:
+        A list of two items:
+
+        0. A list of the IDs of the selected spectra
+        1. A SpectrumArray of the selected spectra
+    """
     global logger
     ids_filtered = []
     for index in range(len(input_spectra)):
@@ -92,10 +153,22 @@ def filter_training_spectra(input_spectra, label_list, input_library, input_spec
     output_spectrum_ids = ids_filtered
     output_spectra = input_library.open(ids=output_spectrum_ids)
 
-    return output_spectrum_ids, output_spectra
+    return output_spectra
 
 
 def evaluate_computed_labels(label_expressions, spectra):
+    """
+    Evaluated computed labels for a spectrum. These are labels that are computed from multiple metadata items, such as
+    B-V colours.
+
+    :param label_expressions:
+        A list of the computed label expressions that we are to evaluate for each spectrum.
+    :param spectra:
+        A SpectrumArray of the spectra for which we are to compute each computed label. The computed labels are added
+        to the metadata dictionary for each spectrum.
+    :return:
+        None
+    """
     global logger
     for index in range(len(spectra)):
         metadata = spectra.get_metadata(index)
@@ -105,6 +178,29 @@ def evaluate_computed_labels(label_expressions, spectra):
 
 
 def create_censoring_masks(censoring_scheme, raster, censoring_line_list, label_fields, label_expressions):
+    """
+    Create censoring masks for each label we are fitting, based on pixels around the lines of each element.
+
+    :param censoring_scheme:
+        Switch to specify how censoring is done. There are three options: 1, 2 or 3. In Scheme 1, all of the labels
+        the Cannon is fitting can see all pixels relevant to all the labels we're fitting. The censoring is a simple
+        mask, which is the same for all labels. In Scheme 2, each individual element can only see its own lines, but
+        Teff and log(g) can see all of the pixels used by at least one of the individual elements. Scheme 3 is similar,
+        but [Fe/H] is treated like Teff and log(g) and can see all the pixels used by at least one of the elements being
+        fitting.
+
+        For best results, use scheme 1.
+    :param raster:
+        The wavelength raster of the spectra we are fitting.
+    :param censoring_line_list:
+        The filename of the file with the line list we use create the censoring masks.
+    :param label_fields:
+        A list of the labels the Cannon is fitting. Used to determine which elements we need to include lines for.
+    :param label_expressions:
+        A list of the algebraic expressions for any label expressions we're fitting.
+    :return:
+        A dictionary of Boolean masks, one for each label.
+    """
     global logger
     censoring_masks = None
     if censoring_line_list != "":
@@ -179,21 +275,10 @@ def create_censoring_masks(censoring_scheme, raster, censoring_line_list, label_
     return censoring_masks
 
 
-def identify_wavelength_arms(raster):
-    # We look at the wavelength raster of the first training spectrum, and look for break points
-    break_points = []
-    raster_diffs = np.diff(raster)
-    diff = raster_diffs[0]
-    for i in range(len(raster_diffs) - 2):
-        second_diff = raster_diffs[i] / diff
-        diff = raster_diffs[i]
-        if (second_diff < 0.98) or (second_diff > 1.02):
-            break_points.append((raster[i] + raster[i + 1]) / 2)
-            diff = raster_diffs[i + 1]
-    return break_points
-
-
 def main():
+    """
+    Main entry point for running the Cannon.
+    """
     global logger
 
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
@@ -319,17 +404,20 @@ def main():
     # Fit each set of labels we're fitting individually, one by one
     for labels_individual_batch_count, test_labels_individual_batch in enumerate(test_labels_individual):
 
+        # Create filename for the output from this Cannon run
+        output_filename = args.output_file
+        # If we're fitting elements individually, individually number the runs to fit each element
+        if len(test_labels_individual) > 1:
+            output_filename += "-{:03d}".format(labels_individual_batch_count)
+
         # If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
         if args.assume_scaled_solar:
-            training_library_ids, training_spectra = \
-                autocomplete_scaled_solar_abundances(
+            training_spectra = autocomplete_scaled_solar_abundances(
                     input_spectra=training_spectra_all,
-                    label_list=test_label_fields + test_labels_individual_batch,
-                    input_spectrum_ids=training_library_ids_all
+                    label_list=test_label_fields + test_labels_individual_batch
                 )
         else:
-            training_library_ids, training_spectra = \
-                filter_training_spectra(
+            training_spectra = filter_training_spectra(
                     input_spectra=training_spectra_all,
                     label_list=test_label_fields + test_labels_individual_batch,
                     input_library=training_library,
@@ -356,7 +444,7 @@ def main():
         )
 
         # If we're doing our own continuum normalisation, we need to treat each wavelength arm separately
-        wavelength_arm_breaks = identify_wavelength_arms(raster=raster)
+        wavelength_arm_breaks = SpectrumProperties(raster).wavelength_arms()['break_points']
 
         # Construct and train a model
         time_training_start = time.time()
@@ -380,7 +468,7 @@ def main():
         time_training_end = time.time()
 
         # Save the model
-        model.save_model(filename="{:s}-{:03d}.cannon".format(args.output_file, labels_individual_batch_count),
+        model.save_model(filename="{:s}.cannon".format(output_filename),
                          overwrite=True)
 
         # Test the model
@@ -412,11 +500,6 @@ def main():
 
             # Identify which star it is and what the SNR is
             star_name = spectrum.metadata["Starname"] if "Starname" in spectrum.metadata else ""
-            snr = spectrum.metadata["SNR"] if "SNR" in spectrum.metadata else 0
-            snr_per = spectrum.metadata["SNR_per"] if "SNR_per" in spectrum.metadata else "pixel"
-            snr_definition = spectrum.metadata["snr_definition"] if "snr_definition" in spectrum.metadata else ""
-            ebv = spectrum.metadata["e_bv"] if "e_bv" in spectrum.metadata else 0
-            with_rv = spectrum.metadata["rv"] if "rv" in spectrum.metadata else 0
             uid = spectrum.metadata["uid"] if "uid" in spectrum.metadata else ""
 
             # From the label covariance matrix extract the standard deviation in each label value
@@ -424,26 +507,18 @@ def main():
             err_labels = np.sqrt(np.diag(cov[0]))
 
             # Turn list of label values into a dictionary
-            result = dict(zip(test_labels, labels[0]))
+            cannon_output = dict(zip(test_labels, labels[0]))
 
             # Add the standard deviations of each label into the dictionary
-            result.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
-
-            # Add target values for each label into the dictionary
-            for label_name in test_label_fields:
-                if label_name in spectrum.metadata:
-                    result["target_{}".format(label_name)] = spectrum.metadata[label_name]
+            cannon_output.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
 
             # Add the star name and the SNR ratio of the test spectrum
-            result.update({"Starname": star_name,
-                           "SNR": snr,
-                           "SNR_per": snr_per,
-                           "snr_definition": snr_definition,
-                           "e_bv": ebv,
-                           "rv": with_rv,
-                           "uid": uid,
-                           "time": time_taken[index]
-                           })
+            result = {"Starname": star_name,
+                      "uid": uid,
+                      "time": time_taken[index],
+                      "spectrum_metadata": spectrum.metadata,
+                      "cannon_output": cannon_output
+                      }
             results.append(result)
 
         # Report time taken
@@ -452,28 +527,39 @@ def main():
                            np.mean(time_taken),
                            np.std(time_taken)))
 
-        # Write results to JSON file
-        with open("{:s}-{:03d}.json".format(args.output_file, labels_individual_batch_count), "w") as f:
-            censoring_output = None
-            if censoring_masks is not None:
-                censoring_output = dict([(label, tuple([int(i) for i in mask]))
-                                         for label, mask in censoring_masks.iteritems()])
+        # Create output data structure
+        censoring_output = None
+        if censoring_masks is not None:
+            censoring_output = dict([(label, tuple([int(i) for i in mask]))
+                                     for label, mask in censoring_masks.iteritems()])
 
-            f.write(json.dumps({
-                "train_library": args.train_library,
-                "test_library": args.test_library,
-                "tolerance": args.tolerance,
-                "description": args.description,
-                "assume_scaled_solar": args.assume_scaled_solar,
-                "line_list": args.censor_line_list,
-                "start_time": time_training_start,
-                "end_time": time.time(),
-                "training_time": time_training_end - time_training_start,
-                "labels": test_labels,
-                "wavelength_raster": tuple(raster),
-                "censoring_mask": censoring_output,
-                "stars": results
-            }))
+        output_data = {
+            "hostname": os.uname()[1],
+            "generator": __file__,
+            "4gp_version": fourgp_version,
+            "cannon_version": model.cannon_version,
+            "start_time": time_training_start,
+            "end_time": time.time(),
+            "training_time": time_training_end - time_training_start,
+            "description": args.description,
+            "train_library": args.train_library,
+            "test_library": args.test_library,
+            "tolerance": args.tolerance,
+            "assume_scaled_solar": args.assume_scaled_solar,
+            "line_list": args.censor_line_list,
+            "labels": test_labels,
+            "wavelength_raster": tuple(raster),
+            "censoring_mask": censoring_output
+        }
+
+        # Write brief summary of run to JSON file, without masses of data
+        with gzip.open("{:s}.summary.json.gz".format(output_filename), "w") as f:
+            f.write(json.dumps(output_data, indent=2))
+
+        # Write full results to JSON file
+        output_data["spectra"] = results
+        with gzip.open("{:s}.full.json.gz".format(output_filename), "w") as f:
+            f.write(json.dumps(output_data, indent=2))
 
 
 # Do it right away if we're run as a script

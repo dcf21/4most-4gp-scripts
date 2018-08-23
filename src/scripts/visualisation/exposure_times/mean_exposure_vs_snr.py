@@ -18,7 +18,7 @@ import pwd
 import numpy as np
 
 from fourgp_speclib import SpectrumLibrarySqlite
-from lib.snr_converstion import SNRConverter
+from fourgp_degrade import SNRConverter
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)

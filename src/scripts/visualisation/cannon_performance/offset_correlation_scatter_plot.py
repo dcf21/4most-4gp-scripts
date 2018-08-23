@@ -21,7 +21,7 @@ from lib.label_information import LabelInformation
 from lib.abscissa_information import AbcissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
 from lib.plot_settings import snr_defined_at_wavelength
-from lib.snr_conversion import SNRConverter
+from fourgp_degrade import SNRConverter
 
 from offset_cmd_line_interface import fetch_command_line_arguments
 
