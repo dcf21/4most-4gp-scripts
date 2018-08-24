@@ -13,6 +13,7 @@ varies with one of the variables.
 
 import os
 from os import path as os_path
+import gzip
 import argparse
 import re
 import json
@@ -49,7 +50,8 @@ parser.add_argument('--fixed-label', required=True, action="append", dest='fixed
 parser.add_argument('--cannon-output',
                     required=True,
                     dest='cannon',
-                    help="Cannon output file we should analyse.")
+                    help="Filename of the JSON file containing the label values estimated by the Cannon, without "
+                         "the <.summary.json.gz> suffix.")
 parser.add_argument('--output', default="/tmp/cannon_model_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
@@ -102,7 +104,7 @@ for i in range(len(library_spectra)):
     library_spectra_by_snr[snr].append(i)
 
 # Fetch title for this Cannon run
-cannon_output = json.loads(open(args.cannon + ".json").read())
+cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
 description = cannon_output['description']
 
 # Open spectrum library we originally trained the Cannon on

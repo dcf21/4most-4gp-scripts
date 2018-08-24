@@ -11,11 +11,11 @@ import argparse
 
 
 def fetch_command_line_arguments():
-
     # Read input parameters
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cannon-output', action="append", dest='cannon_output',
-                        help="JSON structure containing the label values estimated by the Cannon.")
+                        help="Filename of the JSON file containing the label values estimated by the Cannon, without "
+                             "the <.summary.json.gz> suffix.")
     parser.add_argument('--abscissa', default="SNR/A", dest='abscissa_label',
                         help="Name of the quantity to plot on the horizontal axis. Must be a keyword of the "
                              "dictionary abscissa_labels.")
@@ -103,8 +103,10 @@ def fetch_command_line_arguments():
                 args.data_set_line_type):
 
         # Read the JSON file which we dumped after running the Cannon
-        if not os.path.exists(cannon_output):
-            print "mean_performance_vs_label.py could not proceed: Cannon run <{}> not found".format(cannon_output)
+        cannon_filename_full = cannon_output + ".full.json.gz"
+        if not os.path.exists(cannon_filename_full):
+            print "mean_performance_vs_label.py could not proceed: Cannon run <{}> not found". \
+                format(cannon_filename_full)
             sys.exit()
 
         # Append to list of Cannon data sets
@@ -116,10 +118,10 @@ def fetch_command_line_arguments():
                                })
 
     return {"data_sets": cannon_outputs,
-                                 "abundances_over_h": args.abundances_over_h,
-                                 "assume_scaled_solar": args.assume_scaled_solar,
-                                 "abscissa_label": args.abscissa_label,
-                                 "compare_against_reference_labels": args.use_reference_labels,
-                                 "output_figure_stem": args.output_file,
-                                 "run_title": "",  # "External" if args.use_reference_labels else "Internal"
+            "abundances_over_h": args.abundances_over_h,
+            "assume_scaled_solar": args.assume_scaled_solar,
+            "abscissa_label": args.abscissa_label,
+            "compare_against_reference_labels": args.use_reference_labels,
+            "output_figure_stem": args.output_file,
+            "run_title": "",  # "External" if args.use_reference_labels else "Internal"
             }

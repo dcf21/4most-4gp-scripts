@@ -12,6 +12,7 @@ Plot results of testing the Cannon against noisy test spectra, to see how well i
 
 import os
 from os import path as os_path
+import gzip
 import re
 import numpy as np
 import json
@@ -36,7 +37,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
         A list of runs of the Cannon which are to be plotted. This should be a list of dictionaries. Each dictionary
         should have the entries:
 
-        cannon_output: The filename of the JSON output file from the Cannon.
+        cannon_output: The filename of the JSON output file from the Cannon, without the ".summary.json.gz" suffix.
         title: Legend caption to use for each Cannon run.
         filters: A string containing semicolon-separated set of constraints on stars we are to include.
         colour: The colour to plot the dataset in.
@@ -75,7 +76,8 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
-    labels_in_each_data_set = [json.loads(open(json_file).read())['labels'] for json_file in unique_json_files]
+    labels_in_each_data_set = [json.loads(gzip.open(json_file + ".summary.json.gz").read())['labels']
+                               for json_file in unique_json_files]
     unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
 
     # Filter out any labels where we don't have metadata about how to plot them
@@ -104,7 +106,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
     data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
-        cannon_output = json.loads(open(data_set['cannon_output']).read())
+        cannon_output = json.loads(gzip.open(data_set['cannon_output'] + ".full.json.gz").read())
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:
@@ -234,11 +236,11 @@ set fontsize 1.6
 
             plotter.make_plot(output_filename=output_filename,
                               data_files=data_file_names,
-#                               caption=r"""
-# {data_set_title} \newline {caption}
-#                               """.format(data_set_title=data_set_titles[data_set_counter],
-#                                          caption=caption
-#                                          ).strip(),
+                              #                               caption=r"""
+                              # {data_set_title} \newline {caption}
+                              #                               """.format(data_set_title=data_set_titles[data_set_counter],
+                              #                                          caption=caption
+                              #                                          ).strip(),
                               pyxplot_script=ppl
                               )
 

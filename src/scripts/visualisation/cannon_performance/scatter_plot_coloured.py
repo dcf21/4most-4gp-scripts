@@ -15,6 +15,7 @@ import os
 import sys
 import argparse
 import re
+import gzip
 import json
 import numpy as np
 from label_tabulator import tabulate_labels
@@ -34,7 +35,8 @@ parser.add_argument('--cannon-output',
                     required=True,
                     default="",
                     dest='cannon',
-                    help="Cannon output file we should analyse.")
+                    help="Filename of the JSON file containing the label values estimated by the Cannon, without "
+                         "the <.summary.json.gz> suffix.")
 parser.add_argument('--output', default="/tmp/scatter_plot_coloured", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
@@ -59,11 +61,12 @@ for item in args.labels + [args.colour_by_label]:
     })
 
 # Fetch title for this Cannon run
-if not os.path.exists(args.cannon):
-    print "scatter_plot_coloured.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+if not os.path.exists(args.cannon + ".summary.json.gz"):
+    print "scatter_plot_coloured.py could not proceed: Cannon run <{}> not found". \
+        format(args.cannon + ".summary.json.gz")
     sys.exit()
 
-cannon_output = json.loads(open(args.cannon).read())
+cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
 description = cannon_output['description']
 
 # Check that labels exist
@@ -74,7 +77,9 @@ for label in label_list:
         sys.exit()
 
 # Create data files listing parameter values
-snr_list = tabulate_labels("{}/scatter_plot_coloured_snr_".format(args.output_stub), [i['name'] for i in label_list], args.cannon)
+snr_list = tabulate_labels(output_stub="{}/scatter_plot_coloured_snr_".format(args.output_stub),
+                           labels=[i['name'] for i in label_list],
+                           cannon=args.cannon)
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
 snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
@@ -108,7 +113,7 @@ set ylabel "Input {y_label}"
 set yrange [{y_range}]
 
 set axis y left ; unset xtics ; unset mxtics
-plot "{data_filename}" title "Offset in {label_latex} at SNR {snr_pixel}." with dots colour col_scale($6-$3) ps 8
+plot "{data_filename}" title "Offset in {label_latex} at SNR {snr_pixel}." using 1:4 with dots colour col_scale($8-$7) ps 8
 
 unset label
 set noxlabel

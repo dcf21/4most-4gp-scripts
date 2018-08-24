@@ -14,6 +14,7 @@ uncertainty that the Cannon quotes.
 import os
 import sys
 import argparse
+import gzip
 import json
 import numpy as np
 from label_tabulator import tabulate_labels
@@ -27,17 +28,19 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cannon-output',
                     required=True,
                     dest='cannon',
-                    help="Cannon output file we should analyse.")
+                    help="Filename of the JSON file containing the label values estimated by the Cannon, without "
+                         "the <.summary.json.gz> suffix.")
 parser.add_argument('--output', default="/tmp/scatter_plot_cannon_uncertainty", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
 
 # Fetch title for this Cannon run
-if not os.path.exists(args.cannon):
-    print "scatter_plot_cannon_uncertainty.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+if not os.path.exists(args.cannon + ".summary.json.gz"):
+    print "scatter_plot_cannon_uncertainty.py could not proceed: Cannon run <{}> not found". \
+        format(args.cannon + ".summary.json.gz")
     sys.exit()
 
-cannon_output = json.loads(open(args.cannon).read())
+cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
 description = cannon_output['description']
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
@@ -49,7 +52,9 @@ label_names = cannon_output['labels']
 label_count = len(label_names)
 
 # Create data files listing parameter values
-snr_list = tabulate_labels("{}/uncertainty_snr_".format(args.output_stub), label_names, args.cannon)
+snr_list = tabulate_labels(output_stub="{}/uncertainty_snr_".format(args.output_stub),
+                           labels=label_names,
+                           cannon=args.cannon)
 
 # Create pyxplot script to produce this plot
 plotter = PyxplotDriver(multiplot_filename="{0}/uncertainty_multiplot".format(args.output_stub),
@@ -80,13 +85,13 @@ plot {plot_items}
 "{filename}" using {column_x}:(${column_y_1}-${column_y_2}) title "SNR {snr:.1f}" \
              with dots colour col_scale({colour_value}) ps 5
            """.format(filename=snr["filename"],
-                      column_x=2 * label_count + index + 1,
-                      column_y_1=index + 1,
-                      column_y_2=label_count + index + 1,
+                      column_x=3 * index + 3,
+                      column_y_1=3 * index + 1,
+                      column_y_2=3 * index + 2,
                       snr=snr_converter.per_pixel(snr["snr"]).per_a(),
                       colour_value=index2 / max(float(len(snr_list) - 1), 1)).strip()
-                       for index2, snr in enumerate(snr_list)
-                       ]))
+                                 for index2, snr in enumerate(snr_list)
+                                 ]))
                       )
 
 # Clean up plotter

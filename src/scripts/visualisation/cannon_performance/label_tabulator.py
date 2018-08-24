@@ -9,7 +9,9 @@
 """
 
 Take an output JSON file produced by the script <test_cannon/cannon_test.py>, which contains the label values estimated
-by the Cannon. From this, tabulate the target and output stellar parameters next to each other in an ASCII data file.
+by the Cannon. From this, tabulate the input stellar parameters used to synthesise the spectra, the stellar parameters
+estimated by the Cannon, and the formal uncertainty in the Cannon's fitting output. These values are tabulated in an
+ASCII data file.
 
 A separate table is produced for each SNR that the Cannon tested.
 
@@ -24,6 +26,8 @@ This file path can be changed with the --output-stub command line argument.
 
 import os
 from os import path as os_path
+import numpy as np
+import gzip
 import argparse
 import json
 
@@ -43,22 +47,25 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
     snr_list = []
 
     # Load Cannon JSON output
-    cannon_json = json.loads(open(cannon).read())
+    if not cannon.endswith(".full.json.gz"):
+        cannon += ".full.json.gz"
+    assert os.path.exists(cannon), "Cannon output file <{}> does not exist.".format(cannon)
+    cannon_json = json.loads(gzip.open(cannon).read())
 
     # If no list of labels supplied, then list everything
     if not labels:
         labels = cannon_json['labels']
 
     # Open Cannon output data file
-    for item in cannon_json["stars"]:
+    for item in cannon_json["spectra"]:
         # Look up name of object and SNR of spectrum used
         object_name = item["Starname"]
-        snr = float(item["SNR"])
+        snr = item["spectrum_metadata"]["SNR"] if "SNR" in item["spectrum_metadata"] else 0
 
         # Look up Cannon's estimated values of the labels we're interested in
         label_values = []
         for label in labels:
-            label_values.append(item[label])
+            label_values.append(item["cannon_output"][label])
 
         # Feed Cannon's estimated values in the cannon_values data structure
         if object_name not in cannon_values:
@@ -72,13 +79,14 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
         # Look up the target values for each label
         label_values = []
         for label in labels:
-            key = "target_{}".format(label)
-            if key in item:
-                label_values.append(item[key])
-            elif assume_scaled_solar and ("target_[Fe/H]" in item):
-                label_values.append(item["target_[Fe/H]"])  # If no target value available, scale with [Fe/H]
+            if label in item["spectrum_metadata"]:
+                label_values.append(item["spectrum_metadata"][label])
+            elif assume_scaled_solar and ("[Fe/H]" in item["spectrum_metadata"]):
+                # If no target value available, scale with [Fe/H]
+                label_values.append(item["spectrum_metadata"]["[Fe/H]"])
             else:
-                label_values.append("-")  # If even [Fe/H] isn't available, leave blank
+                # If even [Fe/H] isn't available, leave blank
+                label_values.append(np.nan)
 
         library_values[object_name] = label_values
 
@@ -86,10 +94,10 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
         label_values = []
         for label in labels:
             key = "E_{}".format(label)
-            if key in item:
-                label_values.append(item[key])
+            if key in item["cannon_output"]:
+                label_values.append(item["cannon_output"][key])
             else:
-                label_values.append("-")
+                label_values.append(np.nan)
         if object_name not in cannon_uncertainties:
             cannon_uncertainties[object_name] = {}
         cannon_uncertainties[object_name][snr] = label_values
@@ -108,28 +116,32 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
 
         with open(filename, "w") as output:
             # Write headings at the top of the file
-            words = ["Target_{}".format(i) for i in labels]
-            words.extend(["Cannon_output_{}".format(i) for i in labels])
-            words.extend(["Cannon_uncertainty_{}".format(i) for i in labels])
+            words = []
+            for item in labels:
+                words.append("in_{}".format(item))
+                words.append("out_{}".format(item))
+                words.append("err_{}".format(item))
             words.append("Starname")
-            output.write("# {}\n".format(" ".join(words)))
+            output.write("# {}\n".format(" ".join(["{:10s}".format(i) for i in words])))
 
             # Loop over stars writing them into data file
             for object_name in object_names:
-                # Start line with the library parameter values
-                words = [str(i) for i in library_values[object_name]]
+                words = []
+                for index, item in enumerate(labels):
+                    # Start line with the library parameter values
+                    words.append("{:10.4f}".format(library_values[object_name][index]))
 
-                # Add values which the Cannon estimated at this SNR
-                if (object_name in cannon_values) and (snr in cannon_values[object_name]):
-                    words.extend([str(i) for i in cannon_values[object_name][snr]])
-                else:
-                    words.extend(["-" for i in labels])
+                    # Add values which the Cannon estimated at this SNR
+                    if (object_name in cannon_values) and (snr in cannon_values[object_name]):
+                        words.append("{:10.4f}".format(cannon_values[object_name][snr][index]))
+                    else:
+                        words.append("{:10s}")
 
-                # Add uncertainties which the Cannon reported at this SNR
-                if (object_name in cannon_values) and (snr in cannon_values[object_name]):
-                    words.extend([str(i) for i in cannon_uncertainties[object_name][snr]])
-                else:
-                    words.extend(["-" for i in labels])
+                    # Add uncertainties which the Cannon reported at this SNR
+                    if (object_name in cannon_values) and (snr in cannon_values[object_name]):
+                        words.append("{:10.4f}".format(cannon_uncertainties[object_name][snr][index]))
+                    else:
+                        words.append("{:10s}")
 
                 # Add name of object
                 words.append(object_name)
@@ -150,17 +162,19 @@ if __name__ == "__main__":
                         required=True,
                         default="",
                         dest='cannon',
-                        help="Cannon output file.")
+                        help="The Cannon output file we are to tabulate, without file extension. For example, to plot "
+                             "<cannon_pepsi_hrs.full.json.gz>, pass the argument <cannon_pepsi_hrs>.")
     parser.add_argument('--assume-scaled-solar',
                         action='store_true',
                         dest="assume_scaled_solar",
                         help="Assume scaled solar abundances for any elements which don't have abundances individually "
-                             "specified. Useful for working with incomplete data sets.")
+                             "specified. There will be no indication in the output table where scaled solar values "
+                             "have been inserted; we simply copy the value of [Fe/H].")
     parser.add_argument('--no-assume-scaled-solar',
                         action='store_false',
                         dest="assume_scaled_solar",
-                        help="Do not assume scaled solar abundances; "
-                             "throw an error if training set is has missing labels.")
+                        help="Do not assume scaled solar abundances; the output table will show a dash whenever there "
+                             "is missing data.")
     parser.set_defaults(assume_scaled_solar=False)
     parser.add_argument('--output-stub', default="/tmp/cannon_estimates_", dest='output_stub',
                         help="Data file to write output to.")

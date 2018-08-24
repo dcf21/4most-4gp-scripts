@@ -12,10 +12,10 @@ and the colour of the points representing the SNR needed to attain some required
 """
 
 import os
-from os import path as os_path
 import sys
 import argparse
 import re
+import gzip
 import json
 import numpy as np
 
@@ -41,7 +41,8 @@ parser.add_argument('--cannon-output',
                     required=True,
                     default="",
                     dest='cannon',
-                    help="Cannon output file we should analyse.")
+                    help="Filename of the JSON file containing the label values estimated by the Cannon, without "
+                         "the <.summary.json.gz> suffix.")
 parser.add_argument('--output', default="/tmp/scatter_plot_snr_required", dest='output_stub',
                     help="Data file to write output to.")
 parser.add_argument('--accuracy-unit', default="apples", dest='accuracy_unit',
@@ -68,11 +69,12 @@ for item in args.labels + [args.colour_by_label]:
     })
 
 # Read Cannon output
-if not os.path.exists(args.cannon):
-    print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+if not os.path.exists(args.cannon + ".full.json.gz"):
+    print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found". \
+        format(args.cannon + ".full.json.gz")
     sys.exit()
 
-cannon_output = json.loads(open(args.cannon).read())
+cannon_output = json.loads(gzip.open(args.cannon + ".full.json.gz").read())
 
 # Check that labels exist
 for label in label_list:
@@ -82,11 +84,11 @@ for label in label_list:
         sys.exit()
 
 # Create a sorted list of all the SNR values we've got
-snr_values = [item['SNR'] for item in cannon_output['stars']]
+snr_values = [item['spectrum_metadata']['SNR'] for item in cannon_output['spectra']]
 snr_values = sorted(set(snr_values))
 
 # Create a sorted list of all the stars we've got
-star_names = [item['Starname'] for item in cannon_output['stars']]
+star_names = [item['Starname'] for item in cannon_output['spectra']]
 star_names = sorted(set(star_names))
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
@@ -96,17 +98,17 @@ snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster'])
 # Loop over stars, calculating offsets for the label we're colour-coding
 offsets = {}  # offsets[star_name][SNR] = dictionary of label names and absolute offsets
 label_values = {}  # label_values[star_name] = list of label values on x and y axes
-for star in cannon_output['stars']:
+for star in cannon_output['spectra']:
     object_name = star['Starname']
     if object_name not in star_names:
         continue
     if object_name not in offsets:
         offsets[object_name] = {}
     try:
-        offsets[object_name][star['SNR']] = abs(star[args.colour_by_label] -
-                                                star["target_{}".format(args.colour_by_label)])
+        offsets[object_name][star['SNR']] = abs(star['cannon_output'][args.colour_by_label] -
+                                                star['spectrum_metadata'][args.colour_by_label])
         if object_name not in label_values:
-            label_values[object_name] = [star["target_{}".format(item['name'])] for item in label_list]
+            label_values[object_name] = [star['spectrum_metadata'][item['name']] for item in label_list]
     except KeyError:
         # If this star has missing data for one of the labels being measured, discard it
         star_names.remove(object_name)

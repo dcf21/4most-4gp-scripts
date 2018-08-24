@@ -15,6 +15,7 @@ import os
 import sys
 import argparse
 import re
+import gzip
 import json
 import numpy as np
 from label_tabulator import tabulate_labels
@@ -33,7 +34,8 @@ parser.add_argument('--cannon-output',
                     required=True,
                     default="",
                     dest='cannon',
-                    help="Cannon output file we should analyse.")
+                    help="Filename of the JSON file containing the label values estimated by the Cannon, without "
+                         "the <.summary.json.gz> suffix.")
 parser.add_argument('--output', default="/tmp/scatter_plot_arrows", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
@@ -55,14 +57,17 @@ for item in args.labels:
     label_names.append(test.group(1))
 
 # Create data files listing parameter values
-snr_list = tabulate_labels("{}/scatter_plot_arrows_snr_".format(args.output_stub), label_names, args.cannon)
+snr_list = tabulate_labels(output_stub="{}/scatter_plot_arrows_snr_".format(args.output_stub),
+                           labels=label_names,
+                           cannon=args.cannon)
 
 # Fetch title for this Cannon run
-if not os.path.exists(args.cannon):
-    print "scatter_plot_arrows.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+if not os.path.exists(args.cannon + ".summary.json.gz"):
+    print "scatter_plot_arrows.py could not proceed: Cannon run <{}> not found". \
+        format(args.cannon + ".summary.json.gz")
     sys.exit()
 
-cannon_output = json.loads(open(args.cannon).read())
+cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
 description = cannon_output['description']
 
 # Work out multiplication factor to convert SNR/pixel to SNR/A
@@ -87,8 +92,8 @@ set xrange [{x_range}]
 set ylabel "{y_label}"
 set yrange [{y_range}]
 
-plot "{filename}" title "Cannon output -$>$ Synthesised values at SNR/\\AA={snr_per_a:.1f}." \
-     with arrows colour red using 3:4:1:2
+plot "{filename}" title "Synthesised values -$>$ Cannon output at SNR/\\AA={snr_per_a:.1f}." \
+     with arrows colour red using 1:4:2:5
 
 """.format(x_label=args.label_axis_latex[0],
            y_label=args.label_axis_latex[1],

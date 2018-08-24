@@ -15,6 +15,7 @@ import logging
 import re
 import glob
 import json
+import gzip
 from os import path as os_path
 
 from lib import plot_settings
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Set path to workspace where we expect to find libraries of spectra
 our_path = os_path.split(os_path.abspath(__file__))[0]
-workspace = os_path.join(our_path, "../../../../output_data/cannon")
+cannon_output_dir = os_path.join(our_path, "../../../../output_data/cannon")
 
 # Create a long list of all the shell commands we want to run
 batch = BatchProcessor(logger=logger,
@@ -52,10 +53,10 @@ for mode in modes_4most:
             batch.register_job(script=offset_script,
                                output="{plots_path}/comparison_censoring_schemes_{sample}_{mode}",
                                arguments={
-                                   "cannon-output": ["{data_path}/cannon_{sample}_{mode}_10label.json",
-                                                     "{data_path}/cannon_{sample}_censored_{mode}_10label.json",
-                                                     "{data_path}/cannon_{sample}_censored2_{mode}_10label.json",
-                                                     "{data_path}/cannon_{sample}_censored3_{mode}_10label.json"
+                                   "cannon-output": ["{data_path}/cannon_{sample}_{mode}_10label",
+                                                     "{data_path}/cannon_{sample}_censored_{mode}_10label",
+                                                     "{data_path}/cannon_{sample}_censored2_{mode}_10label",
+                                                     "{data_path}/cannon_{sample}_censored3_{mode}_10label"
                                                      ],
                                    "dataset-label": ["No censoring",
                                                      "Censoring scheme 1",
@@ -66,7 +67,7 @@ for mode in modes_4most:
                                },
                                substitutions={"mode": mode,
                                               "sample": sample,
-                                              "data_path": workspace,
+                                              "data_path": cannon_output_dir,
                                               "plots_path": "performance_vs_label"}
                                )
 
@@ -79,8 +80,8 @@ for mode in modes_4most:
             batch.register_job(script=offset_script,
                                output="{plots_path}/comparison_low_z_{sample}_{mode}",
                                arguments={
-                                   "cannon-output": ["{data_path}/cannon_{sample}_fehcut2_{mode}_10label.json",
-                                                     "{data_path}/cannon_{sample}_{mode}_10label.json"
+                                   "cannon-output": ["{data_path}/cannon_{sample}_fehcut2_{mode}_10label",
+                                                     "{data_path}/cannon_{sample}_{mode}_10label"
                                                      ],
                                    "dataset-filter": ["[Fe/H]<-1", "[Fe/H]<-1"],
                                    "dataset-label": ["Trained \$z<-1\$ only", "Trained on full sample"],
@@ -88,7 +89,7 @@ for mode in modes_4most:
                                },
                                substitutions={"mode": mode,
                                               "sample": sample,
-                                              "data_path": workspace,
+                                              "data_path": cannon_output_dir,
                                               "plots_path": "performance_vs_label"}
                                )
 
@@ -102,7 +103,7 @@ for mode in modes_4most:
                                    output="{plots_path}/comparisonA_{sample}_{mode}_{divisor}",
                                    arguments={
                                        "cannon-output":
-                                           ["{data_path}/cannon_{sample}_censored_{mode}_10label.json"] * 8,
+                                           ["{data_path}/cannon_{sample}_censored_{mode}_10label"] * 8,
                                        "dataset-filter": ["logg<3.25;[Fe/H]>0;[Fe/H]<1",
                                                           "logg>3.25;[Fe/H]>0;[Fe/H]<1",
                                                           "logg<3.25;[Fe/H]>-0.5;[Fe/H]<0",
@@ -127,7 +128,7 @@ for mode in modes_4most:
                                    substitutions={"mode": mode,
                                                   "sample": sample,
                                                   "divisor": divisor,
-                                                  "data_path": workspace,
+                                                  "data_path": cannon_output_dir,
                                                   "plots_path": "performance_vs_label"}
                                    )
 
@@ -141,11 +142,11 @@ for mode in modes_4most:
                                        output="{plots_path}/comparisonB_{sample}{censoring}_{mode}_{divisor}",
                                        arguments={
                                            "cannon-output": [
-                                               "{data_path}/cannon_{sample}{censoring}_{mode}_3label.json",
-                                               "{data_path}/cannon_{sample}{censoring}_{mode}_4label.json",
-                                               "{data_path}/cannon_{sample}{censoring}_{mode}_5label.json",
-                                               "{data_path}/cannon_{sample}{censoring}_{mode}_10label.json",
-                                               "{data_path}/cannon_{sample}{censoring}_{mode}_12label.json"
+                                               "{data_path}/cannon_{sample}{censoring}_{mode}_3label",
+                                               "{data_path}/cannon_{sample}{censoring}_{mode}_4label",
+                                               "{data_path}/cannon_{sample}{censoring}_{mode}_5label",
+                                               "{data_path}/cannon_{sample}{censoring}_{mode}_10label",
+                                               "{data_path}/cannon_{sample}{censoring}_{mode}_12label"
                                            ],
                                            "dataset-label": ["3 parameter; uncensored",
                                                              "4 parameter; uncensored",
@@ -160,27 +161,28 @@ for mode in modes_4most:
                                                       "sample": sample,
                                                       "censoring": censoring,
                                                       "divisor": divisor,
-                                                      "data_path": workspace,
+                                                      "data_path": cannon_output_dir,
                                                       "plots_path": "performance_vs_label"}
                                        )
 
 # Now plot performance vs SNR for every Cannon run we have
-cannon_runs = sorted(glob.glob(os_path.join(workspace, "*.json")))
-for i, cannon_run_filename in enumerate(cannon_runs):
+cannon_json_summaries = sorted(glob.glob(os_path.join(cannon_output_dir, "*.summary.json.gz")))
+for i, cannon_json_summary in enumerate(cannon_json_summaries):
 
     # Keep user updated on progress
-    logger.info("{:4d}/{:4d} Working out jobs for <{}>".format(i + 1, len(cannon_runs), cannon_run_filename))
+    logger.info("{:4d}/{:4d} Working out jobs for <{}>".format(i + 1, len(cannon_json_summaries), cannon_json_summary))
 
     # Extract name of Cannon run from filename
-    test = re.match(os_path.join(workspace, r"(.*).json"), cannon_run_filename)
+    test = re.match(os_path.join(cannon_output_dir, r"(.*).summary.json.gz"), cannon_json_summary)
     cannon_run_name = test.group(1)
+    cannon_run_file_stub = os_path.join(cannon_output_dir, cannon_run_name)
 
     # Produce a plot of precision vs SNR
     for offset_script in offset_scripts:
         batch.register_job(script=offset_script,
                            output="{plots_path}/{cannon_run_name}",
                            arguments={
-                               "cannon-output": cannon_run_filename
+                               "cannon-output": cannon_run_file_stub
                            },
                            substitutions={
                                "cannon_run_name": cannon_run_name,
@@ -191,7 +193,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
     # Produce a scatter plot of the nominal uncertainties in the Cannon's label estimates
     batch.register_job(script="scatter_plot_cannon_uncertainty.py",
                        output="{plots_path}/{cannon_run_name}",
-                       arguments={"cannon-output": cannon_run_filename},
+                       arguments={"cannon-output": cannon_run_file_stub},
                        substitutions={
                            "cannon_run_name": cannon_run_name,
                            "plots_path": "performance_vs_label"
@@ -200,7 +202,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
 
     # Now produce scatter plots of the SNR required to achieve the target precision in each label for each star
     label_metadata = LabelInformation().label_metadata
-    cannon_output_data = json.loads(open(cannon_run_filename).read())
+    cannon_output_data = json.loads(gzip.open(cannon_json_summary).read())
     label_names = [item for item in cannon_output_data['labels'] if item in label_metadata]
     for colour_by_label in label_names:
         # Figure out the target precision for each label, and units
@@ -220,7 +222,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                                "target-accuracy": target_accuracy,
                                "colour-range-min": 30,
                                "colour-range-max": 120,
-                               "cannon-output": cannon_run_filename,
+                               "cannon-output": cannon_run_file_stub,
                                "accuracy-unit": target_unit
                            },
                            substitutions={
@@ -240,7 +242,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                                "target-accuracy": target_accuracy,
                                "colour-range-min": 30,
                                "colour-range-max": 120,
-                               "cannon-output": cannon_run_filename,
+                               "cannon-output": cannon_run_file_stub,
                                "accuracy-unit": target_unit
                            },
                            substitutions={
@@ -259,7 +261,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                                "colour-by-label": "{0}{{{{{1}:{2}}}}}".format(colour_by_label,
                                                                               -3 * target_accuracy,
                                                                               3 * target_accuracy),
-                               "cannon-output": cannon_run_filename
+                               "cannon-output": cannon_run_file_stub
                            },
                            substitutions={
                                "cannon_run_name": cannon_run_name,
@@ -277,7 +279,7 @@ for i, cannon_run_filename in enumerate(cannon_runs):
                                "colour-by-label": "{0}{{{{{1}:{2}}}}}".format(colour_by_label,
                                                                               -3 * target_accuracy,
                                                                               3 * target_accuracy),
-                               "cannon-output": cannon_run_filename
+                               "cannon-output": cannon_run_file_stub
                            },
                            substitutions={
                                "cannon_run_name": cannon_run_name,

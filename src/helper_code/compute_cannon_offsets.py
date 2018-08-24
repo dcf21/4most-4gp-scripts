@@ -72,30 +72,30 @@ class CannonAccuracyCalculator:
         self.label_metadata = LabelInformation().label_metadata
 
         # Fetch Cannon output
-        self.test_items = cannon_json_output['stars']
+        self.tests = cannon_json_output['spectra']
 
         # Sort Cannon runs by star name
-        self.test_items_by_star_name = {}
-        for index, tests_for_this_star in enumerate(self.test_items):
-            star_name = self.test_items[index]['Starname']
-            abscissa_value = tests_for_this_star[abscissa_field]
+        self.tests_by_star_name = {}
+        for index, test_item in enumerate(self.tests):
+            star_name = self.tests[index]['Starname']
+            abscissa_value = test_item['spectrum_metadata'][abscissa_field]
 
             # If we have not seen this star before, create an entry for it in test_items_by_star_name
-            if star_name not in self.test_items_by_star_name:
-                self.test_items_by_star_name[star_name] = []
+            if star_name not in self.tests_by_star_name:
+                self.tests_by_star_name[star_name] = []
 
-            self.test_items_by_star_name[star_name].append([abscissa_value, index])
+            self.tests_by_star_name[star_name].append([abscissa_value, index])
 
         # We now create a look-up table of the target / reference values for each label for each star
         self.reference_values = {}
         self.label_offsets = None
 
         # Loop over all the stars in the test set
-        for star_name in self.test_items_by_star_name:
+        for star_name in self.tests_by_star_name:
 
             # Sort Cannon runs into order of ascending abscissa value
-            self.test_items_by_star_name[star_name].sort(sort_on_first_item)
-            test_at_highest_abscissa = self.test_items[self.test_items_by_star_name[star_name][-1][1]]
+            self.tests_by_star_name[star_name].sort(sort_on_first_item)
+            test_at_highest_abscissa = self.tests[self.tests_by_star_name[star_name][-1][1]]
 
             # Start building a tree of the reference values by star name, and then by label name
             reference_values = {}
@@ -103,38 +103,36 @@ class CannonAccuracyCalculator:
             # Loop over all of the labels we're computing the Cannon's accuracy for
             for label in label_names:
                 label_info = self.label_metadata[label]
-                cannon_label = label_info["cannon_label"]
+                cannon_label = label_info['cannon_label']
 
                 # Look up the target value for this label, which we're comparing the Cannon against
 
                 # Option 1: Compare the Cannon's output against the values that were used to synthesise this spectrum
                 if compare_against_reference_labels:
-                    target_metadata_field = "target_{}".format(cannon_label)
-
                     # If this star has a field called target_[X/H], we use the value of this as the target for [X/H]
-                    if target_metadata_field in test_at_highest_abscissa:
-                        reference_values[label] = test_at_highest_abscissa[target_metadata_field]
+                    if cannon_label in test_at_highest_abscissa['spectrum_metadata']:
+                        reference_values[label] = test_at_highest_abscissa['spectrum_metadata'][cannon_label]
 
                     # If not, then this abundance is unknown for this star. Is we're allowed to assume scaled solar
                     # abundances, we look up the value of target_[Fe/H] instead
-                    elif assume_scaled_solar and ("target_[Fe/H]" in test_at_highest_abscissa):
-                        reference_values[label] = test_at_highest_abscissa["target_[Fe/H]"]
+                    elif assume_scaled_solar and ('[Fe/H]' in test_at_highest_abscissa['spectrum_metadata']):
+                        reference_values[label] = test_at_highest_abscissa['spectrum_metadata']['[Fe/H]']
 
                     # If we still don't have a target value, then set it to NaN
                     else:
                         reference_values[label] = np.nan
 
                     # If we are plotting abundance over Fe, then [X/Fe] = [X/H] / [Fe/H]
-                    if label_info["over_fe"]:
-                        reference_values[label] -= test_at_highest_abscissa["target_[Fe/H]"]
+                    if label_info['over_fe']:
+                        reference_values[label] -= test_at_highest_abscissa['spectrum_metadata']["[Fe/H]"]
 
                 # Option 2: Compare the Cannon's output against the estimates it produces at the highest abscissa value
                 else:
-                    reference_values[label] = test_at_highest_abscissa[cannon_label]
+                    reference_values[label] = test_at_highest_abscissa['cannon_output'][cannon_label]
 
                     # If we are plotting abundance over Fe, then [X/Fe] = [X/H] / [Fe/H]
-                    if label_info["over_fe"]:
-                        reference_values[label] -= test_at_highest_abscissa["[Fe/H]"]
+                    if label_info['over_fe']:
+                        reference_values[label] -= test_at_highest_abscissa['cannon_output']['[Fe/H]']
 
             # Dictionary of the target values for each label we're testing, for each named star in the test set
             self.reference_values[star_name] = reference_values
@@ -156,33 +154,33 @@ class CannonAccuracyCalculator:
         self.label_offsets = {}
 
         # Loop over all the stars in the test set
-        for star_name in self.test_items_by_star_name:
+        for star_name in self.tests_by_star_name:
             reference_values = self.reference_values[star_name]
 
             # Loop over all of the labels we're computing the Cannon's accuracy for
             for label in self.label_names:
                 label_info = self.label_metadata[label]
-                cannon_label = label_info["cannon_label"]
+                cannon_label = label_info['cannon_label']
 
                 # Now see how far the Cannon was away from this target value
                 # Loop over all the abscissa values we tested this star at
-                for abscissa_value, test_item_index in self.test_items_by_star_name[star_name]:
+                for abscissa_value, test_item_index in self.tests_by_star_name[star_name]:
 
                     # Skip this spectrum if it is excluded from the test sample by some constraint
                     if (filter_on_indices is not None) and (test_item_index not in filter_on_indices):
                         continue
 
-                    test_item = self.test_items[test_item_index]
+                    test_item = self.tests[test_item_index]
 
                     # Look up the Cannon's estimate for this label
                     cannon_estimate = np.nan
-                    if label in test_item:
-                        cannon_estimate = test_item[cannon_label]
+                    if label in test_item['cannon_output']:
+                        cannon_estimate = test_item['cannon_output'][cannon_label]
 
                     # If we are testing [X/Fe] rather than [X/H], then do conversion using the Cannon's estimate of
                     # [Fe/H]
-                    if label_info["over_fe"]:
-                        cannon_estimate -= test_item["[Fe/H]"]
+                    if label_info['over_fe']:
+                        cannon_estimate -= test_item['cannon_output']['[Fe/H]']
 
                     cannon_offset = cannon_estimate - reference_values[label]
 
@@ -218,10 +216,7 @@ class CannonAccuracyCalculator:
         output_index_list = []
 
         # Loop over each test item in turn to see if it meets the supplied constraints
-        for index, test_item in enumerate(self.test_items):
-            star_name = test_item['Starname']
-            reference_values = self.reference_values[star_name]
-
+        for index, test_item in enumerate(self.tests):
             meets_all_filters = True
 
             # Test this star against each test object in turn
@@ -243,13 +238,7 @@ class CannonAccuracyCalculator:
 
                 # If this is one of the labels the Cannon is fitting, we apply cut on the *target* value of this label,
                 # not the one output by the Cannon
-                if constraint_label in reference_values:
-                    reference_value = reference_values[constraint_label]
-
-                # Alternatively, we can also apply cuts on parameters like SNR and e_bv, which are unique to each
-                # spectrum, rather than to each star
-                else:
-                    reference_value = test_item[constraint_label]
+                reference_value = test_item['cannon_output'][constraint_label]
 
                 # Test whether this spectrum meets this filter
                 if constraint == "{}={}".format(constraint_label, constraint_value_string):

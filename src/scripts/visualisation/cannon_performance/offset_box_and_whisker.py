@@ -12,6 +12,7 @@ Plot results of testing the Cannon against noisy test spectra, to see how well i
 
 import os
 from os import path as os_path
+import gzip
 import re
 import numpy as np
 import json
@@ -36,7 +37,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
         A list of runs of the Cannon which are to be plotted. This should be a list of dictionaries. Each dictionary
         should have the entries:
 
-        cannon_output: The filename of the JSON output file from the Cannon.
+        cannon_output: The filename of the JSON output file from the Cannon, without the ".summary.json.gz" suffix.
         title: Legend caption to use for each Cannon run.
         filters: A string containing semicolon-separated set of constraints on stars we are to include.
         colour: The colour to plot the dataset in.
@@ -75,7 +76,8 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
-    labels_in_each_data_set = [json.loads(open(json_file).read())['labels'] for json_file in unique_json_files]
+    labels_in_each_data_set = [json.loads(gzip.open(json_file + ".summary.json.gz").read())['labels']
+                               for json_file in unique_json_files]
     unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
 
     # Filter out any labels where we don't have metadata about how to plot them
@@ -106,7 +108,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
-        cannon_output = json.loads(open(data_set['cannon_output']).read())
+        cannon_output = json.loads(gzip.open(data_set['cannon_output'] + ".full.json.gz").read())
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:
@@ -215,8 +217,9 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
                     plot_box_whiskers[i][data_set_counter]. \
                         insert(0,
-                        "\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".format(file_name, j)
-                                   )
+                               "\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".format(file_name,
+                                                                                                              j)
+                               )
 
             data_file_names.append(file_name)
 

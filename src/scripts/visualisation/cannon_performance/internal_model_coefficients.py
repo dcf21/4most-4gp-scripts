@@ -12,6 +12,7 @@ Take an output file from the Cannon, and plot the Cannon's predictive model coef
 
 import os
 from os import path as os_path
+import gzip
 import argparse
 import json
 import numpy as np
@@ -20,7 +21,6 @@ from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_cannon import CannonInstance
 from lib import plot_settings
 
-
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--label', default="Teff", dest='label',
@@ -28,7 +28,8 @@ parser.add_argument('--label', default="Teff", dest='label',
 parser.add_argument('--cannon-output',
                     default="../../output_data/cannon/cannon_galah_hrs_10label",
                     dest='cannon',
-                    help="Cannon output file we should analyse.")
+                    help="Filename of the JSON file containing the label values estimated by the Cannon, without "
+                         "the <.summary.json.gz> suffix.")
 parser.add_argument('--output', default="/tmp/cannon_model_", dest='output_stub',
                     help="Data file to write output to.")
 args = parser.parse_args()
@@ -41,7 +42,7 @@ workspace = os_path.join(our_path, "../../../../workspace")
 os.system("mkdir -p {}".format(args.output_stub))
 
 # Fetch title for this Cannon run
-cannon_output = json.loads(open(args.cannon + ".json").read())
+cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
 description = cannon_output['description']
 
 # Open spectrum library we originally trained the Cannon on
@@ -69,4 +70,3 @@ model = CannonInstance(training_set=training_spectra,
                        censors=censoring_masks,
                        threads=None
                        )
-
