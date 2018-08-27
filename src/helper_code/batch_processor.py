@@ -100,7 +100,7 @@ class BatchProcessor:
 
     def list_shell_commands(self):
         """
-        Convert the job decriptors supplied to register_job() into fully-formed shell commands.
+        Convert the job descriptors supplied to register_job() into fully-formed shell commands.
 
         :return:
             List of strings, containing the shell commands which are to be executed
@@ -123,10 +123,15 @@ class BatchProcessor:
                         argument_values = [argument_values]
 
                     for value in argument_values:
-                        shell_command += ("--{name} \"{value}\" ".
-                                          format(name=argument_name.format(**item["substitutions"]),
-                                                 value=str(value).format(**item["substitutions"])
-                                                 ))
+                        argument_name = argument_name.format(**item["substitutions"])
+
+                        if value is None:
+                            shell_command += "--{name} ".format(name=argument_name.format(**item["substitutions"]))
+                        else:
+                            shell_command += ("--{name} \"{value}\" ".
+                                              format(name=argument_name.format(**item["substitutions"]),
+                                                     value=str(value).format(**item["substitutions"])
+                                                     ))
                 shell_commands.append(shell_command)
         return shell_commands
 
