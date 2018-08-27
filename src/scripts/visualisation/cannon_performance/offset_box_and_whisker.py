@@ -210,16 +210,15 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                     else:
                         w1 = 0
                         w2 = 1.024
-                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[3]))
-                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[5]))
-                    f.write("{} {}\n".format((datum[0] + w1) * w2, datum[5]))
-                    f.write("{} {}\n\n\n".format((datum[0] + w1) * w2, datum[3]))
+                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[2]))
+                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[4]))
+                    f.write("{} {}\n".format((datum[0] + w1) * w2, datum[4]))
+                    f.write("{} {}\n\n\n".format((datum[0] + w1) * w2, datum[2]))
 
-                    plot_box_whiskers[i][data_set_counter]. \
-                        insert(0,
-                               "\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}".format(file_name,
-                                                                                                              j)
-                               )
+                    plot_box_whiskers[i][data_set_counter].insert(0, """
+\"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}
+""".format(file_name, j).strip()
+                                                                  )
 
             data_file_names.append(file_name)
 

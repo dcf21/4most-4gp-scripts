@@ -83,7 +83,6 @@ set nodisplay
 set textvalign top
 set label 1 "\parbox{{{width_caption}cm}}{{ {description} }}" at page 0.5, page {description_y}
 
-
 set fontsize 0.8
 set textvalign bottom
 text "{plot_creator}" at 0, {plot_creator_y}
@@ -92,11 +91,11 @@ unset fontsize
 {pyxplot_script}
 
 """.format(width=self.width, aspect=self.aspect, dpi=self.dpi,
-           width_caption=self.width * 0.6,
+           width_caption=self.width * 0.5,
            description=caption if plot_settings.include_caption else "",
            description_y=self.width * self.aspect - 0.3,
            plot_creator=self.plot_creator if plot_settings.include_author else "",
-           plot_creator_y=self.width * self.aspect +0.4,
+           plot_creator_y=self.width * self.aspect + 0.4,
            pyxplot_script=pyxplot_script)
 
         # Work out what images format we need to produce this plot in. If we're making a multiplot, we're going to need

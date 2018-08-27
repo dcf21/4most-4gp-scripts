@@ -21,7 +21,7 @@ from lib.pyxplot_driver import PyxplotDriver
 from lib.label_information import LabelInformation
 from lib.abscissa_information import AbcissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
-from lib.plot_settings import snr_defined_at_wavelength
+from lib.plot_settings import snr_defined_at_wavelength, plot_width
 from fourgp_degrade import SNRConverter
 
 from offset_cmd_line_interface import fetch_command_line_arguments
@@ -182,6 +182,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
     # Create pyxplot script to produce this plot
     plotter = PyxplotDriver(multiplot_filename="{}/histogram_multiplot".format(output_figure_stem),
+                            width=plot_width * 1.5,  # Plot histograms larger than other plots, because so many lines
                             multiplot_aspect=6. / 8)
 
     # Create a new pyxplot script for precision plots

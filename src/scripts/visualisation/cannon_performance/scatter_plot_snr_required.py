@@ -105,8 +105,8 @@ for star in cannon_output['spectra']:
     if object_name not in offsets:
         offsets[object_name] = {}
     try:
-        offsets[object_name][star['SNR']] = abs(star['cannon_output'][args.colour_by_label] -
-                                                star['spectrum_metadata'][args.colour_by_label])
+        offsets[object_name][star['spectrum_metadata']['SNR']] = \
+            abs(star['cannon_output'][label_list[-1]['name']] - star['spectrum_metadata'][label_list[-1]['name']])
         if object_name not in label_values:
             label_values[object_name] = [star['spectrum_metadata'][item['name']] for item in label_list]
     except KeyError:
@@ -131,7 +131,7 @@ for star_name in star_names:
                 snr_required_per_a = snr_converter.per_pixel(snr_required_per_pixel).per_a()
             previous_offset = new_offset
             previous_snr = snr
-        output.append(label_values[star_name] + [snr_required_per_a])
+        output.append(label_values[star_name][:-1] + [snr_required_per_a])
 
 # Make sure that output directory exists
 os.system("mkdir -p {}".format(args.output_stub))

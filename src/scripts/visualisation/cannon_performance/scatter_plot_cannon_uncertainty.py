@@ -20,7 +20,7 @@ import numpy as np
 from label_tabulator import tabulate_labels
 
 from lib.pyxplot_driver import PyxplotDriver
-from lib.plot_settings import snr_defined_at_wavelength
+from lib.plot_settings import snr_defined_at_wavelength, plot_width
 from fourgp_degrade import SNRConverter
 
 # Read input parameters
@@ -58,6 +58,7 @@ snr_list = tabulate_labels(output_stub="{}/uncertainty_snr_".format(args.output_
 
 # Create pyxplot script to produce this plot
 plotter = PyxplotDriver(multiplot_filename="{0}/uncertainty_multiplot".format(args.output_stub),
+                        width=plot_width * 1.3,
                         multiplot_aspect=6. / 8)
 
 for index, label in enumerate(label_names):
@@ -70,7 +71,7 @@ for index, label in enumerate(label_names):
 
 col_scale(z) = hsb(0.75 * z, 1, 1)
     
-set key bottom left
+set key top right
 
 set xlabel "Cannon estimated uncertainty in {label_name}"
 # set xrange [0:{label_range}]
