@@ -31,7 +31,7 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__.strip())
 parser.add_argument('--input-library',
                     required=False,
-                    default="turbospec_apokasc_training_set",
+                    default="galah_test_sample_4fs_hrs_50only",
                     dest="input_library",
                     help="The name of the spectrum library we are to read input spectra from. A subset of the stars "
                          "in the input library may optionally be selected by suffixing its name with a comma-separated "
@@ -40,8 +40,8 @@ parser.add_argument('--input-library',
                          "[Teff>5000], but such ranges are easy to recast is a range, e.g. [5000<Teff<9999].")
 parser.add_argument('--output-library',
                     required=False,
-                    default="convolved_apokasc_training_set_lrs",
-                    dest="output_library_lrs",
+                    default="galah_test_sample_4fs_hrs_he_50only",
+                    dest="output_library",
                     help="The name of the spectrum library we are to feed the convolved spectra into.")
 parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
@@ -67,9 +67,8 @@ parser.add_argument('--log-file',
                     help="Specify a log file where we log our progress.")
 args = parser.parse_args()
 
-logger.info("Adding half-ellipse convolution to spectra from <{}>, going into <{}> <{}>".format(args.input_library,
-                                                                                                args.output_library_lrs,
-                                                                                                args.output_library_hrs))
+logger.info("Adding half-ellipse convolution to spectra from <{}>, going into <{}>".format(args.input_library,
+                                                                                           args.output_library))
 
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
