@@ -22,7 +22,7 @@ import numpy as np
 from operator import itemgetter
 
 from fourgp_speclib import SpectrumLibrarySqlite
-from fourgp_cannon import CannonInstance
+from fourgp_cannon import CannonInstance_2018_01_09
 from lib.pyxplot_driver import PyxplotDriver
 
 
@@ -36,11 +36,6 @@ def dict_merge(x, y):
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--wavelength', required=True, dest='wavelength', type=float,
                     help="The wavelength for which we should plot the Cannon's internal model.")
-parser.add_argument('--library', required=True, dest='library',
-                    help="Spectrum library for which we should plot the Cannon's internal model. Stars may be filtered "
-                         "by parameters by placing a comma-separated list of constraints in [] brackets after the name "
-                         "of the library. Use the syntax [Teff=3000] to demand equality, or [0<[Fe/H]<0.2] to specify "
-                         "a range.")
 parser.add_argument('--label', required=True, dest='label',
                     help="The label we should vary.")
 parser.add_argument('--label-axis-latex', required=True, dest='label_axis_latex',
@@ -81,28 +76,6 @@ workspace = os_path.join(our_path, "../../../../workspace")
 # Create directory to store output files in
 os.system("mkdir -p {}".format(args.output_stub))
 
-# Open spectrum library we're going to plot
-input_library_info = SpectrumLibrarySqlite.open_and_search(
-    library_spec=args.library,
-    workspace=workspace,
-    extra_constraints=dict_merge({"continuum_normalised": 1}, label_constraints)
-)
-
-input_library, library_items = [input_library_info[i] for i in ("library", "items")]
-library_ids = [i["specId"] for i in library_items]
-library_spectra = input_library.open(ids=library_ids)
-
-# Divide up spectra by SNR, and plot each separately
-library_spectra_by_snr = {}
-for i in range(len(library_spectra)):
-    snr = 0
-    metadata = library_spectra.get_metadata(i)
-    if "SNR" in metadata:
-        snr = metadata["SNR"]
-    if snr not in library_spectra_by_snr:
-        library_spectra_by_snr[snr] = []
-    library_spectra_by_snr[snr].append(i)
-
 # Fetch title for this Cannon run
 cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
 description = cannon_output['description']
@@ -126,38 +99,48 @@ if censoring_masks is not None:
     for key, value in censoring_masks.iteritems():
         censoring_masks[key] = np.asarray(value)
 
-model = CannonInstance(training_set=training_spectra,
-                       load_from_file=args.cannon + ".cannon",
-                       label_names=cannon_output["labels"],
-                       censors=censoring_masks,
-                       threads=None
-                       )
+model = CannonInstance_2018_01_09(training_set=training_spectra,
+                                  load_from_file=args.cannon + ".cannon",
+                                  label_names=cannon_output["labels"],
+                                  censors=censoring_masks,
+                                  threads=None
+                                  )
 
 # Loop over stars in SpectrumLibrary extracting flux at requested wavelength
-stars = {}
-raster_index = (np.abs(library_spectra.wavelengths - args.wavelength)).argmin()
+raster_index = (np.abs(training_spectra.wavelengths - args.wavelength)).argmin()
 value_min = np.inf
 value_max = -np.inf
-for snr in library_spectra_by_snr.keys():
-    stars[snr] = []
-    for spectrum_number in library_spectra_by_snr[snr]:
-        metadata = library_spectra.get_metadata(spectrum_number)
-        spectrum = library_spectra.extract_item(spectrum_number)
-        value = metadata[args.label]
 
-        if value < value_min:
-            value_min = value
-        if value > value_max:
-            value_max = value
+stars = []
+for spectrum_number in range(len(training_spectra)):
+    metadata = training_spectra.get_metadata(spectrum_number)
 
-        # Extract name and value of parameter we're varying
-        stars[snr].append({
-            "name": metadata["Starname"],
-            "flux": spectrum.values[raster_index],
-            "flux_error": spectrum.value_errors[raster_index],
-            "value": value
-        })
-    stars[snr].sort(key=itemgetter("value"))
+    # Check whether this spectra meets the label constraints for this plot
+    accept_spectrum = True
+    for key in label_constraints:
+        if ((key not in metadata) or
+                (metadata[key] < label_constraints[key][0]) or
+                (metadata[key] > label_constraints[key][1])):
+            accept_spectrum = False
+    if not accept_spectrum:
+        continue
+
+    spectrum = training_spectra.extract_item(spectrum_number)
+    value = metadata[args.label]
+
+    if value < value_min:
+        value_min = value
+    if value > value_max:
+        value_max = value
+
+    # Extract name and value of parameter we're varying
+    stars.append({
+        "name": metadata["Starname"],
+        "flux": spectrum.values[raster_index],
+        "flux_error": spectrum.value_errors[raster_index],
+        "value": value
+    })
+stars.sort(key=itemgetter("value"))
 
 # Query Cannon's internal model of this pixel
 n_steps = 100
@@ -178,22 +161,19 @@ for i in range(n_steps):
 
 # Write data file for PyXPlot to plot
 with open("{}/internal_model_one_wavelength.dat".format(args.output_stub), "w") as f:
-    for snr in sorted(stars.keys()):
-        for datum in stars[snr]:
-            f.write("{} {} {}\n".format(datum["value"], datum["flux"], datum["flux_error"]))
-        f.write("\n\n\n\n")
+    for datum in stars:
+        f.write("{} {} {}\n".format(datum["value"], datum["flux"], datum["flux_error"]))
+    f.write("\n\n\n\n")
 
     for datum in cannon_predictions:
         f.write("{} {} {}\n".format(datum["value"], datum["flux"], datum["flux_error"]))
 
 # Make list of items we're going to plot
 plot_items = []
-index_counter = 0
-for snr in sorted(stars.keys()):
-    plot_items.append("""
-"{0}/internal_model_one_wavelength.dat" index {1} title "4FS output at SNR/pixel {2:.1f}" with p pt 1 """.
-                      format(args.output_stub, index_counter, snr).strip())
-    index_counter += 1
+plot_items.append("""
+"{0}/internal_model_one_wavelength.dat" index 0 title "4FS output" with p pt 1 """.
+                  format(args.output_stub).strip())
+index_counter = 1
 
 plot_items.append("""
 "{0}/internal_model_one_wavelength.dat" index {1} title "Cannon internal model" with line color red lw 2 """.
@@ -219,21 +199,8 @@ plot {plot_items}
 
 """.format(x_label=args.label_axis_latex, x_min=value_min, x_max=value_max,
            wavelength=args.wavelength,
-           plot_items=", ".join([
-                                    """
-"{filename}/internal_model_one_wavelength.dat" index {index} title "4FS output at SNR/pixel {snr:.1f}" with p pt 1
-    """.format(filename=args.output_stub,
-               index=index_counter,
-               snr=snr
-               ).strip()
-                                    for index_counter, snr in enumerate(sorted(stars.keys()))
-                                ] + [
-                                    """
-"{filename}/internal_model_one_wavelength.dat" index {index} title "Cannon internal model" with line color red lw 2
-    """.format(filename=args.output_stub,
-               index=len(stars)
-               ).strip()
-                                ]))
+           plot_items=", ".join(plot_items)
+           )
                   )
 
 # Clean up plotter
