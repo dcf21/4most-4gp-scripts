@@ -13,7 +13,7 @@ source ../../../../virtualenv/bin/activate
 for mode in hrs lrs
 do
 
-python2.7 degrade_library_with_half_ellipse.py --input-library galah_training_sample_4fs_${mode}_50only \
+python2.7 degrade_library_with_half_ellipse.py --input-library galah_training_sample_4fs_${mode} \
                                                --width 1.7 \
                                                --output-library galah_training_sample_4fs_he1.7_${mode} \
                                                --db-in-tmp
