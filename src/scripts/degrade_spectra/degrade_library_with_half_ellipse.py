@@ -60,6 +60,16 @@ parser.add_argument('--no-create',
                     dest="create",
                     help="Do not create a clean spectrum library to feed output spectra into.")
 parser.set_defaults(create=True)
+parser.add_argument('--db-in-tmp',
+                    action='store_true',
+                    dest="db_in_tmp",
+                    help="Symlink database into /tmp while we're putting data into it (for performance). "
+                         "Don't mess with this option unless you know what you're doing.")
+parser.add_argument('--no-db-in-tmp',
+                    action='store_false',
+                    dest="db_in_tmp",
+                    help="Do not symlink database into /tmp while we're putting data into it. Recommended")
+parser.set_defaults(db_in_tmp=False)
 parser.add_argument('--log-file',
                     required=False,
                     default="/tmp/half_ellipse_convolution_{}.log".format(pid),
@@ -87,6 +97,14 @@ input_library, input_spectra_ids, input_spectra_constraints = [spectra[i] for i 
 library_name = re.sub("/", "_", args.output_library)
 library_path = os_path.join(workspace, library_name)
 output_library = SpectrumLibrarySqlite(path=library_path, create=args.create)
+
+# We may want to symlink the sqlite3 database file into /tmp for performance reasons
+# This bit of crack-on-a-stick is only useful if /tmp is on a ram disk, though...
+if args.db_in_tmp:
+    del output_library
+    os.system("mv {} /tmp/tmp_{}.db".format(os_path.join(library_path, "index.db"), library_name))
+    os.system("ln -s /tmp/tmp_{}.db {}".format(library_name, os_path.join(library_path, "index.db")))
+    output_library = SpectrumLibrarySqlite(path=library_path, create=False)
 
 # Parse the half-ellipse width that the user specified on the command line
 half_ellipse_width = float(args.width)
@@ -137,3 +155,8 @@ with open(args.log_to, "w") as result_log:
         output_library.insert(spectra=output_spectrum,
                               filenames=input_spectrum_id['filename'],
                               metadata_list={"half_ellipse_width": half_ellipse_width})
+
+# If we put database in /tmp while adding entries to it, now return it to original location
+if args.db_in_tmp:
+    del output_library
+    os.system("mv /tmp/tmp_{}.db {}".format(library_name, os_path.join(library_path, "index.db")))
