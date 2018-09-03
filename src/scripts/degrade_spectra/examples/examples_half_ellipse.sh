@@ -13,7 +13,7 @@ source ../../../../virtualenv/bin/activate
 for mode in hrs lrs
 do
 
-python2.7 degrade_library_with_half_ellipse.py --input-library galah_training_sample_4fs_${mode} \
+python2.7 degrade_library_with_half_ellipse.py --input-library galah_training_sample_4fs_${mode}_50only \
                                                --width 1.7 \
                                                --output-library galah_training_sample_4fs_he1.7_${mode} \
                                                --db-in-tmp
@@ -21,7 +21,7 @@ python2.7 degrade_library_with_half_ellipse.py --input-library galah_training_sa
 for he_width in 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2
 do
 
-python2.7 degrade_library_with_half_ellipse.py --input-library galah_test_sample_4fs_${mode} \
+python2.7 degrade_library_with_half_ellipse.py --input-library galah_test_sample_4fs_${mode}_50only \
                                                --width ${he_width} \
                                                --output-library galah_test_sample_4fs_he${he_width}_${mode} \
                                                --db-in-tmp
