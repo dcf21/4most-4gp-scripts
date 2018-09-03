@@ -80,7 +80,8 @@ class BatchProcessor:
         # Check which file products already exist and don't need to be remade
         for item in self.job_list:
             if item["needs_doing"]:
-                item["needs_doing"] = not os_path.exists(os_path.join(self.output_path, item["output"]))
+                output = item["output"].format(**item["substitutions"])
+                item["needs_doing"] = not os_path.exists(os_path.join(self.output_path, output))
 
     def report_status(self):
         """
