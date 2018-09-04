@@ -155,6 +155,7 @@ col_scale_z(z) = min(max(  (z-({colour_range_min_per_pixel})) / \
                  (({colour_range_max_per_pixel})-({colour_range_min_per_pixel}))  ,0),1)
 col_scale(z) = (z>{colour_range_max_per_pixel}) ? colors.black : hsb(0.75 * col_scale_z(z), 1, 1)
     
+set numerics errors quiet
 set fontsize 1.1
 set nokey
 

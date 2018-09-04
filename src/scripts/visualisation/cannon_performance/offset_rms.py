@@ -219,6 +219,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
                               ).strip(),
                               pyxplot_script="""
 
+set numerics errors quiet
 set fontsize 1.3
 set key top {keypos}
 set keycols 2

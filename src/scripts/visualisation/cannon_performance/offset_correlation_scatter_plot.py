@@ -199,6 +199,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
                 caption = "{0} {1}".format(abscissa_info["latex"], displayed_abscissa_value)
 
             ppl = """
+set numerics errors quiet
 clear
 set width {width}
 set size square

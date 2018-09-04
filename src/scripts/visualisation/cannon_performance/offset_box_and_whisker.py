@@ -244,6 +244,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
                                   data_set_title=data_set_titles[data_set_counter]
                               ).strip(),
                               pyxplot_script="""
+set numerics errors quiet
 set nokey
 set fontsize 1.3
 set ylabel "$\Delta$ {label_name}"

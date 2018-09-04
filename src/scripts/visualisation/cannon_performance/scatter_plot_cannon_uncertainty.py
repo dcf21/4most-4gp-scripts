@@ -20,6 +20,7 @@ import numpy as np
 from label_tabulator import tabulate_labels
 
 from lib.pyxplot_driver import PyxplotDriver
+from lib.label_information import LabelInformation
 from lib.plot_settings import snr_defined_at_wavelength, plot_width
 from fourgp_degrade import SNRConverter
 
@@ -47,8 +48,11 @@ description = cannon_output['description']
 snr_converter = SNRConverter(raster=np.array(cannon_output['wavelength_raster']),
                              snr_at_wavelength=snr_defined_at_wavelength)
 
+# Metadata about all the labels which we can plot the Cannon's precision in estimating
+label_metadata = LabelInformation().label_metadata
+
 # Look up list of labels the Cannon was fitting
-label_names = cannon_output['labels']
+label_names = [item for item in cannon_output['labels'] if item in label_metadata]
 label_count = len(label_names)
 
 # Create data files listing parameter values
@@ -62,15 +66,19 @@ plotter = PyxplotDriver(multiplot_filename="{0}/uncertainty_multiplot".format(ar
                         multiplot_aspect=6. / 8)
 
 for index, label in enumerate(label_names):
+    label_info = label_metadata[label]
     plotter.make_plot(output_filename="{0}/uncertainty_{1}".format(args.output_stub, index),
                       data_files=[snr["filename"] for snr in snr_list],
                       caption=r"""
 {description} \newline {{\bf {label_name} }}
-""".format(description=description, label_name=label).strip(),
+""".format(description=description,
+           label_name=label_info['latex']
+           ).strip(),
                       pyxplot_script="""
 
 col_scale(z) = hsb(0.75 * z, 1, 1)
     
+set numerics errors quiet
 set key top right
 
 set xlabel "Cannon estimated uncertainty in {label_name}"
@@ -90,7 +98,8 @@ plot {plot_items}
                       column_y_1=3 * index + 1,
                       column_y_2=3 * index + 2,
                       snr=snr_converter.per_pixel(snr["snr"]).per_a(),
-                      colour_value=index2 / max(float(len(snr_list) - 1), 1)).strip()
+                      colour_value=index2 / max(float(len(snr_list) - 1), 1)
+                      ).strip()
                                  for index2, snr in enumerate(snr_list)
                                  ]))
                       )

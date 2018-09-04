@@ -104,6 +104,7 @@ for snr in snr_list:
 col_scale_z(z) = min(max(  (z-({colour_range_min})) / (({colour_range_max})-({colour_range_min}))  ,0),1)
 col_scale(z) = hsb(0.75 * col_scale_z(z), 1, 1)
     
+set numerics errors quiet
 set nokey
 set multiplot
 

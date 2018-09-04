@@ -84,6 +84,7 @@ for snr in snr_list:
                       caption=description,
                       pyxplot_script="""
     
+set numerics errors quiet
 set key top left
 set linewidth 0.4
 

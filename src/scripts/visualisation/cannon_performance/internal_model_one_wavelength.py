@@ -187,6 +187,7 @@ plotter.make_plot(output_filename="{}/internal_model_one_wavelength".format(args
                   caption=description,
                   pyxplot_script="""
 
+set numerics errors quiet
 set key below
 set linewidth 0.4
 

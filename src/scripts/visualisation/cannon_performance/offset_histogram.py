@@ -224,6 +224,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
                               ).strip(),
                               pyxplot_script="""
 
+set numerics errors quiet
 set key ycentre right
 set binwidth {bin_width}
 col_scale(z) = hsb(0.75 * z, 1, 1)

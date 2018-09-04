@@ -193,6 +193,7 @@ for data_set_count, data_set in enumerate(["Synthesised", "Cannon model"]):
                       data_files=["{}/internal_model_span_wavelength.dat".format(args.output_stub)],
                       pyxplot_script="""
 
+set numerics errors quiet
 set key below
 set linewidth 0.4
 
