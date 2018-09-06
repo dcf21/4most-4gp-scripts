@@ -4,10 +4,10 @@
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
 # <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
 # is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
-# <python degrade_library_with_gaussian.py>, but <./degrade_library_with_gaussian.py> will not work.
+# <python convolve_library.py>, but <./convolve_library.py> will not work.
 
 """
-Take a library of spectra, and convolve each spectrum with a half ellipse.
+Take a library of spectra, and convolve each spectrum with some convolution kernel.
 """
 
 import argparse
@@ -17,6 +17,7 @@ import time
 import re
 import logging
 import numpy as np
+from scipy.stats import norm
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
@@ -40,7 +41,7 @@ parser.add_argument('--input-library',
                          "[Teff>5000], but such ranges are easy to recast is a range, e.g. [5000<Teff<9999].")
 parser.add_argument('--output-library',
                     required=False,
-                    default="galah_test_sample_4fs_hrs_he_50only",
+                    default="galah_test_sample_4fs_hrs_convolved",
                     dest="output_library",
                     help="The name of the spectrum library we are to feed the convolved spectra into.")
 parser.add_argument('--workspace', dest='workspace', default="",
@@ -50,6 +51,12 @@ parser.add_argument('--width',
                     default="1.7",
                     dest="width",
                     help="The width of the half-ellipse convolution function.")
+parser.add_argument('--kernel',
+                    choices=["gaussian", "half_ellipse"],
+                    required=False,
+                    default="gaussian",
+                    dest="kernel",
+                    help="Select the convolution kernel to use.")
 parser.add_argument('--create',
                     action='store_true',
                     dest="create",
@@ -77,7 +84,8 @@ parser.add_argument('--log-file',
                     help="Specify a log file where we log our progress.")
 args = parser.parse_args()
 
-logger.info("Adding half-ellipse convolution to spectra from <{}>, going into <{}>".format(args.input_library,
+logger.info("Adding {} convolution to spectra from <{}>, going into <{}>".format(args.kernel,
+                                                                                 args.input_library,
                                                                                            args.output_library))
 
 # Set path to workspace where we create libraries of spectra
@@ -107,11 +115,21 @@ if args.db_in_tmp:
     output_library = SpectrumLibrarySqlite(path=library_path, create=False)
 
 # Parse the half-ellipse width that the user specified on the command line
-half_ellipse_width = float(args.width)
+kernel_width = float(args.width)
 
 # Create half-ellipse convolution function
-half_ellipse_raster = np.arange(-3, 3.1)
-half_ellipse = np.sqrt(np.maximum(0, 1 - half_ellipse_raster ** 2 / half_ellipse_width ** 2))
+convolution_raster = np.arange(-5, 5.1)
+
+if args.kernel == "half_ellipse":
+    convolution_kernel = np.sqrt(np.maximum(0, 1 - convolution_raster ** 2 / kernel_width ** 2))
+elif args.kernel == "gaussian":
+    convolution_kernel = (norm.cdf((convolution_raster+0.5) / kernel_width) -
+                          norm.cdf((convolution_raster-0.5) / kernel_width))
+else:
+    assert False, "Unknown convolution kernel <{}>".format(args.kernel)
+
+# Normalise convolution kernel
+convolution_kernel /= sum(convolution_kernel)
 
 # Start making a log file
 with open(args.log_to, "w") as result_log:
@@ -140,10 +158,10 @@ with open(args.log_to, "w") as result_log:
 
         # Convolve spectrum
         flux_data = input_spectrum.values
-        flux_data_convolved = np.convolve(a=flux_data, v=half_ellipse, mode='same')
+        flux_data_convolved = np.convolve(a=flux_data, v=convolution_kernel, mode='same')
 
         flux_errors = input_spectrum.value_errors
-        flux_errors_convolved = np.convolve(a=flux_errors, v=half_ellipse, mode='same')
+        flux_errors_convolved = np.convolve(a=flux_errors, v=convolution_kernel, mode='same')
 
         output_spectrum = Spectrum(wavelengths=input_spectrum.wavelengths,
                                    values=flux_data_convolved,
@@ -154,7 +172,8 @@ with open(args.log_to, "w") as result_log:
         # Import degraded spectra into output spectrum library
         output_library.insert(spectra=output_spectrum,
                               filenames=input_spectrum_id['filename'],
-                              metadata_list={"half_ellipse_width": half_ellipse_width})
+                              metadata_list={"convolution_width": kernel_width,
+                                             "convolution_kernel": args.kernel})
 
 # If we put database in /tmp while adding entries to it, now return it to original location
 if args.db_in_tmp:

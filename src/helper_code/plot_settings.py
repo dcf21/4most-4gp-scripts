@@ -11,7 +11,7 @@ output_formats = [
 output_dpi = 200
 keep_data_files = False
 
-include_author = True
+include_author = False
 include_caption = True
 
 snr_defined_at_wavelength = 6100
