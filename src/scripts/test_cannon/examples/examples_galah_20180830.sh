@@ -14,22 +14,35 @@ mkdir -p ../../../output_data/cannon
 
 # -----------------------------------------------------------------------------------------
 
-for mode in hrs lrs
+# Loop over both Gaussian and half ellipse convolutions
+for convolution_kernel in gaussian half_ellipse
 do
 
-for he_width in 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2
-do
+    # Do convolution for both 4MOST LRS and HRS
+    for mode in hrs lrs
+    do
+
+        # Loop over two different SNRs
+        for snr in 20 50
+        do
+
+            # Loop over different convolution widths for the test set
+            for convolution_width in 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2
+            do
 
 
-python2.7 cannon_test.py --train "galah_training_sample_4fs_he1.7_${mode}" \
-                         --test "galah_test_sample_4fs_he${he_width}_${mode}" \
-                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
-                         --description "4MOST HRS (with ${he_width}-pixel half-ellipse convolution; censored) - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../../../output_data/cannon/cannon_galah_he${he_width}_censored_${mode}_10label"
+                python2.7 cannon_test.py --train "galah_training_sample_4fs_${convolution_kernel}_1.7_${mode}" \
+                                         --test "galah_test_sample_4fs_${convolution_kernel}_${convolution_width}_${mode}_snr${snr}" \
+                                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                                         --description "HRS with ${convolution_width}-pixel ${convolution_kernel} convolution; censored - 10 labels." \
+                                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                                         --assume-scaled-solar \
+                                         --output-file "../../../output_data/cannon/cannon_galah_${convolution_kernel}_${convolution_width}_censored_${mode}_10label_snr${snr}"
+
+            done
+
+        done
+
+    done
 
 done
-
-done
-

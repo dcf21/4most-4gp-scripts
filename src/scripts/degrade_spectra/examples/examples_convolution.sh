@@ -36,7 +36,7 @@ do
                 python2.7 convolve_library.py --input-library "galah_test_sample_4fs_${mode}[SNR=${snr}]" \
                                               --kernel ${convolution_kernel} \
                                               --width ${convolution_width} \
-                                              --output-library galah_test_sample_4fs_${convolution_kernel}_${convolution_width}_${mode} \
+                                              --output-library galah_test_sample_4fs_${convolution_kernel}_${convolution_width}_${mode}_snr${snr} \
                                               --db-in-tmp
 
             done
