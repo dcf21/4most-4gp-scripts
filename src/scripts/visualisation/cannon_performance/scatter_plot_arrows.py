@@ -81,7 +81,7 @@ plotter = PyxplotDriver(multiplot_filename="{filename}/multiplot".format(filenam
 for snr in snr_list:
     plotter.make_plot(output_filename=snr["filename"],
                       data_files=[snr["filename"]],
-                      caption=description,
+                      caption=re.sub("_", r"\_", description),
                       pyxplot_script="""
     
 set numerics errors quiet

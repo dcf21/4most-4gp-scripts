@@ -148,7 +148,7 @@ plotter = PyxplotDriver()
 
 plotter.make_plot(output_filename=filename,
                   data_files=[filename],
-                  caption=cannon_output['description'],
+                  caption=re.sub("_", r"\_", cannon_output['description']),
                   pyxplot_script="""
 
 col_scale_z(z) = min(max(  (z-({colour_range_min_per_pixel})) / \

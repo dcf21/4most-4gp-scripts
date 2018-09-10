@@ -94,7 +94,7 @@ for snr in snr_list:
                       data_files=[snr["filename"]],
                       caption=r"""
 {description} \newline {{\bf {label_latex} }} \newline SNR/\AA={snr_a:.1f} \newline SNR/pixel={snr_pixel:.1f}
-                      """.format(description=description,
+                      """.format(description=re.sub("_", r"\_", description),
                                  label_latex=label_list[2]['latex'],
                                  snr_a=snr_converter.per_pixel(snr["snr"]).per_a(),
                                  snr_pixel=snr["snr"]

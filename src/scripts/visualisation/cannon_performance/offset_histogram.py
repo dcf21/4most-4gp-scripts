@@ -110,7 +110,7 @@ def generate_histograms(data_sets, abscissa_label, assume_scaled_solar,
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:
-            data_set['title'] = cannon_output['description']
+            data_set['title'] = re.sub("_", r"\_", cannon_output['description'])
 
         # Calculate the accuracy of the Cannon's abundance determinations
         accuracy_calculator = CannonAccuracyCalculator(

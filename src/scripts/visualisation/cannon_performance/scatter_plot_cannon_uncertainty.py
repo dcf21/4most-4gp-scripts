@@ -13,6 +13,7 @@ uncertainty that the Cannon quotes.
 
 import os
 import sys
+import re
 import argparse
 import gzip
 import json
@@ -71,7 +72,7 @@ for index, label in enumerate(label_names):
                       data_files=[snr["filename"] for snr in snr_list],
                       caption=r"""
 {description} \newline {{\bf {label_name} }}
-""".format(description=description,
+""".format(description=re.sub("_", r"\_", description),
            label_name=label_info['latex']
            ).strip(),
                       pyxplot_script="""
