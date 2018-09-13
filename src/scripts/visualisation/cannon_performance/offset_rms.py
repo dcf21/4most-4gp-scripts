@@ -283,8 +283,8 @@ plot {plot_items}
                                        else "set nokey"),
                               x_label=abscissa_info["latex"],
                               y_label=label_info["latex"],
-                              y_min=label_info["offset_min"],
-                              y_max=label_info["offset_max"],
+                              y_min=0.7 * label_info["offset_min"],
+                              y_max=0.7 * label_info["offset_max"],
                               set_log=("set log x" if abscissa_info["log_axis"] else ""),
                               set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
                                            if common_x_limits is not None else ""),

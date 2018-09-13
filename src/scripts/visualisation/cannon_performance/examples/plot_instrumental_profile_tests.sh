@@ -16,23 +16,19 @@ source ../../../../../virtualenv/bin/activate
 
 for kernel in gaussian half_ellipse
 do
-
     for mode in hrs lrs
     do
-
         for snr in 20 50
         do
-
-            python2.7 offset_rms.py \
-            --cannon-output ../../../../output_data/cannon/cannon_galah_${kernel}_all_censored_${mode}_10label_snr${snr} \
-            --abscissa convolution \
-            --output ../../../../output_plots/cannon_performance/instrumental_profile_tests/${kernel}_${mode}_10label_snr${snr} \
-            &
-
+            for script in offset_rms.py offset_box_and_whisker.py
+            do
+                python2.7 ${script} \
+                --cannon-output ../../../../output_data/cannon/cannon_galah_${kernel}_all_censored_${mode}_10label_snr${snr} \
+                --abscissa convolution \
+                --output ../../../../output_plots/cannon_performance/instrumental_profile_tests/${kernel}_${mode}_10label_snr${snr} \
+                &
+            done
+            wait
         done
-        wait
-
     done
-
 done
-
