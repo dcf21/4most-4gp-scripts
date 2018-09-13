@@ -19,7 +19,7 @@ import json
 
 from lib.pyxplot_driver import PyxplotDriver
 from lib.label_information import LabelInformation
-from lib.abscissa_information import AbcissaInformation
+from lib.abscissa_information import AbscissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
 from lib.plot_settings import snr_defined_at_wavelength
 from fourgp_degrade import SNRConverter
@@ -46,7 +46,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
     :param abscissa_label:
         The name of the label we are to plot on the horizontal axis. This should be 'SNR/A', 'SNR/pixel', 'ebv'. See
-        <lib/abcissa_information.py>, where these are defined.
+        <lib/abscissa_information.py>, where these are defined.
 
     :param compare_against_reference_labels:
         If true, we measure the difference between each label value estimated by the Cannon and the target value taken
@@ -72,7 +72,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     label_metadata = LabelInformation().label_metadata
 
     # Metadata data about all of the horizontal axes that we can plot precision against
-    abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
+    abscissa_info = AbscissaInformation().abscissa_labels[abscissa_label]
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
@@ -119,7 +119,9 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
             cannon_json_output=cannon_output,
             label_names=label_names,
             compare_against_reference_labels=compare_against_reference_labels,
-            assume_scaled_solar=assume_scaled_solar)
+            assume_scaled_solar=assume_scaled_solar,
+            abscissa_field=abscissa_info['field']
+        )
 
         stars_which_meet_filter = accuracy_calculator.filter_test_stars(constraints=data_set['filters'].split(";"))
 
