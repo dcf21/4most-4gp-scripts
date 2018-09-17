@@ -19,7 +19,7 @@ import json
 
 from lib.pyxplot_driver import PyxplotDriver
 from lib.label_information import LabelInformation
-from lib.abscissa_information import AbcissaInformation
+from lib.abscissa_information import AbscissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
 from lib.plot_settings import snr_defined_at_wavelength
 from fourgp_degrade import SNRConverter
@@ -46,7 +46,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
     :param abscissa_label:
         The name of the label we are to plot on the horizontal axis. This should be 'SNR/A', 'SNR/pixel', 'ebv'. See
-        <lib/abcissa_information.py>, where these are defined.
+        <lib/abscissa_information.py>, where these are defined.
 
     :param compare_against_reference_labels:
         If true, we measure the difference between each label value estimated by the Cannon and the target value taken
@@ -72,7 +72,7 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
     label_metadata = LabelInformation().label_metadata
 
     # Metadata data about all of the horizontal axes that we can plot precision against
-    abscissa_info = AbcissaInformation().abscissa_labels[abscissa_label]
+    abscissa_info = AbscissaInformation().abscissa_labels[abscissa_label]
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
@@ -119,7 +119,9 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
             cannon_json_output=cannon_output,
             label_names=label_names,
             compare_against_reference_labels=compare_against_reference_labels,
-            assume_scaled_solar=assume_scaled_solar)
+            assume_scaled_solar=assume_scaled_solar,
+            abscissa_field=abscissa_info['field']
+        )
 
         stars_which_meet_filter = accuracy_calculator.filter_test_stars(constraints=data_set['filters'].split(";"))
 
@@ -204,16 +206,16 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
 
 """)
                 for j, datum in enumerate(y):
-                    if abscissa_label.startswith("SNR"):
-                        w1 = 1.2
-                        w2 = 1
+                    if abscissa_info["log_axis"]:
+                        x_min = datum[0] / abscissa_info["box_whisker_width"]
+                        x_max = datum[0] * abscissa_info["box_whisker_width"]
                     else:
-                        w1 = 0
-                        w2 = 1.024
-                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[2]))
-                    f.write("{} {}\n".format((datum[0] - w1) / w2, datum[4]))
-                    f.write("{} {}\n".format((datum[0] + w1) * w2, datum[4]))
-                    f.write("{} {}\n\n\n".format((datum[0] + w1) * w2, datum[2]))
+                        x_min = datum[0] - abscissa_info["box_whisker_width"]
+                        x_max = datum[0] + abscissa_info["box_whisker_width"]
+                    f.write("{} {}\n".format(x_min, datum[2]))
+                    f.write("{} {}\n".format(x_min, datum[4]))
+                    f.write("{} {}\n".format(x_max, datum[4]))
+                    f.write("{} {}\n\n\n".format(x_max, datum[2]))
 
                     plot_box_whiskers[i][data_set_counter].insert(0, """
 \"{0}\" using 1:2 with filledregion fc red col black lw 0.5 index {1}
@@ -258,8 +260,8 @@ plot {plot_items}
                               """.format(
                                   label_name=label_info["latex"],
                                   x_label=abscissa_info["latex"],
-                                  y_min=-2 * label_info["offset_max"],
-                                  y_max=2 * label_info["offset_max"],
+                                  y_min=-1.2 * label_info["offset_max"],
+                                  y_max=1.2 * label_info["offset_max"],
                                   set_log=("set log x" if abscissa_info["log_axis"] else ""),
                                   set_x_range=("set xrange [{}:{}]".format(common_x_limits[0], common_x_limits[1])
                                                if common_x_limits is not None else ""),
