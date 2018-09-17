@@ -4,7 +4,7 @@
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
 # <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
 # is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
-# <python convolve_library.py>, but <./convolve_library.py> will not work.
+# <python build_grid.py>, but <./build_grid.py> will not work.
 
 """
 

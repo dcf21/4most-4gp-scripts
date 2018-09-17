@@ -26,7 +26,7 @@ pip install numpy scipy astropy MySQL-python flask tables
 pip install matplotlib==1.5.3
 
 # These additional packages are required by Sergey's RV code
-pip install pyyaml numdifftools pandas
+pip install pyyaml numdifftools pandas functools32
 
 # Make sure we've got the latest version of the 4GP libraries installed in virtual environment
 cd ${cwd}
