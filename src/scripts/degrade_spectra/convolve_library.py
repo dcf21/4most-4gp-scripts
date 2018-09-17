@@ -86,7 +86,7 @@ args = parser.parse_args()
 
 logger.info("Adding {} convolution to spectra from <{}>, going into <{}>".format(args.kernel,
                                                                                  args.input_library,
-                                                                                           args.output_library))
+                                                                                 args.output_library))
 
 # Set path to workspace where we create libraries of spectra
 workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
@@ -123,8 +123,8 @@ convolution_raster = np.arange(-5, 5.1)
 if args.kernel == "half_ellipse":
     convolution_kernel = np.sqrt(np.maximum(0, 1 - convolution_raster ** 2 / kernel_width ** 2))
 elif args.kernel == "gaussian":
-    convolution_kernel = (norm.cdf((convolution_raster+0.5) / kernel_width) -
-                          norm.cdf((convolution_raster-0.5) / kernel_width))
+    convolution_kernel = (norm.cdf((convolution_raster + 0.5) / kernel_width) -
+                          norm.cdf((convolution_raster - 0.5) / kernel_width))
 else:
     assert False, "Unknown convolution kernel <{}>".format(args.kernel)
 

@@ -2,6 +2,9 @@
 
 # This script updates the local installation of 4GP
 
+# Below we do a bit of brute-force uninstallation and cleaning of the python environment, as otherwise we can
+# end up reinstalling a cached old version of packages, rather than forcing a download of a new copy of a package
+
 cwd=`pwd`
 
 # Activate python virtual environment
@@ -16,6 +19,14 @@ pip uninstall -y fourgp_specsynth
 pip uninstall -y fourgp_telescope_data
 pip uninstall -y fourgp_fourfs
 
+# Install some of the python packages we required
+pip install numpy scipy astropy MySQL-python flask tables
+
+# I recommend installing an old version of matplotlib, as the latest has additional dependencies
+pip install matplotlib==1.5.3
+
+# These additional packages are required by Sergey's RV code
+pip install pyyaml numdifftools pandas
 
 # Make sure we've got the latest version of the 4GP libraries installed in virtual environment
 cd ${cwd}
@@ -53,3 +64,8 @@ cd ../pyphot
 python2.7 setup.py clean --all
 python2.7 setup.py install --force
 
+# Make sure we've got the latest version of Sergey's RV code installed in virtual environment
+cd ${cwd}
+cd ../rvspecfit
+python2.7 setup.py clean --all
+python2.7 setup.py install --force
