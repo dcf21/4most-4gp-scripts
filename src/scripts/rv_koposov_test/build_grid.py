@@ -116,6 +116,8 @@ for arm_name in sorted(all_wavelength_arms.keys()):
     arm = all_wavelength_arms[arm_name]
     output_directory = os_path.join(args.output_directory, arm_name)
 
+    os.system("mkdir -p {}".format(output_directory))
+
     rvspecfit.make_interpol.process_all(setupInfo=(arm_name,
                                                    arm["lambda_min"],
                                                    arm["lambda_max"],
