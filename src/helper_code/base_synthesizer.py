@@ -121,6 +121,8 @@ class Synthesizer:
                 item['free_abundances'] = {}
             if 'extra_metadata' not in item:
                 item['extra_metadata'] = {}
+            if 'microturbulence' not in item:
+                item['microturbulence'] = 1
 
         # Ensure that we have a table of input data to dump to SQLite, if requested
         for item in self.star_list:
@@ -206,7 +208,8 @@ class Synthesizer:
                     "uid": str(unique_id),
                     "Teff": float(star['Teff']),
                     "[Fe/H]": float(star['[Fe/H]']),
-                    "logg": float(star['logg'])
+                    "logg": float(star['logg']),
+                    "microturbulence": float(star["microturbulence"])
                 }
 
                 # User can specify that we should only do every nth spectrum, if we're running in parallel
@@ -230,6 +233,7 @@ class Synthesizer:
                     metallicity=float(star['[Fe/H]']),
                     log_g=float(star['logg']),
                     stellar_mass=1 if "stellar_mass" not in star else star["stellar_mass"],
+                    turbulent_velocity=1 if "microturbulence" not in star else star["microturbulence"],
                     free_abundances=free_abundances
                 )
 

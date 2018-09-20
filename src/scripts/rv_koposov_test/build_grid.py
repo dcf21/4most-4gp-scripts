@@ -22,6 +22,7 @@ import argparse
 import os
 import sys
 from os import path as os_path
+import json
 import logging
 import numpy as np
 
@@ -101,6 +102,10 @@ if os_path.exists(args.output_directory):
 
 os.system("mkdir -p {}".format(args.output_directory))
 
+# Save information about the wavelength arms
+with open(os_path.join(args.output_directory, "arm_list.json"), "w") as json_out:
+    json_out.write(json.dumps(all_wavelength_arms))
+
 # Build SQLite3 database of template spectra
 logger.info("Calling <rvspecfit.read_grid.makedb>")
 db_file = os_path.join(args.output_directory, "files.db")
@@ -135,7 +140,7 @@ for arm_name in sorted(all_wavelength_arms.keys()):
 
 # Create the triangulation tables
 for arm_name in sorted(all_wavelength_arms.keys()):
-    logger.info("Calling <rvspecfit.make_interpol.process_all> for arm <{}>".format(arm_name))
+    logger.info("Calling <rvspecfit.make_nd.execute> for arm <{}>".format(arm_name))
     arm = all_wavelength_arms[arm_name]
     output_directory = os_path.join(args.output_directory, arm_name)
 
