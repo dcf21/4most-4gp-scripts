@@ -34,7 +34,7 @@ synthesizer = Synthesizer(library_name="galah_sample_v2",
                           docstring=__doc__)
 
 # Table supplies list of abundances for GES stars
-f = fits.open("../../downloads/GALAH_trainingset_4MOST_errors.fits")
+f = fits.open("../../../../downloads/GALAH_trainingset_4MOST_errors.fits")
 galah_stars = f[1].data
 galah_fields = galah_stars.names
 # print galah_fields  # To print a list of available parameters
