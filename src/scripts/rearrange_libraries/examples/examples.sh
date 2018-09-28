@@ -37,3 +37,9 @@ python2.7 rearrange.py --input-library 4fs_ges_dwarf_sample_lrs[SNR=100] \
                        --contamination-fraction 0.01 \
                        --output-library polluted_ges_dwarf_sample_lrs
 
+# Randomly split a library into two parts, taking only spectra at SNR/pixel 100
+python2.7 rearrange.py --input-library turbospec_galah_wm \
+                       --output-library turbospec_galah_wm_training_sample \
+                       --output-library turbospec_galah_wm_test_sample \
+                       --output-fraction 0.25 --output-fraction 0.75
+
