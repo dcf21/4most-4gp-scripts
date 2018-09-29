@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,9 +10,9 @@
 Take spectrum library, and output all of the metadata contained within into a CSV file.
 """
 
-from os import path as os_path
 import argparse
 import re
+from os import path as os_path
 
 from fourgp_speclib import SpectrumLibrarySqlite
 
@@ -51,7 +51,7 @@ fields.sort()
 
 # At the top of the CSV file, write column headings with the field names
 line = args.separator.join(fields)
-print line
+print(line)
 
 # Write out information about spectra one by one
 for i in range(len(library_ids)):
@@ -71,4 +71,4 @@ for i in range(len(library_ids)):
 
     # Print out a line of CSV output
     line = args.separator.join(words)
-    print line
+    print(line)

@@ -4,10 +4,10 @@
 A class which allows us to run batches of shell commands in parallel.
 """
 
-import os
-from os import path as os_path
-import sys
 import multiprocessing as mp
+import os
+import sys
+from os import path as os_path
 
 
 class BatchProcessor:

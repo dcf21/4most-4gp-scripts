@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,8 +10,8 @@
 Take a load of plots listed on the command line, and compile them into a single gallery.
 """
 
-import sys
 import os
+import sys
 
 
 def multiplot_make(plot_list, columns=3, margin=1, width=20, aspect=1.618034, dpi=120):

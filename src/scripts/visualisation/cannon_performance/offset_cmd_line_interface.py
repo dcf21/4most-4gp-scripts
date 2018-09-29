@@ -5,9 +5,9 @@
 Define a common command-line interface which is shared between all the scripts for plotting the Cannon's performance.
 """
 
+import argparse
 import os
 import sys
-import argparse
 
 
 def fetch_command_line_arguments():
@@ -105,8 +105,8 @@ def fetch_command_line_arguments():
         # Read the JSON file which we dumped after running the Cannon
         cannon_filename_full = cannon_output + ".full.json.gz"
         if not os.path.exists(cannon_filename_full):
-            print "mean_performance_vs_label.py could not proceed: Cannon run <{}> not found". \
-                format(cannon_filename_full)
+            print("mean_performance_vs_label.py could not proceed: Cannon run <{}> not found". \
+                  format(cannon_filename_full))
             sys.exit()
 
         # Append to list of Cannon data sets

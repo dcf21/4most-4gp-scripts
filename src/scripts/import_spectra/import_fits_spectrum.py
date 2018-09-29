@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,12 +11,13 @@ Take a FITS file containing a spectrum, and import it into a spectrum library.
 """
 
 import argparse
-import os
-from os import path as os_path
 import logging
+import os
 import re
-from astropy.io import fits
+from os import path as os_path
+
 import numpy as np
+from astropy.io import fits
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',

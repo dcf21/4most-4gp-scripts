@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -19,21 +19,21 @@ pass this code continuum normalised spectra if you want scientifically meaningfu
 """
 
 import argparse
-import os
-from os import path as os_path
-import logging
-import json
-import time
 import gzip
-import numpy as np
+import json
+import logging
+import os
+import time
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite
-from fourgp_degrade import SpectrumProperties
+import numpy as np
 from fourgp_cannon import \
     __version__ as fourgp_version, \
     CannonInstance_2018_01_09, \
     CannonInstanceWithRunningMeanNormalisation_2018_01_09, \
     CannonInstanceWithContinuumNormalisation_2018_01_09
+from fourgp_degrade import SpectrumProperties
+from fourgp_speclib import SpectrumLibrarySqlite
 
 
 def select_cannon(continuum_normalisation="none"):
@@ -413,16 +413,16 @@ def main():
         # If requested, fill in any missing labels on the training set by assuming scaled-solar abundances
         if args.assume_scaled_solar:
             training_spectra = autocomplete_scaled_solar_abundances(
-                    input_spectra=training_spectra_all,
-                    label_list=test_label_fields + test_labels_individual_batch
-                )
+                input_spectra=training_spectra_all,
+                label_list=test_label_fields + test_labels_individual_batch
+            )
         else:
             training_spectra = filter_training_spectra(
-                    input_spectra=training_spectra_all,
-                    label_list=test_label_fields + test_labels_individual_batch,
-                    input_library=training_library,
-                    input_spectrum_ids=training_library_ids_all
-                )
+                input_spectra=training_spectra_all,
+                label_list=test_label_fields + test_labels_individual_batch,
+                input_library=training_library,
+                input_spectrum_ids=training_library_ids_all
+            )
 
         # Evaluate labels which are calculated via metadata expressions
         test_labels_expressions = []
@@ -507,10 +507,10 @@ def main():
             err_labels = np.sqrt(np.diag(cov[0]))
 
             # Turn list of label values into a dictionary
-            cannon_output = dict(zip(test_labels, labels[0]))
+            cannon_output = dict(list(zip(test_labels, labels[0])))
 
             # Add the standard deviations of each label into the dictionary
-            cannon_output.update(dict(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels)))
+            cannon_output.update(dict(list(zip(["E_{}".format(label_name) for label_name in test_labels], err_labels))))
 
             # Add the star name and the SNR ratio of the test spectrum
             result = {"Starname": star_name,
@@ -531,7 +531,7 @@ def main():
         censoring_output = None
         if censoring_masks is not None:
             censoring_output = dict([(label, tuple([int(i) for i in mask]))
-                                     for label, mask in censoring_masks.iteritems()])
+                                     for label, mask in censoring_masks.items()])
 
         output_data = {
             "hostname": os.uname()[1],

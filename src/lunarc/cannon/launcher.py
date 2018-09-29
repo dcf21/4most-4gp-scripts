@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -20,9 +20,9 @@ the out of memory killer tends to kill your jobs. Well, it probably will do that
 """
 
 import argparse
+import logging
 import os
 import re
-import logging
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -111,10 +111,10 @@ for job in args.jobs:
         # If file product already exists, don't need to recreate it
         destination = os.path.join(config_path, destination) + ".full.json.gz"
         if os.path.exists(destination):
-            print "-  Product <{}> already exists".format(destination)
+            print("-  Product <{}> already exists".format(destination))
             continue
         else:
-            print "++ Product <{}> needs making".format(destination)
+            print("++ Product <{}> needs making".format(destination))
 
         # Create rsync command to copy spectrum libraries to node local storage
         run_id = "{}_{}".format(uid, counter)

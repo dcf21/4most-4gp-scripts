@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,20 +10,19 @@
 Plot results of testing the Cannon against noisy test spectra, to see how well it reproduces stellar labels.
 """
 
-import os
-from os import path as os_path
 import gzip
-import re
-import numpy as np
 import json
+import os
+import re
+from os import path as os_path
 
-from lib.pyxplot_driver import PyxplotDriver
-from lib.label_information import LabelInformation
+import numpy as np
+from fourgp_degrade import SNRConverter
 from lib.abscissa_information import AbscissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
+from lib.label_information import LabelInformation
 from lib.plot_settings import snr_defined_at_wavelength
-from fourgp_degrade import SNRConverter
-
+from lib.pyxplot_driver import PyxplotDriver
 from offset_cmd_line_interface import fetch_command_line_arguments
 
 
@@ -139,7 +138,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
         data_set_titles.append(legend_label)
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_values = accuracy_calculator.label_offsets.keys()
+        abscissa_values = list(accuracy_calculator.label_offsets.keys())
         abscissa_values = sorted(set(abscissa_values))
 
         data_set_counter += 1
@@ -186,7 +185,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
     # Create a new pyxplot script for correlation plots
     item_width = 4  # centimetres
     for data_set_counter, data_set_items in enumerate(plot_cross_correlations):
-        for abscissa_index, (displayed_abscissa_value, plot_item) in enumerate(sorted(data_set_items.iteritems())):
+        for abscissa_index, (displayed_abscissa_value, plot_item) in enumerate(sorted(data_set_items.items())):
             data_filename, snr_converter = plot_item
 
             if abscissa_label == "SNR/A":

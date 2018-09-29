@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -13,16 +13,16 @@ mock observations of the input spectra, for 4MOST LRS and HRS.
 """
 
 import argparse
-import os
-from os import path as os_path
 import hashlib
-import time
-import re
 import logging
-import numpy as np
+import os
+import re
+import time
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite
+import numpy as np
 from fourgp_degrade import GaussianNoise
+from fourgp_speclib import SpectrumLibrarySqlite
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -224,7 +224,7 @@ with open(args.log_to, "w") as result_log:
 
         # Process spectra through Gaussian noise model
         degraded_spectra = {}
-        for mode_name, noise_model in modes.iteritems():
+        for mode_name, noise_model in modes.items():
             degraded_spectra[mode_name] = noise_model.process_spectra(
                 spectra_list=((input_spectrum, input_spectrum_continuum_normalised),)
             )
@@ -246,5 +246,5 @@ with open(args.log_to, "w") as result_log:
                                                       metadata_list={"uid": unique_id})
 
 # Clean up noise models
-for mode in modes.itervalues():
+for mode in modes.values():
     mode.close()

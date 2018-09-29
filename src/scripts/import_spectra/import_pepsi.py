@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -13,18 +13,18 @@ much extra noise into them.
 """
 
 import argparse
-import os
-from os import path as os_path
-import numpy as np
 import glob
 import hashlib
 import logging
+import os
 import re
-from astropy.io import fits
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
+import numpy as np
+from astropy.io import fits
 from fourgp_degrade import SpectrumResampler
 from fourgp_fourfs import FourFS
+from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -155,7 +155,7 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
 
     # Extract list of metadata from <abundance_data>
     if star_name not in abundance_data:
-        print "Warning: star <{}> not found in ASCII table".format(star_name)
+        print("Warning: star <{}> not found in ASCII table".format(star_name))
     else:
         header_dictionary.update(abundance_data[star_name])
 

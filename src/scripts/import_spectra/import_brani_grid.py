@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -12,13 +12,13 @@ Take the grid of template spectra used by Brani's RV code, and turn it into a sp
 To run this script, you need to have a copy of the file <templates.npy> which is part of Brani's RV code.
 """
 
-import os
-from os import path as os_path
 import argparse
-import numpy as np
 import itertools
 import logging
+import os
+from os import path as os_path
 
+import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 # Path to where we find Brani's <4MOST_forward_modeling>
@@ -70,7 +70,7 @@ grid_axes = [["Teff", (4000, 8250, 250)],
              ]
 
 grid_axis_values = [np.arange(axis[1][0], axis[1][1], axis[1][2]) for axis in grid_axes]
-grid_axis_indices = [range(int((axis[1][1] - axis[1][0]) / axis[1][2])) for axis in grid_axes]
+grid_axis_indices = [list(range(int((axis[1][1] - axis[1][0]) / axis[1][2]))) for axis in grid_axes]
 grid_axis_index_combinations = itertools.product(*grid_axis_indices)
 
 # Turn Brani's set of templates into a spectrum library with path specified above

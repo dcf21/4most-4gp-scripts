@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -12,9 +12,10 @@ Take parameters of the SAGA survey, and synthesize spectra using TurboSpectrum.
 Parameters downloaded from here: http://sagadatabase.jp/?page_id=10
 """
 
-import re
-import numpy as np
 import logging
+import re
+
+import numpy as np
 from lib.base_synthesizer import Synthesizer
 
 # List of elements whose abundances we pass to TurboSpectrum
@@ -56,9 +57,9 @@ stars = []
 columns = f[0].split("\t")
 
 for line in f[1:]:
-    star = dict(zip(columns, line.split("\t")))
+    star = dict(list(zip(columns, line.split("\t"))))
     valid_star = True
-    print len(columns), len(line.split("\t"))
+    print(len(columns), len(line.split("\t")))
     for essential_item in ['Teff', 'log g', 'Fe']:
         if essential_item not in star:
             valid_star = False

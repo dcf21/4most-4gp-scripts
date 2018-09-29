@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,16 +10,15 @@
 Take an output file from the Cannon, and plot the Cannon's predictive model coefficients.
 """
 
+import argparse
+import gzip
+import json
 import os
 from os import path as os_path
-import gzip
-import argparse
-import json
-import numpy as np
 
-from fourgp_speclib import SpectrumLibrarySqlite
+import numpy as np
 from fourgp_cannon import CannonInstance
-from lib import plot_settings
+from fourgp_speclib import SpectrumLibrarySqlite
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -61,7 +60,7 @@ training_spectra = training_library.open(ids=training_library_ids)
 # Recreate a Cannon instance, using the saved state
 censoring_masks = cannon_output["censoring_mask"]
 if censoring_masks is not None:
-    for key, value in censoring_masks.iteritems():
+    for key, value in censoring_masks.items():
         censoring_masks[key] = np.asarray(value)
 
 model = CannonInstance(training_set=training_spectra,

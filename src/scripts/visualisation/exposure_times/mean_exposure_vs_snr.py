@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -12,13 +12,13 @@ Take a SpectrumLibrary and tabulate the average exposure time at each SNR within
 
 import argparse
 import os
+import pwd
 import time
 from os import path as os_path
-import pwd
-import numpy as np
 
-from fourgp_speclib import SpectrumLibrarySqlite
+import numpy as np
 from fourgp_degrade import SNRConverter
+from fourgp_speclib import SpectrumLibrarySqlite
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)

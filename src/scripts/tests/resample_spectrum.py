@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,10 +11,10 @@ Create a demo spectrum with a couple of lines in it, and check they look sensibl
 """
 
 from math import pi
-import numpy as np
 
-from fourgp_speclib import Spectrum
+import numpy as np
 from fourgp_degrade import SpectrumResampler
+from fourgp_speclib import Spectrum
 
 # Create a really bonkers raster to sample a spectrum on
 raster_original = np.concatenate([np.linspace(0, 3, 30), np.linspace(3, 6, 300), np.linspace(6, 10, 20)])

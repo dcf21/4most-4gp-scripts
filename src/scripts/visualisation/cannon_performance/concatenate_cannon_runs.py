@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -43,7 +43,7 @@ def concatenate_data_sets(input_files, output_file):
 
     for counter, input_file in enumerate(input_files):
         # Print status update
-        print "Loading <{}>...".format(input_file)
+        print("Loading <{}>...".format(input_file))
 
         # Read JSON output
         cannon_output = json.loads(gzip.open(input_file + ".full.json.gz").read())

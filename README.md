@@ -35,18 +35,18 @@ cd 4most-4gp-scripts/src/scripts/test_cannon
  
 mkdir -p ../../../output_data/cannon
 
-python2.7 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
-                         --test "galah_test_sample_4fs_hrs" \
-                         --description "4MOST HRS - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../../../output_data/cannon/cannon_galah_hrs_10label"
-python2.7 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
-                         --test "galah_test_sample_4fs_lrs" \
-                         --description "4MOST LRS - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                         --assume-scaled-solar \
-                         --output-file "../../../output_data/cannon/cannon_galah_lrs_10label"
+python3 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                       --test "galah_test_sample_4fs_hrs" \
+                       --description "4MOST HRS - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                       --assume-scaled-solar \
+                       --output-file "../../../output_data/cannon/cannon_galah_hrs_10label"
+python3 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                       --test "galah_test_sample_4fs_lrs" \
+                       --description "4MOST LRS - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                       --assume-scaled-solar \
+                       --output-file "../../../output_data/cannon/cannon_galah_lrs_10label"
 
 ```
 

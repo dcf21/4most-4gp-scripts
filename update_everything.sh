@@ -20,52 +20,49 @@ pip uninstall -y fourgp_telescope_data
 pip uninstall -y fourgp_fourfs
 
 # Install some of the python packages we required
-pip install numpy scipy astropy MySQL-python flask tables
-
-# I recommend installing an old version of matplotlib, as the latest has additional dependencies
-pip install matplotlib==1.5.3
+pip install numpy scipy astropy mysqlclient flask matplotlib tables
 
 # These additional packages are required by Sergey's RV code
-pip install pyyaml numdifftools pandas functools32
+pip install pyyaml numdifftools pandas
 
 # Make sure we've got the latest version of the 4GP libraries installed in virtual environment
 cd ${cwd}
 cd ../4most-4gp/src/pythonModules/fourgp_speclib
-python2.7 setup.py clean --all  # No. Really. I don't want you to cache an old version of my code.
-python2.7 setup.py install --force  # How many times do I need to tell you not to cache my code?
+python3 setup.py clean --all  # No. Really. I don't want you to cache an old version of my code.
+python3 setup.py install --force  # How many times do I need to tell you not to cache my code?
 cd ../fourgp_cannon
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 cd ../fourgp_degrade
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 cd ../fourgp_rv
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 cd ../fourgp_specsynth
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 cd ../fourgp_telescope_data
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 cd ../fourgp_fourfs
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 
 # Make sure we've got the latest version of the Cannon installed in virtual environment
 cd ${cwd}
 cd ../AnniesLasso
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 
 # Make sure we've got the latest version of pyphot installed in virtual environment
 cd ${cwd}
 cd ../pyphot
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force
 
 # Make sure we've got the latest version of Sergey's RV code installed in virtual environment
 cd ${cwd}
 cd ../rvspecfit
-python2.7 setup.py clean --all
-python2.7 setup.py install --force
+python3 setup.py clean --all
+python3 setup.py install --force

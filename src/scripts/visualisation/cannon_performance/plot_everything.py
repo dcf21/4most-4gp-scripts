@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,16 +11,16 @@ This script looks in the directory <4most-4gp-scripts/output_data/cannon> to see
 Cannon and plots up the results automatically.
 """
 
+import glob
+import gzip
+import json
 import logging
 import re
-import glob
-import json
-import gzip
 from os import path as os_path
 
 from lib import plot_settings
-from lib.label_information import LabelInformation
 from lib.batch_processor import BatchProcessor
+from lib.label_information import LabelInformation
 
 # Create logger
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',

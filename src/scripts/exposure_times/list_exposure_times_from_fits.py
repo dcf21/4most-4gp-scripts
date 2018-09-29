@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,16 +11,16 @@ Take a bunch of FITS template spectra, and list their intrinsic magnitudes (as s
 exposure times needed to observe them if they were at some particular reference magnitude.
 """
 
+import argparse
+import glob
+import logging
 import os
 from os import path as os_path
-import glob
+
 import numpy as np
 from astropy.io import fits
-import argparse
-import logging
-
-from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 from fourgp_fourfs import FourFS
+from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
 root_path = os_path.join(our_path, "../../../..")
@@ -219,12 +219,12 @@ for magnitude in mag_list:
                     exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]
 
                     # Print output
-                    print "{name:100s} {mode:6s} {snr:6.1f} {magnitude:6.3f} {exposure:6.3f}". \
-                        format(name=name,
-                               mode=mode,
-                               snr=snr,
-                               magnitude=mag_intrinsic,
-                               exposure=exposure_time)
+                    print("{name:100s} {mode:6s} {snr:6.1f} {magnitude:6.3f} {exposure:6.3f}". \
+                          format(name=name,
+                                 mode=mode,
+                                 snr=snr,
+                                 magnitude=mag_intrinsic,
+                                 exposure=exposure_time))
 
         # Insert spectrum object into spectrum library
         library.insert(spectra=spectrum, filenames=os_path.split(template)[1])

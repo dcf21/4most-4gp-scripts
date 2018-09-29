@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,10 +10,10 @@
 Take spectrum library, and list some basic stellar parameters and photometry for the spectra within.
 """
 
-from os import path as os_path
 import argparse
-import numpy as np
+from os import path as os_path
 
+import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite
 
 # Read input parameters
@@ -81,7 +81,7 @@ for i in range(len(library_spectra)):
             format("Object", "Exposure", "Mag(4FS)", "E(B-V)", "Teff", "log(g)", "[Fe/H]",
                    "SNR/" + snr_per_unit, "SNR defn")
         line += " {:8s} {:8s} {:8s}".format("SDSS_r", "SDSS_g", "SDSS_u")
-        print line
+        print(line)
 
     # Write out a row of data
     line = "{:15s} {:8.1f} {:8.2f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.1f} {:10s}". \
@@ -94,4 +94,4 @@ for i in range(len(library_spectra)):
                float(metadata.get("[Fe/H]", np.nan)),
                snr, snr_defn)
     line += " {:8.3f} {:8.3f} {:8.3f}".format(r, g, u)
-    print line
+    print(line)

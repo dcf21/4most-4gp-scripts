@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,19 +11,17 @@ Take an output file from the Cannon, and plot the Cannon's predictive model of h
 span varies with one of the variables.
 """
 
-import os
-from os import path as os_path
-import gzip
 import argparse
-import re
+import gzip
 import json
-import numpy as np
-
+import os
+import re
 from operator import itemgetter
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite
+import numpy as np
 from fourgp_cannon import CannonInstance_2018_01_09
-
+from fourgp_speclib import SpectrumLibrarySqlite
 from lib.pyxplot_driver import PyxplotDriver
 
 
@@ -99,7 +97,7 @@ training_spectra = training_library.open(ids=training_library_ids)
 # Recreate a Cannon instance, using the saved state
 censoring_masks = cannon_output["censoring_mask"]
 if censoring_masks is not None:
-    for key, value in censoring_masks.iteritems():
+    for key, value in censoring_masks.items():
         censoring_masks[key] = np.asarray(value)
 
 model = CannonInstance_2018_01_09(training_set=training_spectra,

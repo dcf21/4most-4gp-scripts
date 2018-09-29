@@ -5,10 +5,11 @@ A class for calculating the offset in the Cannon's determination of labels from 
 """
 
 import re
+
 import numpy as np
 
-from label_information import LabelInformation
-from interpolate_linear import sort_on_first_item
+from .interpolate_linear import sort_on_first_item
+from .label_information import LabelInformation
 
 
 class CannonAccuracyCalculator:

@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,11 +11,11 @@ Create a data file listing all of the MARCS models we have in a particular grid,
 such as gnuplot or pyxplot.
 """
 
-from os import path as os_path
-import glob
-import re
 import argparse
+import glob
 import logging
+import re
+from os import path as os_path
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -47,7 +47,7 @@ def fetch_marcs_grid(input_path, output_filename):
         "metallicity": [], "a": [], "c": [], "n": [], "o": [], "r": [], "s": []
     }
 
-    marcs_value_keys = marcs_values.keys()
+    marcs_value_keys = list(marcs_values.keys())
     marcs_value_keys.sort()
 
     marcs_models = glob.glob(os_path.join(input_path, "*"))

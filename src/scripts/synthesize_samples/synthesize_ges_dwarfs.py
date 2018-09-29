@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,9 +10,10 @@
 Take stellar parameters of GES dwarf stars and synthesize spectra using TurboSpectrum.
 """
 
-import numpy as np
-import logging
 import json
+import logging
+
+import numpy as np
 from astropy.io import fits
 from lib.base_synthesizer import Synthesizer
 

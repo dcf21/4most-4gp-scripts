@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,12 +10,12 @@
 Take some SpectrumLibraries and make a scatter plot of the stellar parameters within them.
 """
 
+import argparse
 import os
 import re
-import argparse
 
-from lib.pyxplot_driver import PyxplotDriver
 from label_tabulator import tabulate_labels
+from lib.pyxplot_driver import PyxplotDriver
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)

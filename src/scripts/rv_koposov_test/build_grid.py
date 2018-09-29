@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -19,18 +19,14 @@ Before you start, the Phoenix grid needs to be downloaded from
 """
 
 import argparse
+import json
+import logging
 import os
 import sys
 from os import path as os_path
-import json
-import logging
+
 import numpy as np
-
-import rvspecfit.read_grid
-import rvspecfit.make_interpol
-import rvspecfit.make_nd
 import rvspecfit.make_ccf
-
 from fourgp_degrade import SpectrumProperties
 
 # Read input parameters

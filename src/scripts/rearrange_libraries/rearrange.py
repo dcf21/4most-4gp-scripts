@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -15,14 +15,14 @@ We can also contaminate the input spectra with some fraction of light from a con
 """
 
 import argparse
-import os
-from os import path as os_path
-import time
-import random
 import logging
+import os
+import random
+import time
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite
 import fourgp_degrade
+from fourgp_speclib import SpectrumLibrarySqlite
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -274,11 +274,11 @@ with open(args.log_to, "w") as result_log:
                     # Pollute continuum normalised spectrum
                     input_spectrum_continuum_normalised.values = \
                         (input_spectrum_continuum_normalised.values * pixel_weights +
-                         contamination_cn_resampled.values * (1-pixel_weights))
+                         contamination_cn_resampled.values * (1 - pixel_weights))
 
                     # Add metadata describing pollution fraction
                     input_spectrum_continuum_normalised.metadata["contamination_fraction"] = \
-                    input_spectrum.metadata["contamination_fraction"] = contamination_fraction
+                        input_spectrum.metadata["contamination_fraction"] = contamination_fraction
 
                 # Select which output library to send this spectrum to
                 # Be sure to send all spectra relating to any particular star to the same destination

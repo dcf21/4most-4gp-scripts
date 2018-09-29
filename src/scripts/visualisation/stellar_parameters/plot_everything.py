@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,8 +10,8 @@
 This script looks in the directory <4most-4gp-scripts/workspace> to see what spectrum libraries you have created, and plots histograms and Kiel diagrams of the contents of each.
 """
 
-import logging
 import glob
+import logging
 from os import path as os_path
 
 from lib import plot_settings

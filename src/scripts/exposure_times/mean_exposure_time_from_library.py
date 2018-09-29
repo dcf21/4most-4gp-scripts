@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,13 +11,13 @@ Take a bunch of template spectra in a SpectrumLibrary, and list the exposure tim
 were at some particular reference magnitude.
 """
 
-from os import path as os_path
-import numpy as np
 import argparse
 import logging
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite
+import numpy as np
 from fourgp_fourfs import FourFS
+from fourgp_speclib import SpectrumLibrarySqlite
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
 root_path = os_path.join(our_path, "../../../..")
@@ -248,9 +248,9 @@ for magnitude in sorted(output.keys()):
             exposure_time_sd = np.std(output[mode][snr])
 
             # Print a row of output
-            print "{mode:6s} {magnitude:6.1f} {snr:6.1f} {mean:6.3f} {std_dev:6.3f}".format(mode=mode,
+            print("{mode:6s} {magnitude:6.1f} {snr:6.1f} {mean:6.3f} {std_dev:6.3f}".format(mode=mode,
                                                                                             magnitude=magnitude,
                                                                                             snr=snr,
                                                                                             mean=exposure_time_mean,
                                                                                             std_dev=exposure_time_sd
-                                                                                            )
+                                                                                            ))

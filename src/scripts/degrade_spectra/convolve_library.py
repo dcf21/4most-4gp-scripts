@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,15 +11,15 @@ Take a library of spectra, and convolve each spectrum with some convolution kern
 """
 
 import argparse
-import os
-from os import path as os_path
-import time
-import re
 import logging
-import numpy as np
-from scipy.stats import norm
+import os
+import re
+import time
+from os import path as os_path
 
+import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
+from scipy.stats import norm
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')

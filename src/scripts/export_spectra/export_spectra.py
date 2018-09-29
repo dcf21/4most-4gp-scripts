@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,11 +11,11 @@
 Take spectrum library, and export the spectra in it in ASCII format.
 """
 
+import argparse
 import os
 from os import path as os_path
-import argparse
-import numpy as np
 
+import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite
 
 # Read input parameters
@@ -74,4 +74,4 @@ for i in range(len(library_spectra)):
 
     # Write a text file containing the spectrum itself
     with open("{filename}.spec".format(filename=filename_stub), "w") as f:
-        np.savetxt(f, np.asarray(zip(spectrum.wavelengths, spectrum.values, spectrum.value_errors)))
+        np.savetxt(f, np.asarray(list(zip(spectrum.wavelengths, spectrum.values, spectrum.value_errors))))

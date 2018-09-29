@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -12,15 +12,8 @@ new list of stars is written out as a JSON data file in the same format as the o
 """
 
 import argparse
-from os import path as os_path
-import re
-import logging
 import json
-import time
-import numpy as np
-
-from fourgp_speclib import SpectrumLibrarySqlite
-from fourgp_cannon import CannonInstance
+import logging
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -77,7 +70,7 @@ cannon_json = json.loads(open(args.input_file + ".json").read())
 filtered_stars = []
 for star in cannon_json["stars"]:
     reject = False
-    for constraint_name, constraint_value in constraints.iteritems():
+    for constraint_name, constraint_value in constraints.items():
         # We filter stars based on the target values used to synthesise the spectra, not the Cannon output
         target_value_key = "target_{}".format(constraint_name)
         # If this parameter is not set on this star, we exclude it

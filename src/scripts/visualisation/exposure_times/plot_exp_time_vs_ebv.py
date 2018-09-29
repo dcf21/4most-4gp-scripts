@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -14,16 +14,16 @@ python2.7 plot_exp_time_vs_ebv.py --abundance-target "[Fe/H]<0.1" --abundance-ta
 
 """
 
-import os
-from os import path as os_path
-import sys
 import argparse
 import json
-import re
 import logging
-import numpy as np
+import os
+import re
+import sys
 from operator import itemgetter
+from os import path as os_path
 
+import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite
 from lib.multiplotter import PyxplotDriver
 
@@ -52,36 +52,36 @@ workspace = args.workspace if args.workspace else os_path.join(our_path, "../../
 
 # Read Cannon output
 if not os.path.exists(args.cannon):
-    print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon)
+    print("scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found".format(args.cannon))
     sys.exit()
 
 cannon_output = json.loads(open(args.cannon).read())
-print "Number of Cannon tests: {:d}".format(len(cannon_output['stars']))
+print("Number of Cannon tests: {:d}".format(len(cannon_output['stars'])))
 
 # Create a sorted list of all the SNR values we've got
 snr_values = [item['SNR'] for item in cannon_output['stars']]
 snr_values = sorted(set(snr_values))
-print "Number of SNR values: {:d}".format(len(snr_values))
+print("Number of SNR values: {:d}".format(len(snr_values)))
 
 # Create a sorted list of all the SNR definitions we've got
 snr_definitions = [item['snr_definition'] for item in cannon_output['stars']]
 snr_definitions = sorted(set(snr_definitions))
-print "Number of SNR definitions: {:d}".format(len(snr_definitions))
+print("Number of SNR definitions: {:d}".format(len(snr_definitions)))
 
 # Create a sorted list of all the stars we've got
 star_names = [item['Starname'] for item in cannon_output['stars']]
 star_names = sorted(set(star_names))
-print "Number of unique stars: {:d}".format(len(star_names))
+print("Number of unique stars: {:d}".format(len(star_names)))
 
 # Create a sorted list of all the E(B-V) values we've got
 ebv_values = [item['e_bv'] for item in cannon_output['stars']]
 ebv_values = sorted(set(ebv_values))
-print "Number of unique E(B-V) values: {:d}".format(len(ebv_values))
+print("Number of unique E(B-V) values: {:d}".format(len(ebv_values)))
 
 # Estimate number of observations in each configuration
-print "Number of observations per configuration: {:.3f}".format(float(len(cannon_output['stars'])) / len(snr_values)
+print("Number of observations per configuration: {:.3f}".format(float(len(cannon_output['stars'])) / len(snr_values)
                                                                 / len(snr_definitions) / len(star_names)
-                                                                / len(ebv_values))
+                                                                / len(ebv_values)))
 
 # If list of abundance constraints not specified, make some up
 if args.targets is None:

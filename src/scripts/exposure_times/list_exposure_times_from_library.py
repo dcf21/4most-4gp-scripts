@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,12 +11,12 @@ Take a bunch of template spectra in a SpectrumLibrary, and list the exposure tim
 were at some particular reference magnitude.
 """
 
-from os import path as os_path
 import argparse
 import logging
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_fourfs import FourFS
+from fourgp_speclib import SpectrumLibrarySqlite
 
 our_path = os_path.split(os_path.abspath(__file__))[0]
 root_path = os_path.join(our_path, "../../../..")
@@ -230,9 +230,9 @@ for magnitude in mag_list:
                     exposure_time = degraded_spectra[mode][index][snr]["spectrum"].metadata["exposure"]
 
                     # Print output
-                    print "{name:100s} {mode:6s} {snr:6.1f} {magnitude:6.3f} {exposure:6.3f}". \
-                        format(name=object_name,
-                               mode=mode,
-                               snr=snr,
-                               magnitude=mag_intrinsic,
-                               exposure=exposure_time)
+                    print("{name:100s} {mode:6s} {snr:6.1f} {magnitude:6.3f} {exposure:6.3f}". \
+                          format(name=object_name,
+                                 mode=mode,
+                                 snr=snr,
+                                 magnitude=mag_intrinsic,
+                                 exposure=exposure_time))

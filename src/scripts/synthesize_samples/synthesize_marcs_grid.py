@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,10 +11,11 @@ Take the [Teff, log_g, Fe/H] parameter values in the MARCs grid of model atmosph
 point in parameter space. Assume solar abundance ratios for all other elements.
 """
 
+import glob
+import logging
 import re
 from os import path as os_path
-import logging
-import glob
+
 from lib.base_synthesizer import Synthesizer
 
 # Start logging our progress
@@ -75,7 +76,7 @@ def fetch_marcs_grid(marcs_grid_path):
             raise
 
         # Keep a list of all of the parameter values we've seen
-        for parameter, value in model.iteritems():
+        for parameter, value in model.items():
             if parameter in marcs_values:
                 if value not in marcs_values[parameter]:
                     marcs_values[parameter].append(value)
@@ -91,7 +92,7 @@ def fetch_marcs_grid(marcs_grid_path):
 marcs_grid_path = os_path.join(synthesizer.args.binary_path, "fromBengt/marcs_grid")
 parameter_values = fetch_marcs_grid(marcs_grid_path=marcs_grid_path)
 
-for key, value in parameter_values.iteritems():
+for key, value in parameter_values.items():
     logger.info("We have {:6d} values for parameter <{}>: {}".format(len(value), key, value))
 
 # Iterate over the spectra we're supposed to be synthesizing

@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,6 +11,7 @@ Synthesize a handful of demo stars, e.g. the Sun, using TurboSpectrum.
 """
 
 import logging
+
 from lib.base_synthesizer import Synthesizer
 
 # Start logging our progress

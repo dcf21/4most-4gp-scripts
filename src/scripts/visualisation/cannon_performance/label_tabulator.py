@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -24,12 +24,13 @@ This file path can be changed with the --output-stub command line argument.
 
 """
 
+import argparse
+import gzip
+import json
 import os
 from os import path as os_path
+
 import numpy as np
-import gzip
-import argparse
-import json
 
 
 def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
@@ -105,7 +106,7 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
     # Start creating output data files
     snr_list_with_filenames = []
     snr_list.sort()
-    object_names = library_values.keys()
+    object_names = list(library_values.keys())
     object_names.sort()
     for snr in snr_list:
         filename = "{}_{:03.0f}.dat".format(output_stub, snr)

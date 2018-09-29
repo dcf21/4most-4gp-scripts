@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,13 +11,13 @@ Take the APOKASC training set and test sets, as defined in ASCII tables provided
 SpectrumLibraries for use in 4MOST 4GP
 """
 
-import os
-import glob
 import argparse
-from os import path as os_path
+import glob
 import logging
-from astropy.table import Table
+import os
+from os import path as os_path
 
+from astropy.table import Table
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
 
 # Path to where we find Keith Hawkins's <4MOST_testspectra>

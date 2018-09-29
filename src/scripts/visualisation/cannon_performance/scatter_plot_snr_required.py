@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,18 +11,18 @@ Take an output file from the Cannon, and produce a scatter plot of coloured poin
 and the colour of the points representing the SNR needed to attain some required level of accuracy in a third label.
 """
 
-import os
-import sys
 import argparse
-import re
 import gzip
 import json
-import numpy as np
+import os
+import re
+import sys
 
-from lib.label_information import LabelInformation
-from lib.pyxplot_driver import PyxplotDriver
-from lib.plot_settings import snr_defined_at_wavelength
+import numpy as np
 from fourgp_degrade import SNRConverter
+from lib.label_information import LabelInformation
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.pyxplot_driver import PyxplotDriver
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -70,8 +70,8 @@ for item in args.labels + [args.colour_by_label]:
 
 # Read Cannon output
 if not os.path.exists(args.cannon + ".full.json.gz"):
-    print "scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found". \
-        format(args.cannon + ".full.json.gz")
+    print("scatter_plot_snr_required.py could not proceed: Cannon run <{}> not found". \
+          format(args.cannon + ".full.json.gz"))
     sys.exit()
 
 cannon_output = json.loads(gzip.open(args.cannon + ".full.json.gz").read())
@@ -79,8 +79,8 @@ cannon_output = json.loads(gzip.open(args.cannon + ".full.json.gz").read())
 # Check that labels exist
 for label in label_list:
     if label["name"] not in cannon_output["labels"]:
-        print "scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".format(label["name"],
-                                                                                                      args.cannon)
+        print("scatter_plot_snr_required.py could not proceed: Label <{}> not present in <{}>".format(label["name"],
+                                                                                                      args.cannon))
         sys.exit()
 
 # Create a sorted list of all the SNR values we've got

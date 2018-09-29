@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,18 +11,18 @@ Take an output file from the Cannon, and produce a scatter plot with arrows conn
 those estimated by the Cannon.
 """
 
-import os
-import sys
 import argparse
-import re
 import gzip
 import json
-import numpy as np
-from label_tabulator import tabulate_labels
+import os
+import re
+import sys
 
-from lib.pyxplot_driver import PyxplotDriver
-from lib.plot_settings import snr_defined_at_wavelength
+import numpy as np
 from fourgp_degrade import SNRConverter
+from label_tabulator import tabulate_labels
+from lib.plot_settings import snr_defined_at_wavelength
+from lib.pyxplot_driver import PyxplotDriver
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -63,8 +63,8 @@ snr_list = tabulate_labels(output_stub="{}/scatter_plot_arrows_snr_".format(args
 
 # Fetch title for this Cannon run
 if not os.path.exists(args.cannon + ".summary.json.gz"):
-    print "scatter_plot_arrows.py could not proceed: Cannon run <{}> not found". \
-        format(args.cannon + ".summary.json.gz")
+    print("scatter_plot_arrows.py could not proceed: Cannon run <{}> not found". \
+          format(args.cannon + ".summary.json.gz"))
     sys.exit()
 
 cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())

@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,12 +11,12 @@ Take the FITS files containing the PEPSI sample, and turn them into ASCII data f
 """
 
 import argparse
-import os
-from os import path as os_path
-import numpy as np
 import glob
 import logging
-import re
+import os
+from os import path as os_path
+
+import numpy as np
 from astropy.io import fits
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
@@ -51,5 +51,4 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
     flux_errors = data['Var']
 
     filename_out = "{}/{}.dat".format(output_directory, filename)
-    np.savetxt(filename_out, np.transpose( [wavelengths, flux, flux_errors] ))
-
+    np.savetxt(filename_out, np.transpose([wavelengths, flux, flux_errors]))

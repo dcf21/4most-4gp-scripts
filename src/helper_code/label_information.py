@@ -155,7 +155,7 @@ class LabelInformation:
         }
 
         # Allow abundance over Fe to also be plotted
-        for key in self.label_metadata.keys():
+        for key in list(self.label_metadata.keys()):
             test = re.match("\[(.*)/H\]", key)
             if test is not None:
                 info = self.label_metadata[key].copy()

@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -10,20 +10,19 @@
 Plot results of testing the Cannon against noisy test spectra, to see how well it reproduces stellar labels.
 """
 
-import os
-from os import path as os_path
 import gzip
-import re
-import numpy as np
 import json
+import os
+import re
+from os import path as os_path
 
-from lib.pyxplot_driver import PyxplotDriver
-from lib.label_information import LabelInformation
+import numpy as np
+from fourgp_degrade import SNRConverter
 from lib.abscissa_information import AbscissaInformation
 from lib.compute_cannon_offsets import CannonAccuracyCalculator
+from lib.label_information import LabelInformation
 from lib.plot_settings import snr_defined_at_wavelength
-from fourgp_degrade import SNRConverter
-
+from lib.pyxplot_driver import PyxplotDriver
 from offset_cmd_line_interface import fetch_command_line_arguments
 
 
@@ -141,17 +140,17 @@ def generate_box_and_whisker_plots(data_sets, abscissa_label, assume_scaled_sola
         data_set_titles.append(legend_label)
 
         # Create a sorted list of all the abscissa values we've got
-        abscissa_values = accuracy_calculator.label_offsets.keys()
+        abscissa_values = list(accuracy_calculator.label_offsets.keys())
         abscissa_values = sorted(set(abscissa_values))
 
         # If all abscissa values are off the range of the x axis, rescale axis
         if common_x_limits is not None:
             if abscissa_values[0] > common_x_limits[1]:
                 common_x_limits[1] = abscissa_values[0]
-                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[0])
+                print("Rescaling x-axis to include {:.1f}".format(abscissa_values[0]))
             if abscissa_values[-1] < common_x_limits[0]:
                 common_x_limits[0] = abscissa_values[-1]
-                print "Rescaling x-axis to include {:.1f}".format(abscissa_values[-1])
+                print("Rescaling x-axis to include {:.1f}".format(abscissa_values[-1]))
 
         data_set_counter += 1
 

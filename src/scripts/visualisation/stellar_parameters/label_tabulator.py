@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,8 +11,8 @@ Take a SpectrumLibrary and tabulate a list of the stellar parameters of the star
 """
 
 import argparse
-from os import path as os_path
 import re
+from os import path as os_path
 
 from fourgp_speclib import SpectrumLibrarySqlite
 

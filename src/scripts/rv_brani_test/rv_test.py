@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -11,14 +11,14 @@ Take the APOKASC training set and test sets, apply random radial velocities to t
 can determine what radial velocity we applied.
 """
 
-from os import path as os_path
 import argparse
 import logging
-import time
 import random
+import time
+from os import path as os_path
 
-from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
 from fourgp_rv import RvInstance, random_radial_velocity
+from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
 
 # Read input parameters
 parser = argparse.ArgumentParser(description=__doc__)
@@ -120,7 +120,7 @@ with open(args.output_file, "w") as output:
             line1 = "# {:5s} {:7s} {:11s} ".format("Steps", "Time", "RV_in")
             line2 = "# {:5d} {:7d} {:11d} ".format(1, 2, 3)
             column_counter = 3
-            stellar_label_names = stellar_labels.keys()
+            stellar_label_names = list(stellar_labels.keys())
             stellar_label_names.sort()
             for key in stellar_label_names:
                 column_counter += 1

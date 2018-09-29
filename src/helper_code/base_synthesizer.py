@@ -4,19 +4,18 @@
 Framework for code to synthesise a library of spectra.
 """
 
+import argparse
+import hashlib
+import json
 import os
 import re
-import time
-import hashlib
-import argparse
-import numpy as np
-from os import path as os_path
-import json
 import sqlite3
+import time
+from os import path as os_path
 
 from fourgp_speclib import SpectrumLibrarySqlite, Spectrum
-from fourgp_telescope_data import FourMost
 from fourgp_specsynth import TurboSpectrum
+from fourgp_telescope_data import FourMost
 
 
 class Synthesizer:
@@ -144,20 +143,20 @@ class Synthesizer:
             c = conn.cursor()
 
             columns = []
-            for col_name, col_value in self.star_list[0]['input_data'].iteritems():
-                col_type_str = isinstance(col_value, basestring)
+            for col_name, col_value in list(self.star_list[0]['input_data'].items()):
+                col_type_str = isinstance(col_value, str)
                 columns.append("{} {}".format(col_name, "TEXT" if col_type_str else "REAL"))
             c.execute("CREATE TABLE stars (uid INTEGER PRIMARY KEY, {});".format(",".join(columns)))
 
             for i, item in enumerate(self.star_list):
-                print "Writing sqlite parameter dump: %5d / %5d" % (i, len(self.star_list))
+                print(("Writing sqlite parameter dump: %5d / %5d" % (i, len(self.star_list))))
                 c.execute("INSERT INTO stars (name) VALUES (?);", (item['input_data']['name'],))
                 uid = c.lastrowid
                 for col_name in item['input_data']:
                     if col_name == "name":
                         continue
                     arguments = (
-                        str(item['input_data'][col_name]) if isinstance(item['input_data'][col_name], basestring)
+                        str(item['input_data'][col_name]) if isinstance(item['input_data'][col_name], str)
                         else float(item['input_data'][col_name]),
                         uid
                     )
@@ -221,7 +220,7 @@ class Synthesizer:
 
                 # Pass list of the abundances of individual elements to TurboSpectrum
                 free_abundances = dict(star['free_abundances'])
-                for element, abundance in free_abundances.iteritems():
+                for element, abundance in list(free_abundances.items()):
                     metadata["[{}/H]".format(element)] = float(abundance)
 
                 # Propagate all ionisation states into metadata

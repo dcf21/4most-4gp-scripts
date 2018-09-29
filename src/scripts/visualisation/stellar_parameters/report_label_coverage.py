@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python2.7
+#!../../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -13,8 +13,8 @@ set of stars.
 
 import argparse
 from os import path as os_path
-import numpy as np
 
+import numpy as np
 from fourgp_speclib import SpectrumLibrarySqlite
 
 # Read input parameters
@@ -63,4 +63,4 @@ for spectrum_index, spectrum_id in enumerate(library_ids):
             count[label_index] += 1
 
 for label_index, label in enumerate(label_list):
-    print "Label {:16s} is set on {:5d} / {:5d} spectra.".format(label, count[label_index], spectrum_count)
+    print("Label {:16s} is set on {:5d} / {:5d} spectra.".format(label, count[label_index], spectrum_count))

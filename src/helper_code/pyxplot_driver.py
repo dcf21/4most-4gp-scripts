@@ -7,11 +7,11 @@ plots we've made with a single driver instance.
 """
 
 import os
-from math import floor
 import pwd
 import time
+from math import floor
 
-import plot_settings
+from . import plot_settings
 
 
 class PyxplotDriver:

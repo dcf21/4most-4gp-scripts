@@ -1,4 +1,4 @@
-#!../../../../virtualenv/bin/python2.7
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -26,10 +26,10 @@ You specify an input library pattern, e.g. "demo_stars". We then look for all sp
 # python merge_libraries.py --input-library turbospec_ges_dwarfs_perturbed
 
 import argparse
-import os
-from os import path as os_path
 import glob
 import logging
+import os
+from os import path as os_path
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
@@ -66,7 +66,7 @@ for item in input_libraries:
 command_line += " --output-library {}".format(args.input_library)
 
 # Show the user the python command we're about to run
-print command_line
+print(command_line)
 
 # Do it!
 os.system(command_line)
