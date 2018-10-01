@@ -6,6 +6,9 @@
 cd "$(dirname "$0")"
 cwd=`pwd`
 
+# Sometimes this line is necessary, if your locale settings are broken
+export LC_ALL=C
+
 # Below we do a bit of brute-force uninstallation and cleaning of the python environment, as otherwise we can
 # end up reinstalling a cached old version of packages, rather than forcing a download of a new copy of a package
 
