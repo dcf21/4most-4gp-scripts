@@ -140,7 +140,7 @@ with open(args.log_to, "w") as result_log:
         # Loop over each of the values of E(B-V) we are applying to each input spectrum
         for e_bv in ebv_list:
             # Create a unique ID for this reddened spectrum (shared between the flux- and continuum-normalised output)
-            unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+            unique_id = hashlib.md5(os.urandom(32)).hexdigest()[:16]
 
             # Redden the spectrum
             reddened_spectrum = reddener.redden(e_bv=e_bv)

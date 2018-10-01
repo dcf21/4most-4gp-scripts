@@ -130,7 +130,7 @@ if args.input_library is not None:
 
 # Report to user how many spectra we have just found
 logger.info("Opening {:d} input libraries. These contain {:s} spectra.".
-            format(len(input_libraries), [len(x['items']) for x in input_libraries]))
+            format(len(input_libraries), str([len(x['items']) for x in input_libraries])))
 
 # Open contaminating spectrum library(s), if any, and fetch a list of all the flux-normalised spectra within each
 contamination_libraries = []

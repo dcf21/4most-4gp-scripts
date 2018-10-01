@@ -200,7 +200,7 @@ class Synthesizer:
         with open(self.logfile, "w") as result_log:
             for star in self.star_list:
                 star_name = star['name']
-                unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+                unique_id = hashlib.md5(os.urandom(32)).hexdigest()[:16]
 
                 metadata = {
                     "Starname": str(star_name),

@@ -161,7 +161,7 @@ with open(args.log_to, "w") as result_log:
             degraded_cn = input_spectrum_continuum_normalised.apply_radial_velocity(rv * 1000)
 
             # Create a unique ID for this mock observation (shared between the flux- and continuum-normalised output)
-            unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+            unique_id = hashlib.md5(os.urandom(32)).hexdigest()[:16]
 
             # Save the flux-normalised output
             output_library.insert(spectra=degraded,

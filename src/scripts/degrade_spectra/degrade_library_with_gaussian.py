@@ -238,7 +238,7 @@ with open(args.log_to, "w") as result_log:
                 # Loop over the various SNRs we simulated
                 for snr in degraded_spectra[mode][index]:
                     # Create a unique ID for this mock observation
-                    unique_id = hashlib.md5(os.urandom(32).encode("hex")).hexdigest()[:16]
+                    unique_id = hashlib.md5(os.urandom(32)).hexdigest()[:16]
                     # Import the flux- and continuum-normalised spectra separately, but give them the same ID
                     for spectrum_version in degraded_spectra[mode][index][snr]:
                         output_libraries[mode].insert(spectra=spectrum_version,

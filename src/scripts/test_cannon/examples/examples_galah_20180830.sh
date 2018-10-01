@@ -31,13 +31,13 @@ do
             do
 
 
-                python2.7 cannon_test.py --train "galah_training_sample_4fs_${convolution_kernel}_1.7_${mode}" \
-                                         --test "galah_test_sample_4fs_${convolution_kernel}_${convolution_width}_${mode}_snr${snr}" \
-                                         --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
-                                         --description "HRS with ${convolution_width}-pixel ${convolution_kernel} convolution; censored - 10 labels." \
-                                         --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                                         --assume-scaled-solar \
-                                         --output-file "../../../output_data/cannon/cannon_galah_${convolution_kernel}_${convolution_width}_censored_${mode}_10label_snr${snr}"
+                python3 cannon_test.py --train "galah_training_sample_4fs_${convolution_kernel}_1.7_${mode}" \
+                                       --test "galah_test_sample_4fs_${convolution_kernel}_${convolution_width}_${mode}_snr${snr}" \
+                                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                                       --description "HRS with ${convolution_width}-pixel ${convolution_kernel} convolution; censored - 10 labels." \
+                                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                                       --assume-scaled-solar \
+                                       --output-file "../../../output_data/cannon/cannon_galah_${convolution_kernel}_${convolution_width}_censored_${mode}_10label_snr${snr}"
 
             done
 
@@ -46,3 +46,4 @@ do
     done
 
 done
+

@@ -10,4 +10,5 @@ cd ${cwd}
 source ../../../../virtualenv/bin/activate
 
 # Now do some work
-python2.7 list_exposure_times_from_fits.py --input "/media/dcf21/LOUISEUSB/templates_S4_*/*.fits"
+python3 list_exposure_times_from_fits.py --input "/media/dcf21/LOUISEUSB/templates_S4_*/*.fits"
+
