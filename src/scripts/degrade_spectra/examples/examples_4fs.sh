@@ -10,7 +10,7 @@ cd ${cwd}
 source ../../../../virtualenv/bin/activate
 
 # Now do some work
-python3 degrade_library_with_4fs.py --input-library demo_stars \
+python3 degrade_library_with_4fs.py --input-library turbospec_demo_stars \
                                     --output-library-lrs 4fs_demo_stars_lrs \
                                     --output-library-hrs 4fs_demo_stars_hrs
 
