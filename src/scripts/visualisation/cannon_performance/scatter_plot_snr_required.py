@@ -74,7 +74,7 @@ if not os.path.exists(args.cannon + ".full.json.gz"):
           format(args.cannon + ".full.json.gz"))
     sys.exit()
 
-cannon_output = json.loads(gzip.open(args.cannon + ".full.json.gz").read())
+cannon_output = json.loads(gzip.open(args.cannon + ".full.json.gz", "rt").read())
 
 # Check that labels exist
 for label in label_list:

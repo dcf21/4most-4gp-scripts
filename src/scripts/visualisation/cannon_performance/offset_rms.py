@@ -75,7 +75,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
 
     # Look up a list of all the (unique) labels the Cannon tried to fit in all the data sets we're plotting
     unique_json_files = set([item['cannon_output'] for item in data_sets])
-    labels_in_each_data_set = [json.loads(gzip.open(json_file + ".summary.json.gz").read())['labels']
+    labels_in_each_data_set = [json.loads(gzip.open(json_file + ".summary.json.gz", "rt").read())['labels']
                                for json_file in unique_json_files]
     unique_labels = set([label for label_list in labels_in_each_data_set for label in label_list])
 
@@ -107,7 +107,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
-        cannon_output = json.loads(gzip.open(data_set['cannon_output'] + ".full.json.gz").read())
+        cannon_output = json.loads(gzip.open(data_set['cannon_output'] + ".full.json.gz", "rt").read())
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:

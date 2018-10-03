@@ -4,34 +4,7 @@
 A class for linearly interpolating [x,y] data sets. Can return either y(x), or solve for x(y)
 """
 
-
-def sgn(x):
-    """
-    Return the sign of a floating-point number (-1 or 1; never 0)
-
-    :param x:
-        Input float
-    :return:
-        Sign of float (-1 or 1)
-    """
-    if x < 0.0:
-        return -1.0
-    else:
-        return 1.0
-
-
-def sort_on_first_item(a, b):
-    """
-    Helper to sort a list of lists into the order of the first list item.
-
-    :param a:
-        Comparison item A
-    :param b:
-        Comparison item B
-    :return:
-        Comparison integer
-    """
-    return int(sgn(a[0] - b[0]))
+from operator import itemgetter
 
 
 class LinearInterpolate:
@@ -51,7 +24,7 @@ class LinearInterpolate:
         self.data_set = list(data_set)
 
         # Sort into order of ascending x
-        self.data_set.sort(sort_on_first_item)
+        self.data_set.sort(key=itemgetter(0))
 
     def compute_x(self, y):
         """

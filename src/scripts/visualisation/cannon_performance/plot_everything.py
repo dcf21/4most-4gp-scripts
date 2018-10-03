@@ -202,7 +202,7 @@ for i, cannon_json_summary in enumerate(cannon_json_summaries):
 
     # Now produce scatter plots of the SNR required to achieve the target precision in each label for each star
     label_metadata = LabelInformation().label_metadata
-    cannon_output_data = json.loads(gzip.open(cannon_json_summary).read())
+    cannon_output_data = json.loads(gzip.open(cannon_json_summary, "rt").read())
     label_names = [item for item in cannon_output_data['labels'] if item in label_metadata]
     for colour_by_label in label_names:
         # Figure out the target precision for each label, and units

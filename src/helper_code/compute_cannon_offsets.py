@@ -6,9 +6,10 @@ A class for calculating the offset in the Cannon's determination of labels from 
 
 import re
 
+from operator import itemgetter
+
 import numpy as np
 
-from .interpolate_linear import sort_on_first_item
 from .label_information import LabelInformation
 
 
@@ -95,7 +96,7 @@ class CannonAccuracyCalculator:
         for star_name in self.tests_by_star_name:
 
             # Sort Cannon runs into order of ascending abscissa value
-            self.tests_by_star_name[star_name].sort(sort_on_first_item)
+            self.tests_by_star_name[star_name].sort(key=itemgetter(0))
             test_at_highest_abscissa = self.tests[self.tests_by_star_name[star_name][-1][1]]
 
             # Start building a tree of the reference values by star name, and then by label name

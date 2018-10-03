@@ -51,7 +51,7 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
     if not cannon.endswith(".full.json.gz"):
         cannon += ".full.json.gz"
     assert os.path.exists(cannon), "Cannon output file <{}> does not exist.".format(cannon)
-    cannon_json = json.loads(gzip.open(cannon).read())
+    cannon_json = json.loads(gzip.open(cannon, "rt").read())
 
     # If no list of labels supplied, then list everything
     if not labels:

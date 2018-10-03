@@ -66,7 +66,7 @@ if not os.path.exists(args.cannon + ".summary.json.gz"):
           format(args.cannon + ".summary.json.gz"))
     sys.exit()
 
-cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
+cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz", "rt").read())
 description = cannon_output['description']
 
 # Check that labels exist

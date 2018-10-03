@@ -41,7 +41,7 @@ workspace = os_path.join(our_path, "../../../../workspace")
 os.system("mkdir -p {}".format(args.output_stub))
 
 # Fetch title for this Cannon run
-cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz").read())
+cannon_output = json.loads(gzip.open(args.cannon + ".summary.json.gz", "rt").read())
 description = cannon_output['description']
 
 # Open spectrum library we originally trained the Cannon on

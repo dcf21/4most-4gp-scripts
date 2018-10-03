@@ -46,7 +46,7 @@ def concatenate_data_sets(input_files, output_file):
         print("Loading <{}>...".format(input_file))
 
         # Read JSON output
-        cannon_output = json.loads(gzip.open(input_file + ".full.json.gz").read())
+        cannon_output = json.loads(gzip.open(input_file + ".full.json.gz", "rt").read())
 
         # Append the spectra tested in this Cannon run to the complete list we are making
         spectra.extend(cannon_output['spectra'])
@@ -60,12 +60,12 @@ def concatenate_data_sets(input_files, output_file):
     output_struct['generator'] = __file__
 
     # Write brief summary of run to JSON file, without masses of data
-    with gzip.open("{:s}.summary.json.gz".format(output_file), "w") as f:
+    with gzip.open("{:s}.summary.json.gz".format(output_file), "wt") as f:
         f.write(json.dumps(output_struct, indent=2))
 
     # Write full results to JSON file
     output_struct["spectra"] = spectra
-    with gzip.open("{:s}.full.json.gz".format(output_file), "w") as f:
+    with gzip.open("{:s}.full.json.gz".format(output_file), "wt") as f:
         f.write(json.dumps(output_struct, indent=2))
 
 
