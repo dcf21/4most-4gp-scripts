@@ -20,14 +20,15 @@ python3 cannon_test.py --train "galah_wm_training_sample_4fs_hrs[SNR=250]" \
                        --description "4MOST HRS (censored) - 10 labels - Train on 0.25 GALAH. Test on PEPSI." \
                        --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
                        --assume-scaled-solar \
-                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_nocores_hrs"
+                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_wm_nocores_hrs"
+
 python3 cannon_test.py --train "galah_wm_training_sample_4fs_lrs[SNR=250]" \
                        --test "pepsi_4fs_lrs" \
                        --censor "line_list_filter_2016MNRAS.461.2174R_without_cores.txt" \
                        --description "4MOST LRS (censored) - 10 labels - Train on 0.25 GALAH. Test on PEPSI." \
                        --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
                        --assume-scaled-solar \
-                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_nocores_lrs"
+                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_wm_nocores_lrs"
 
 python3 cannon_test.py --train "galah_wm_training_sample_4fs_hrs[SNR=250]" \
                        --test "pepsi_4fs_hrs" \
@@ -35,14 +36,15 @@ python3 cannon_test.py --train "galah_wm_training_sample_4fs_hrs[SNR=250]" \
                        --description "4MOST HRS (censored) - 5 labels - Train on 0.25 GALAH. Test on PEPSI." \
                        --labels "Teff,logg,[Fe/H]" \
                        --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_nocores_hrs_5label"
+                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_wm_nocores_hrs_5label"
+
 python3 cannon_test.py --train "galah_wm_training_sample_4fs_lrs[SNR=250]" \
                        --test "pepsi_4fs_lrs" \
                        --censor "line_list_filter_2016MNRAS.461.2174R_without_cores.txt" \
                        --description "4MOST LRS (censored) - 5 labels - Train on 0.25 GALAH. Test on PEPSI." \
                        --labels "Teff,logg,[Fe/H]" \
                        --label-expressions "photometry_GROUND_JOHNSON_B-photometry_GROUND_JOHNSON_V,photometry_GROUND_JOHNSON_V-photometry_GROUND_COUSINS_R" \
-                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_nocores_lrs_5label"
+                       --output-file "../../../output_data/cannon/cannon_pepsi_censored_wm_nocores_lrs_5label"
 
 # -----------------------------------------------------------------------------------------
 
