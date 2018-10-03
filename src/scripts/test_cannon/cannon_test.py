@@ -553,12 +553,12 @@ def main():
         }
 
         # Write brief summary of run to JSON file, without masses of data
-        with gzip.open("{:s}.summary.json.gz".format(output_filename), "w") as f:
+        with gzip.open("{:s}.summary.json.gz".format(output_filename), "wt") as f:
             f.write(json.dumps(output_data, indent=2))
 
         # Write full results to JSON file
         output_data["spectra"] = results
-        with gzip.open("{:s}.full.json.gz".format(output_filename), "w") as f:
+        with gzip.open("{:s}.full.json.gz".format(output_filename), "wt") as f:
             f.write(json.dumps(output_data, indent=2))
 
 
