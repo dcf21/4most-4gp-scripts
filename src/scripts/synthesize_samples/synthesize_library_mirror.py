@@ -67,6 +67,15 @@ for input_spectrum_id in input_spectra_ids:
         'extra_metadata': {}
     }
 
+    # Work out micro-turbulent velocity
+    if (star_descriptor['logg'] >= 4.2) and (star_descriptor['Teff'] <= 5500):
+        star_descriptor['microturbulence'] = \
+            1.1 + 1e-4 * (star_descriptor['Teff'] - 5500) + 4e-7 * (star_descriptor['Teff'] - 5500) ** 2
+
+    else:
+        star_descriptor['microturbulence'] = \
+            1.1 + 1.6e-4 * (star_descriptor['Teff'] - 5500)
+
     # Insert manually set abundances
     for key, value in metadata.items():
         test = re.match("\[(.*)/H\]", key)
