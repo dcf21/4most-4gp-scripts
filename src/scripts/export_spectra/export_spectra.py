@@ -46,18 +46,20 @@ input_library_info = SpectrumLibrarySqlite.open_and_search(library_spec=args.lib
 # Get a list of the spectrum IDs which we were returned
 input_library, library_items = [input_library_info[i] for i in ("library", "items")]
 library_ids = [i["specId"] for i in library_items]
-library_spectra = input_library.open(ids=library_ids)
 
 # Create output directory
 os.system("mkdir -p {}".format(args.output_stub))
 
 # Write out spectra one by one
-for i in range(len(library_spectra)):
+for spectrum_id in library_ids:
+    # Fetch spectrum
+    library_spectra = input_library.open(ids=(spectrum_id,))
+
     # Retrieve the dictionary of metadata associated with this spectrum
-    metadata = library_spectra.get_metadata(i)
+    metadata = library_spectra.get_metadata(0)
 
     # Retrieve the spectrum itself
-    spectrum = library_spectra.extract_item(i)
+    spectrum = library_spectra.extract_item(0)
 
     # Create a filename to save an ASCII version of this spectrum to
     filename_stub = os_path.join(args.output_stub, "{star_name}_{normalisation}_{reddening:06.4f}_{snr:06.1f}".
@@ -70,8 +72,16 @@ for i in range(len(library_spectra)):
     # Write a text file containing the metadata associated with this spectrum
     with open("{filename}.txt".format(filename=filename_stub), "w") as f:
         for key in sorted(metadata.keys()):
-            f.write("{keyword:12s}: {value}\n".format(keyword=key, value=metadata[key]))
+            metadata_value = metadata[key]
+            if isinstance(metadata_value, str):
+                metadata_value = metadata_value.strip()
+            f.write("{keyword:12s}: {value}\n".format(keyword=key, value=metadata_value))
 
     # Write a text file containing the spectrum itself
     with open("{filename}.spec".format(filename=filename_stub), "w") as f:
-        np.savetxt(f, np.asarray(list(zip(spectrum.wavelengths, spectrum.values, spectrum.value_errors))))
+        np.savetxt(fname=f,
+                   fmt="%.6e",
+                   X=np.asarray(list(zip(spectrum.wavelengths,
+                                         spectrum.values,
+                                         spectrum.value_errors)))
+                   )

@@ -38,7 +38,7 @@ workspace = args.workspace if args.workspace else os_path.join(our_path, "../../
 # constraints
 input_library_info = SpectrumLibrarySqlite.open_and_search(library_spec=args.library,
                                                            workspace=workspace,
-                                                           extra_constraints={"continuum_normalised": 0}
+                                                           extra_constraints={}
                                                            )
 
 # Get a list of the spectrum IDs which we were returned
@@ -46,7 +46,7 @@ input_library, library_items = [input_library_info[i] for i in ("library", "item
 library_ids = [i["specId"] for i in library_items]
 
 # Fetch list of all metadata fields, and sort it alphabetically
-fields = input_library.list_metadata_fields()
+fields = [i.strip() for i in input_library.list_metadata_fields()]
 fields.sort()
 
 # At the top of the CSV file, write column headings with the field names
@@ -58,13 +58,17 @@ for i in range(len(library_ids)):
     # Fetch a dictionary of metadata about this spectrum
     metadata = input_library.get_metadata(ids=library_ids[i])[0]
 
+    # To avoid duplication, only list flux-normalised spectra
+    if 'continuum_normalisation' in metadata and (metadata['continuum_normalisation'] != 0):
+        continue
+
     # Extract each field from the metadata in turn. Write a "-" when a field is not set on a particular spectrum.
     words = []
     for x in fields:
         word = metadata.get(x, "-")
         # For string metadata, make sure that quotes are escaped correctly in the CSV output
         if type(word) not in [int, float]:
-            word = "\"{}\"".format(re.sub("\"", "\\\"", str(word)))
+            word = "\"{}\"".format(re.sub("\"", "\\\"", str(word).strip()))
         else:
             word = str(word)
         words.append(word)
