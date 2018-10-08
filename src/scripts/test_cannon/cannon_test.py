@@ -263,6 +263,8 @@ def create_censoring_masks(censoring_scheme, raster, censoring_line_list, label_
 
             logger.info("Pixels used for label {}: {} of {} (in {} lines)".
                         format(label_name, mask.sum(), len(raster), allowed_lines))
+
+            # Invert the mask because the Cannon expects pixels to be True when they are *excluded*
             censoring_masks[label_name] = ~mask
 
         # Make sure that label expressions also have masks set

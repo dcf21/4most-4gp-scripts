@@ -9,6 +9,9 @@
 """
 Take an output file from the Cannon, and plot the Cannon's predictive model of how the flux in a particular wavelength
 span varies with one of the variables.
+
+This script is only really useful if the test set was a rectangular grid of models, as it assumes that there will be
+multiple test stars with identical parameters, except for the one parameter we are varying.
 """
 
 import argparse
@@ -23,12 +26,6 @@ import numpy as np
 from fourgp_cannon import CannonInstance_2018_01_09
 from fourgp_speclib import SpectrumLibrarySqlite
 from lib.pyxplot_driver import PyxplotDriver
-
-
-def dict_merge(x, y):
-    z = x.copy()  # start with x's keys and values
-    z.update(y)  # modifies z with y's keys and values & returns None
-    return z
 
 
 # Read input parameters
@@ -107,7 +104,7 @@ model = CannonInstance_2018_01_09(training_set=training_spectra,
                                   threads=None
                                   )
 
-# Loop over stars in SpectrumLibrary extracting flux at requested wavelength
+# Loop over stars in SpectrumLibrary extracting flux in requested wavelength span
 stars = []
 raster_mask_1 = (training_spectra.wavelengths > args.wavelength_min) * \
                 (training_spectra.wavelengths < args.wavelength_max)
