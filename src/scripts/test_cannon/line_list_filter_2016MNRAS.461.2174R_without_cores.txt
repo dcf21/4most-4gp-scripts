@@ -2,13 +2,24 @@
 
 # Table 2
 
-H alpha 6470-6563
-H alpha 6566-6650
-H beta  4858.9-4860.4
-H beta  4862.4-4863.9
+H alpha 6470-6650
+H beta  4858.9-4863.9
 Mg B    5100-5250
 Ca I    6152-6172
 
+# Mask out the core of H-alpha, and a few lines which blend with it
+exclude 6542.0-6550.0
+exclude 6552.0-6556.0
+exclude 6557.0-6558.5
+exclude 6559.0-6560.0
+exclude 6561.5-6564.0
+exclude 6565.0-6565.5
+exclude 6566.0-6566.5
+exclude 6568.5-6570.5
+exclude 6572.0-6576.5
+
+# Mask out the core of H-beta
+exclude 4860.4-4862.4
 
 # Line list from Table B2
 

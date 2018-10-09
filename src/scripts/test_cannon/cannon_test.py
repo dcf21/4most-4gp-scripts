@@ -221,6 +221,11 @@ def create_censoring_masks(censoring_scheme, raster, censoring_line_list, label_
                     continue
                 words = line.split()
                 element_symbol = words[0]
+
+                # We deal with excluded regions below; in this pass we put lines INTO the mask
+                if element_symbol == "exclude":
+                    continue
+
                 wavelength = words[2]
 
                 # Only select lines from elements we're trying to fit. Always use H lines.
@@ -260,6 +265,25 @@ def create_censoring_masks(censoring_scheme, raster, censoring_line_list, label_
                 allowed_lines += 1
                 window_mask = (raster >= pass_band[0]) * (pass_band[1] >= raster)
                 mask[window_mask] = True
+
+            # Loop over the excluded regions in the line list, and make sure they are not in the mask
+            for line in line_list_txt:
+                line = line.strip()
+
+                # Ignore comment lines
+                if (len(line) == 0) or (line[0] == "#"):
+                    continue
+                words = line.split()
+                if words[0] == "exclude":
+                    wavelength = words[1]
+                    if "-" in wavelength:
+                        pass_band = [float(i) for i in wavelength.split("-")]
+                    else:
+                        pass_band = [float(wavelength) - window, float(wavelength) + window]
+
+                    # Disallow this region
+                    window_mask = (raster >= pass_band[0]) * (pass_band[1] >= raster)
+                    mask[window_mask] = False
 
             logger.info("Pixels used for label {}: {} of {} (in {} lines)".
                         format(label_name, mask.sum(), len(raster), allowed_lines))
