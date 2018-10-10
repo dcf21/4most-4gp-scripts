@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python3
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the

@@ -28,7 +28,6 @@ parser.add_argument('--output-file', required=True, dest='output_file',
 parser.add_argument('--criteria', required=True, dest='criteria',
                     help="Selection criteria to use when picking stars. Either use format 'Teff=6000' or "
                          "'5000<Teff<6000'.")
-parser.set_defaults(multithread=True)
 args = parser.parse_args()
 
 logger.info("Testing Cannon filter <{}> <{}> <{}>".format(args.input_file,
