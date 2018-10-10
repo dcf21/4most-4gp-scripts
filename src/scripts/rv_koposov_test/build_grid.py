@@ -46,16 +46,10 @@ parser.add_argument('--output-directory',
                     dest="output_directory",
                     help="The path where we should store the resampled template spectra, together with an SQLite3 "
                          "database listing the templates we have.")
-parser.add_argument('--log-file',
-                    required=False,
-                    default="/tmp/build_koposov_grid_{}.log".format(pid),
-                    dest="log_to",
-                    help="Specify a log file where we log our progress.")
 args = parser.parse_args()
 
 # Start creating log file
-logging.basicConfig(filename=args.log_to, filemode='w',
-                    level=logging.INFO,
+logging.basicConfig(level=logging.INFO,
                     format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                     datefmt='%d/%m/%Y %H:%M:%S')
 logger = logging.getLogger(__name__)
