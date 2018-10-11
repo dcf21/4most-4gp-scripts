@@ -118,12 +118,12 @@ for arm_name in sorted(all_wavelength_arms.keys()):
                                                    arm["lambda_max"],
                                                    (arm["lambda_max"] + arm["lambda_min"]) / 2 / arm["lambda_step"],
                                                    arm["lambda_step"],
-                                                   False),
+                                                   True),
                                         dbfile=db_file,
                                         oprefix=output_directory,
                                         prefix=phoenix_dir,
                                         wavefile=phoenix_raster,
-                                        air=True,
+                                        air=False,
                                         resolution0=100000,
                                         fixed_fwhm=False
                                         )
