@@ -55,7 +55,7 @@ def tabulate_labels(output_stub, labels, cannon, assume_scaled_solar=False):
 
     # If no list of labels supplied, then list everything
     if not labels:
-        labels = cannon_json['labels']
+        labels = sorted(cannon_json['labels'])
 
     # Open Cannon output data file
     for item in cannon_json["spectra"]:

@@ -100,9 +100,10 @@ def merge_data_sets(logger, input_files, output_file):
             # Rename labels in cannon_output
             for label_name in cannon_output['labels']:
                 if label_name in labels_to_rename:
-                    label_name_new = label_renaming_format.format(name=label_name, number=counter)
-                    spectrum['cannon_output'][label_name_new] = spectrum['cannon_output'][label_name]
-                    del spectrum['cannon_output'][label_name]
+                    for cannon_output_key in (label_name, "E_{}".format(label_name)):
+                        cannon_output_key_new = label_renaming_format.format(name=cannon_output_key, number=counter)
+                        spectrum['cannon_output'][cannon_output_key_new] = spectrum['cannon_output'][cannon_output_key]
+                        del spectrum['cannon_output'][cannon_output_key]
 
             # If this is the first time we've seen this spectrum, create a new entry for it in output data file
             if uid not in spectra_output_by_uid:
