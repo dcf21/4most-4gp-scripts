@@ -17,10 +17,15 @@ import random
 import time
 import json
 from os import path as os_path
+import numpy as np
+import scipy.constants
 
 from fourgp_fourfs import FourFS
+from fourgp_degrade.resample import SpectrumResampler
 from fourgp_rv import random_radial_velocity
 from fourgp_speclib import SpectrumLibrarySqlite
+
+from rvspecfit import spec_fit, fitter_ccf, vel_fit
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -77,7 +82,7 @@ spectra = SpectrumLibrarySqlite.open_and_search(
     workspace=workspace,
     extra_constraints={"continuum_normalised": 0}
 )
-test_library, test_library_items, test_spectra_constraints = [spectra[i] for i in ("library", "items","constraints")]
+test_library, test_library_items, test_spectra_constraints = [spectra[i] for i in ("library", "items", "constraints")]
 
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
@@ -88,6 +93,27 @@ etc_wrapper = FourFS(
 
 # Read information about the wavelength rasters we need to resample the test spectra onto
 rv_code_wavelength_arms = json.loads(open(os_path.join(args.templates_directory, "arm_list.json"), "rt").read())
+
+# Construct the raster for each wavelength arm
+arm_rasters = {}
+
+for arm_name, raster_spec in rv_code_wavelength_arms.items():
+    mode, sub_arm = arm_name.split("_")
+
+    if mode not in arm_rasters:
+        arm_rasters[mode] = []
+
+    # This must EXACTLY match the wavelength raster generated in <rvspecfit/py/rvspecfit/make_interpol.py:125>
+    deltav = 1000.  # extra padding
+    fac1 = (1 + deltav / (scipy.constants.speed_of_light / 1e3))
+
+    arm_rasters[mode].append({'name': arm_name,
+                              'raster': np.exp(
+                                  np.arange(
+                                      np.log(raster_spec['lambda_min'] / fac1),
+                                      np.log(raster_spec['lambda_max'] * fac1),
+                                      np.log(1 + raster_spec['lambda_step'] / raster_spec['lambda_min'])))
+                              })
 
 # Pick some random spectra
 indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.test_count)]
@@ -142,7 +168,7 @@ with open(args.output_file, "w") as output:
 
         test_spectrum_continuum_normalised_with_rv = test_spectrum_continuum_normalised.apply_radial_velocity(
             v=radial_velocity * 1000
-                                                                                                              )
+        )
 
         # Now create a mock observation of this spectrum using 4FS
         mock_observed_spectra = etc_wrapper.process_spectra(
@@ -153,12 +179,48 @@ with open(args.output_file, "w") as output:
         for mode in mock_observed_spectra:
             # Loop over the spectra we simulated (there was only one!)
             for index in mock_observed_spectra[mode]:
+                time_start = time.time()
+
                 # Extract continuum-normalised mock observation
                 observed = mock_observed_spectra[mode][index][float(args.snr)]['spectrum_continuum_normalised']
+                resampler = SpectrumResampler(observed)
 
-                # Run RV code and calculate how much CPU time we used
-                time_start = time.time()
-                stellar_labels = rv_code.fit_rv(test_spectrum_with_rv)
+                # Loop over each arm of this 4MOST mode in turn, populating a list of the observed spectra
+                spectral_data = []
+                for arm in arm_rasters[mode]:
+                    observed_arm = resampler.onto_raster(arm['raster'])
+                    spectral_data.append(
+                        spec_fit.SpecData(name=arm['name'],
+                                          lam=arm['raster'],
+                                          spec=observed_arm.values,
+                                          espec=observed_arm.value_errors,
+                                          badmask=None
+                                          )
+                    )
+
+                # Run RV code
+                # 1. fitter_ccf
+                res = fitter_ccf.fit(specdata=spectral_data, config=config)
+                t2 = time.time()
+
+                # 2. vel_fit
+                paramDict0 = res['best_par']
+                fixParam = []
+                if res['best_vsini'] is not None:
+                    paramDict0['vsini'] = res['best_vsini']
+                res1 = vel_fit.process(
+                    specdata=spectral_data,
+                    paramDict0=paramDict0,
+                    fixParam=fixParam,
+                    config=config,
+                    options=options)
+                t3 = time.time()
+
+                # 3. get_chisq_continuum
+                chisq_cont_array = spec_fit.get_chisq_continuum(specdata=spectral_data, options=options)
+                t4 = time.time()
+
+                # Calculate how much CPU time we used
                 time_end = time.time()
 
                 # If this is the first object, write column headers
