@@ -138,7 +138,6 @@ for mode in arm_rasters.keys():
 for counter, index in enumerate(indices):
     # Look up database ID of the test spectrum
     test_id = test_library_items[index]['specId']
-    logger.info("Working on test {:6d} (spectrum <{}>)".format(counter, test_id))
 
     # Load test spectrum (flux normalised)
     test_spectrum = test_library.open(ids=[test_id]).extract_item(0)
@@ -152,6 +151,8 @@ for counter, index in enumerate(indices):
 
     # Look up the unique ID of this object
     object_name = test_spectrum.metadata[spectrum_matching_field]
+    logger.info("Working on test {:6d} (spectrum <{}>)".format(counter, object_name))
+    logger.info("Spectrum metadata: {}".format(str(test_spectrum.metadata)))
 
     # Search for the continuum-normalised version of this same object (which will share the same uid / name)
     search_criteria = test_spectra_constraints.copy()
@@ -171,8 +172,8 @@ for counter, index in enumerate(indices):
     test_spectrum_continuum_normalised = test_spectrum_continuum_normalised_arr.extract_item(0)
 
     # Pick a random radial velocity
-    logger.info("Applying radial velocity to spectrum")
     radial_velocity = random_radial_velocity()  # Unit km/s
+    logger.info("Applying radial velocity {:6.1f} km/s to spectrum".format(radial_velocity))
 
     # Apply radial velocity to both flux- and continuum-normalised spectra (method expects velocity in m/s)
     test_spectrum_with_rv = test_spectrum.apply_radial_velocity(
@@ -227,6 +228,8 @@ for counter, index in enumerate(indices):
             # 1. fitter_ccf
             logger.info("Calling <fitter_ccf.fit> on {} spectrum".format(mode))
             res = fitter_ccf.fit(specdata=spectral_data, config=config)
+            logger.info("Initial guess velocity: {}".format(str(res['best_vel'])))
+            logger.info("Initial guess parameters: {}".format(str(res['best_par'])))
             t2 = time.time()
 
             # 2. vel_fit
