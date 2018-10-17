@@ -25,7 +25,7 @@ from fourgp_degrade.resample import SpectrumResampler
 from fourgp_rv import random_radial_velocity
 from fourgp_speclib import SpectrumLibrarySqlite
 
-from rvspecfit import spec_fit, fitter_ccf, vel_fit
+from rvspecfit import spec_fit, fitter_ccf, vel_fit, frozendict
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -45,7 +45,7 @@ parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--templates-directory',
                     required=False,
-                    default="/mnt/data/phoenix/4most_templates",
+                    default="/mnt/data/phoenix/4most_templates/",
                     dest="templates_directory",
                     help="The path where we find the resampled template spectra, together with an SQLite3 "
                          "database listing the templates we have.")
@@ -55,7 +55,7 @@ parser.add_argument('--binary-path',
                     dest="binary_path",
                     help="Specify a directory where 4FS binary package is installed.")
 parser.add_argument('--output-file',
-                    default="./test_rv_code.out",
+                    default="./test_rv_code",
                     dest='output_file',
                     help="Data file to write output to")
 parser.add_argument('--test-count',
@@ -119,134 +119,152 @@ for arm_name, raster_spec in rv_code_wavelength_arms.items():
 indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.test_count)]
 
 # Start writing output
-with open(args.output_file, "w") as output:
-    column_headings_written = False
-    stellar_label_names = []
+output_files = {}
+format_str = "{:5} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10}"
 
-    # Loop over the spectra we are going to test
-    for index in indices:
-        # Look up database ID of the test spectrum
-        test_id = test_library_items[index]['id']
+for mode in arm_rasters.keys():
+    output_files[mode] = open("{}_{}.dat".format(args.output_file, mode), "wt")
 
-        # Load test spectrum (flux normalised)
-        test_spectrum = test_library.open(ids=[test_id]).extract_item(0)
+    # Write column headers
+    output_files[mode].write("# {}\n".format(format_str).format("Time",
+                                                                "RV_in", "RV_out", "RV_err",
+                                                                "Teff_in", "Teff_out", "Teff_err",
+                                                                "logg_in", "logg_out", "logg_err",
+                                                                "feh_in", "feh_out", "feh_err")
+                             )
+    output_files[mode].write("# {}\n".format(format_str).format(*range(13)))
 
-        # Look up the unique ID of the star we've just loaded
-        # Newer spectrum libraries have a uid field which is guaranteed unique; for older spectrum libraries use
-        # Starname instead.
+# Loop over the spectra we are going to test
+for counter, index in enumerate(indices):
+    # Look up database ID of the test spectrum
+    test_id = test_library_items[index]['specId']
+    logger.info("Working on test {:6d} (spectrum <{}>)".format(counter, test_id))
 
-        # Work out which field we're using (uid or Starname)
-        spectrum_matching_field = 'uid' if 'uid' in test_spectrum.metadata else 'Starname'
+    # Load test spectrum (flux normalised)
+    test_spectrum = test_library.open(ids=[test_id]).extract_item(0)
 
-        # Look up the unique ID of this object
-        object_name = test_spectrum.metadata[spectrum_matching_field]
+    # Look up the unique ID of the star we've just loaded
+    # Newer spectrum libraries have a uid field which is guaranteed unique; for older spectrum libraries use
+    # Starname instead.
 
-        # Search for the continuum-normalised version of this same object (which will share the same uid / name)
-        search_criteria = test_spectra_constraints.copy()
-        search_criteria[spectrum_matching_field] = object_name
-        search_criteria['continuum_normalised'] = 1
-        continuum_normalised_spectrum_id = test_library.search(**search_criteria)
+    # Work out which field we're using (uid or Starname)
+    spectrum_matching_field = 'uid' if 'uid' in test_spectrum.metadata else 'Starname'
 
-        # Check that continuum-normalised spectrum exists and is unique
-        assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
+    # Look up the unique ID of this object
+    object_name = test_spectrum.metadata[spectrum_matching_field]
 
-        # Load the continuum-normalised version
-        test_spectrum_continuum_normalised_arr = test_library.open(
-            ids=continuum_normalised_spectrum_id[0]['specId']
-        )
+    # Search for the continuum-normalised version of this same object (which will share the same uid / name)
+    search_criteria = test_spectra_constraints.copy()
+    search_criteria[spectrum_matching_field] = object_name
+    search_criteria['continuum_normalised'] = 1
+    continuum_normalised_spectrum_id = test_library.search(**search_criteria)
 
-        # Turn the SpectrumArray we got back into a single Spectrum
-        test_spectrum_continuum_normalised = test_spectrum_continuum_normalised_arr.extract_item(0)
+    # Check that continuum-normalised spectrum exists and is unique
+    assert len(continuum_normalised_spectrum_id) == 1, "Could not find continuum-normalised spectrum."
 
-        # Pick a random radial velocity
-        radial_velocity = random_radial_velocity()  # Unit km/s
+    # Load the continuum-normalised version
+    test_spectrum_continuum_normalised_arr = test_library.open(
+        ids=continuum_normalised_spectrum_id[0]['specId']
+    )
 
-        # Apply radial velocity to both flux- and continuum-normalised spectra (method expects velocity in m/s)
-        test_spectrum_with_rv = test_spectrum.apply_radial_velocity(
-            v=radial_velocity * 1000
-        )
+    # Turn the SpectrumArray we got back into a single Spectrum
+    test_spectrum_continuum_normalised = test_spectrum_continuum_normalised_arr.extract_item(0)
 
-        test_spectrum_continuum_normalised_with_rv = test_spectrum_continuum_normalised.apply_radial_velocity(
-            v=radial_velocity * 1000
-        )
+    # Pick a random radial velocity
+    logger.info("Applying radial velocity to spectrum")
+    radial_velocity = random_radial_velocity()  # Unit km/s
 
-        # Now create a mock observation of this spectrum using 4FS
-        mock_observed_spectra = etc_wrapper.process_spectra(
-            spectra_list=((test_spectrum, test_spectrum_continuum_normalised),)
-        )
+    # Apply radial velocity to both flux- and continuum-normalised spectra (method expects velocity in m/s)
+    test_spectrum_with_rv = test_spectrum.apply_radial_velocity(
+        v=radial_velocity * 1000
+    )
 
-        # Loop over LRS and HRS
-        for mode in mock_observed_spectra:
-            # Loop over the spectra we simulated (there was only one!)
-            for index in mock_observed_spectra[mode]:
-                time_start = time.time()
+    test_spectrum_continuum_normalised_with_rv = test_spectrum_continuum_normalised.apply_radial_velocity(
+        v=radial_velocity * 1000
+    )
 
-                # Extract continuum-normalised mock observation
-                observed = mock_observed_spectra[mode][index][float(args.snr)]['spectrum_continuum_normalised']
-                resampler = SpectrumResampler(observed)
+    # Now create a mock observation of this spectrum using 4FS
+    logger.info("Passing spectrum through 4FS")
+    mock_observed_spectra = etc_wrapper.process_spectra(
+        spectra_list=((test_spectrum, test_spectrum_continuum_normalised),)
+    )
 
-                # Loop over each arm of this 4MOST mode in turn, populating a list of the observed spectra
-                spectral_data = []
-                for arm in arm_rasters[mode]:
-                    observed_arm = resampler.onto_raster(arm['raster'])
-                    spectral_data.append(
-                        spec_fit.SpecData(name=arm['name'],
-                                          lam=arm['raster'],
-                                          spec=observed_arm.values,
-                                          espec=observed_arm.value_errors,
-                                          badmask=None
-                                          )
-                    )
+    # Loop over LRS and HRS
+    for mode in mock_observed_spectra:
+        mode_lower = mode.lower()
 
-                # Run RV code
-                # 1. fitter_ccf
-                res = fitter_ccf.fit(specdata=spectral_data, config=config)
-                t2 = time.time()
+        # Loop over the spectra we simulated (there was only one!)
+        for index in mock_observed_spectra[mode]:
+            time_start = time.time()
 
-                # 2. vel_fit
-                paramDict0 = res['best_par']
-                fixParam = []
-                if res['best_vsini'] is not None:
-                    paramDict0['vsini'] = res['best_vsini']
-                res1 = vel_fit.process(
-                    specdata=spectral_data,
-                    paramDict0=paramDict0,
-                    fixParam=fixParam,
-                    config=config,
-                    options=options)
-                t3 = time.time()
+            # Extract continuum-normalised mock observation
+            logger.info("Resampling {} spectrum".format(mode))
+            observed = mock_observed_spectra[mode][index][float(args.snr)]['spectrum_continuum_normalised']
+            resampler = SpectrumResampler(observed)
 
-                # 3. get_chisq_continuum
-                chisq_cont_array = spec_fit.get_chisq_continuum(specdata=spectral_data, options=options)
-                t4 = time.time()
+            # Loop over each arm of this 4MOST mode in turn, populating a list of the observed spectra
+            spectral_data = []
+            for arm in arm_rasters[mode_lower]:
+                observed_arm = resampler.onto_raster(arm['raster'])
+                spectral_data.append(
+                    spec_fit.SpecData(name=arm['name'],
+                                      lam=arm['raster'],
+                                      spec=observed_arm.values,
+                                      espec=observed_arm.value_errors,
+                                      badmask=None
+                                      )
+                )
 
-                # Calculate how much CPU time we used
-                time_end = time.time()
+            # Run RV code
+            config = frozendict.frozendict({
+                'template_lib': args.templates_directory
+            })
 
-                # If this is the first object, write column headers
-                if not column_headings_written:
-                    line1 = "# {:5s} {:7s} {:11s} ".format("Steps", "Time", "RV_in")
-                    line2 = "# {:5d} {:7d} {:11d} ".format(1, 2, 3)
-                    column_counter = 3
-                    stellar_label_names = list(stellar_labels.keys())
-                    stellar_label_names.sort()
-                    for key in stellar_label_names:
-                        column_counter += 1
-                        line2 = "%-*s %s" % (len(line1), line2, column_counter)
-                        line1 += "{}_out ".format(key)
-                    for key in test_library.list_metadata_fields():
-                        column_counter += 1
-                        line2 = "%-*s %s" % (len(line1), line2, column_counter)
-                        line1 += "{} ".format(key)
-                    output.write("{}\n{}\n".format(line1, line2))
-                    column_headings_written = True
+            options = {
+                'npoly': 15
+            }
 
-                # Write a line to the output data file
-                line = "{:5d} {:9.1f} {:11.3f} ".format(rv_code.n_steps, time_end - time_start, radial_velocity)
-                for key in stellar_label_names:
-                    line += "{} ".format(stellar_labels.get(key, "-"))
-                for key in test_library.list_metadata_fields():
-                    line += "{} ".format(test_spectrum.metadata.get(key, "-"))
+            # 1. fitter_ccf
+            logger.info("Calling <fitter_ccf.fit> on {} spectrum".format(mode))
+            res = fitter_ccf.fit(specdata=spectral_data, config=config)
+            t2 = time.time()
 
-                output.write(line + "\n")
-                output.flush()
+            # 2. vel_fit
+            logger.info("Calling <vel_fit.process> on {} spectrum".format(mode))
+            paramDict0 = res['best_par']
+            fixParam = []
+            if res['best_vsini'] is not None:
+                paramDict0['vsini'] = res['best_vsini']
+            res1 = vel_fit.process(
+                specdata=spectral_data,
+                paramDict0=paramDict0,
+                fixParam=fixParam,
+                config=config,
+                options=options)
+            t3 = time.time()
+
+            # 3. get_chisq_continuum
+            logger.info("Calling <spec_fit.get_chisq_continuum> on {} spectrum".format(mode))
+            chisq_cont_array = spec_fit.get_chisq_continuum(specdata=spectral_data, options=options)
+            t4 = time.time()
+
+            # Calculate how much CPU time we used
+            time_end = time.time()
+
+            # Write a line to the output data file
+            output_files[mode_lower].write("  {}\n".format(format_str).format(
+                time_end - time_start,
+                radial_velocity, res1.get('vel', '-'), res1.get('vel_err', '-'),
+                test_spectrum.metadata.get('Teff', '-'),
+                res1['param'].get('teff', '-'),
+                res1['param_err'].get('teff', '-'),
+                test_spectrum.metadata.get('logg', '-'),
+                res1['param'].get('logg', '-'),
+                res1['param_err'].get('logg', '-'),
+                test_spectrum.metadata.get('[Fe/H]', '-'),
+                res1['param'].get('feh', '-'),
+                res1['param_err'].get('feh', '-'),
+            ))
+
+            # Make sure that output data file is always kept up to date
+            output_files[mode_lower].flush()
