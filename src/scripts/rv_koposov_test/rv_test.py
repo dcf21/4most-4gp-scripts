@@ -103,15 +103,13 @@ for arm_name, raster_spec in rv_code_wavelength_arms.items():
     if mode not in arm_rasters:
         arm_rasters[mode] = []
 
-    # This must EXACTLY match the wavelength raster generated in <rvspecfit/py/rvspecfit/make_interpol.py:125>
-    deltav = 1000.  # extra padding
-    fac1 = (1 + deltav / (scipy.constants.speed_of_light / 1e3))
-
+    # I think this has to exactly match the wavelength raster generated in
+    # <rvspecfit/py/rvspecfit/make_interpol.py:125>, only without the margin factored in by fac1.
     arm_rasters[mode].append({'name': arm_name,
                               'raster': np.exp(
                                   np.arange(
-                                      np.log(raster_spec['lambda_min'] / fac1),
-                                      np.log(raster_spec['lambda_max'] * fac1),
+                                      np.log(raster_spec['lambda_min']),
+                                      np.log(raster_spec['lambda_max']),
                                       np.log(1 + raster_spec['lambda_step'] / raster_spec['lambda_min'])))
                               })
 
@@ -201,6 +199,11 @@ for counter, index in enumerate(indices):
             # Extract continuum-normalised mock observation
             logger.info("Resampling {} spectrum".format(mode))
             observed = mock_observed_spectra[mode][index][float(args.snr)]['spectrum_continuum_normalised']
+
+            # Replace errors which are nans with a large value, otherwise they cause numerical failures in the RV code
+            observed.value_errors[np.isnan(observed.value_errors)] = 1000.
+
+            # Resample it onto a logarithmic raster of fixed step
             resampler = SpectrumResampler(observed)
 
             # Loop over each arm of this 4MOST mode in turn, populating a list of the observed spectra
@@ -216,9 +219,25 @@ for counter, index in enumerate(indices):
                                       )
                 )
 
+            # Debugging
+            np.savetxt("/tmp/debug_observed.dat", np.transpose([
+                observed.wavelengths,
+                observed.values,
+                observed.value_errors
+            ]))
+
+            for arm in arm_rasters[mode_lower]:
+                np.savetxt("/tmp/debug_{}.dat".format(arm['name']), np.transpose([
+                    observed_arm.wavelengths,
+                    observed_arm.values,
+                    observed_arm.value_errors
+                ]))
+
             # Run RV code
             config = frozendict.frozendict({
-                'template_lib': args.templates_directory
+                'template_lib': args.templates_directory,
+                'min_vel': -900,
+                'max_vel': 900
             })
 
             options = {
