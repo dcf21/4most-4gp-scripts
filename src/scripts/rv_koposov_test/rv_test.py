@@ -18,7 +18,7 @@ import time
 import json
 from os import path as os_path
 import numpy as np
-import scipy.constants
+import os
 
 from fourgp_fourfs import FourFS
 from fourgp_degrade.resample import SpectrumResampler
@@ -26,6 +26,9 @@ from fourgp_rv import random_radial_velocity
 from fourgp_speclib import SpectrumLibrarySqlite
 
 from rvspecfit import spec_fit, fitter_ccf, vel_fit, frozendict
+
+# Create unique ID for this process
+run_id = os.getpid()
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -121,7 +124,7 @@ output_files = {}
 format_str = "{:5} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10}"
 
 for mode in arm_rasters.keys():
-    output_files[mode] = open("{}_{}.dat".format(args.output_file, mode), "wt")
+    output_files[mode] = open("{}_{}_{}.dat".format(args.output_file, mode, run_id), "wt")
 
     # Write column headers
     output_files[mode].write("# {}\n".format(format_str).format("Time",
@@ -220,14 +223,14 @@ for counter, index in enumerate(indices):
                 )
 
             # Debugging
-            np.savetxt("/tmp/debug_observed.dat", np.transpose([
+            np.savetxt("/tmp/debug_observed_{}.dat".format(run_id), np.transpose([
                 observed.wavelengths,
                 observed.values,
                 observed.value_errors
             ]))
 
             for arm in arm_rasters[mode_lower]:
-                np.savetxt("/tmp/debug_{}.dat".format(arm['name']), np.transpose([
+                np.savetxt("/tmp/debug_{}_{}.dat".format(arm['name'], run_id), np.transpose([
                     observed_arm.wavelengths,
                     observed_arm.values,
                     observed_arm.value_errors

@@ -17,7 +17,7 @@ import random
 import time
 from os import path as os_path
 
-from fourgp_rv import RvInstance, random_radial_velocity
+from fourgp_rv import RvInstanceBrani, random_radial_velocity
 from fourgp_speclib import SpectrumLibrarySqlite, SpectrumPolynomial
 
 # Read input parameters
@@ -64,7 +64,7 @@ library_path = os_path.join(workspace, target_library_name)
 
 # Instantiate the RV code
 time_start = time.time()
-rv_code = RvInstance.from_spectrum_library_sqlite(library_path=library_path)
+rv_code = RvInstanceBrani.from_spectrum_library_sqlite(library_path=library_path)
 n_burn_default = rv_code.n_burn
 n_steps_default = rv_code.n_steps
 time_end = time.time()
