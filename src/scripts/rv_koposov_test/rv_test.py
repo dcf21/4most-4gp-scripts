@@ -188,7 +188,7 @@ for counter, index in enumerate(indices):
     # Now create a mock observation of this spectrum using 4FS
     logger.info("Passing spectrum through 4FS")
     mock_observed_spectra = etc_wrapper.process_spectra(
-        spectra_list=((test_spectrum, test_spectrum_continuum_normalised),)
+        spectra_list=((test_spectrum_with_rv, test_spectrum_continuum_normalised_with_rv),)
     )
 
     # Loop over LRS and HRS
