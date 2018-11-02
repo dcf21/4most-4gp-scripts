@@ -55,9 +55,15 @@ cd ../fourgp_fourfs
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
 python3 setup.py install
 
-# Make sure we've got the latest version of the Cannon installed in virtual environment
+# Make sure we've got the latest version of Andy Casey's Cannon installed in virtual environment
 cd ${cwd}
 cd ../AnniesLasso
+rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
+python3 setup.py install
+
+# Make sure we've got the latest version of Anno Ho's Cannon installed in virtual environment
+cd ${cwd}
+cd ../TheCannon
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
 python3 setup.py install
 

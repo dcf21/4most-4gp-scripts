@@ -27,22 +27,22 @@ import time
 from os import path as os_path
 
 import numpy as np
-from fourgp_cannon import \
-    __version__ as fourgp_version, \
-    CannonInstance_2018_01_09, \
-    CannonInstanceWithRunningMeanNormalisation_2018_01_09, \
-    CannonInstanceWithContinuumNormalisation_2018_01_09
+from fourgp_cannon import __version__ as fourgp_version
 from fourgp_degrade import SpectrumProperties
 from fourgp_speclib import SpectrumLibrarySqlite
 
 
-def select_cannon(continuum_normalisation="none"):
+def select_cannon(continuum_normalisation="none", cannon_version="casey_old"):
     """
     Select which Cannon wrapper to use, based on whether we've been asked to do continuum normalisation or not.
 
     :param continuum_normalisation:
         String indicating the name of the continuum normalisation scheme we've been asked to use. It is recommended
         to use "none", meaning that you've already done continuum normalisation.
+
+    :param cannon_version:
+        The name of the Cannon version to use. Must be one of "casey_old", "casey_new", "anna_ho".
+
     :return:
         A list of three items:
 
@@ -50,26 +50,64 @@ def select_cannon(continuum_normalisation="none"):
         2. Boolean flag indicating whether we want the training set already continuum normalised before input.
         3. Boolean flag indicating whether we want the test set already continuum normalised before input.
     """
+    # Make sure that a valid version of the Cannon is selected
+    assert cannon_version in ["casey_old", "casey_new", "anna_ho"]
+
+    # We only import the Cannon inside this if statement, so that the user doesn't have to have all the Cannon
+    # versions installed to use one of them.
+    if cannon_version == "casey_old":
+        from fourgp_cannon.cannon_wrapper_casey_old import \
+            CannonInstanceCaseyOld, \
+            CannonInstanceCaseyOldWithContinuumNormalisation, CannonInstanceCaseyOldWithRunningMeanNormalisation
+
+        cannon_classes = {
+            "vanilla": CannonInstanceCaseyOld,
+            "automatic_continuum_normalisation": CannonInstanceCaseyOldWithContinuumNormalisation,
+            "running_mean_normalisation": CannonInstanceCaseyOldWithRunningMeanNormalisation
+        }
+
+    elif cannon_version == "casey_new":
+        from fourgp_cannon.cannon_wrapper_casey_new import \
+            CannonInstanceCaseyNew, \
+            CannonInstanceCaseyNewWithContinuumNormalisation, CannonInstanceCaseyNewWithRunningMeanNormalisation
+
+        cannon_classes = {
+            "vanilla": CannonInstanceCaseyNew,
+            "automatic_continuum_normalisation": CannonInstanceCaseyNewWithContinuumNormalisation,
+            "running_mean_normalisation": CannonInstanceCaseyNewWithRunningMeanNormalisation
+        }
+
+    elif cannon_version == "anna_ho":
+        from fourgp_cannon.cannon_wrapper_anna_ho import CannonInstanceAnnaHo
+
+        cannon_classes = {
+            "vanilla": CannonInstanceAnnaHo,
+            "automatic_continuum_normalisation": None,
+            "running_mean_normalisation": None
+        }
+
+    else:
+        assert False, "Unknown Cannon version <{}>".format(cannon_version)
+
     # Make sure that a valid continuum normalisation option is selected
     assert continuum_normalisation in ["none", "running_mean", "polynomial"]
 
     # Running mean normalisation. We accept flux-normalised spectra, and normalised each pixel by the mean flux in
     # a running window of pixels on either side of that pixel.
     if continuum_normalisation == "running_mean":
-        cannon_class = CannonInstanceWithRunningMeanNormalisation_2018_01_09
+        cannon_class = cannon_classes["running_mean_normalisation"]
         continuum_normalised_training = False
         continuum_normalised_testing = False
     # Attempt to continuum normalise the spectra by fitting a polynomial to it. This implementation is really crude
     # and doesn't really manage to fit the continuum at all, so the results are a disaster.
     elif continuum_normalisation == "polynomial":
-        cannon_class = CannonInstanceWithContinuumNormalisation_2018_01_09
+        cannon_class = cannon_classes["automatic_continuum_normalisation"]
         continuum_normalised_training = True
         continuum_normalised_testing = False
     # Assume that spectra have already been continuum normalised. You must use this option for now if you want
     # sensible results.
     else:
-        # FIXME Use old Cannon for now, because the new Cannon produces worse fits
-        cannon_class = CannonInstance_2018_01_09
+        cannon_class = cannon_classes["vanilla"]
         continuum_normalised_training = True
         continuum_normalised_testing = True
     return cannon_class, continuum_normalised_testing, continuum_normalised_training
@@ -325,6 +363,9 @@ def main():
                              "range.")
     parser.add_argument('--workspace', dest='workspace', default="",
                         help="Directory where we expect to find spectrum libraries.")
+    parser.add_argument('--cannon-version', default="casey_old", dest='cannon_version',
+                        choices=("casey_old", "casey_new", "anna_ho"),
+                        help="Select which implementation of the Cannon to use: Andy Casey's or Anna Ho's.")
     parser.add_argument('--continuum-normalisation', default="none", dest='continuum_normalisation',
                         help="Select continuum normalisation method: none, running_mean or polynomial.")
     parser.add_argument('--reload-cannon', required=False, dest='reload_cannon', default=None,
@@ -388,7 +429,8 @@ def main():
 
     # Pick which Cannon version to use
     cannon_class, continuum_normalised_testing, continuum_normalised_training = \
-        select_cannon(continuum_normalisation=args.continuum_normalisation)
+        select_cannon(cannon_version=args.cannon_version,
+                      continuum_normalisation=args.continuum_normalisation)
 
     # List of labels over which we are going to test the performance of the Cannon
     test_label_fields = args.labels.split(",")
