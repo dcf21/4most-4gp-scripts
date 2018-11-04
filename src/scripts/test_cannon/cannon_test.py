@@ -572,7 +572,7 @@ def main():
 
             # From the label covariance matrix extract the standard deviation in each label value
             # (diagonal terms in the matrix are variances)
-            err_labels = np.sqrt(np.diag(cov[0]))
+            err_labels = cov[0]
 
             # Turn list of label values into a dictionary
             cannon_output = dict(list(zip(test_labels, labels[0])))
