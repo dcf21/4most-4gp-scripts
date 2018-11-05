@@ -23,7 +23,7 @@ do
         for snr in 20 50
         do
 
-            python2.7 concatenate_cannon_runs.py \
+            python3 concatenate_cannon_runs.py \
             --output-file ../../../../output_data/cannon/cannon_galah_${kernel}_all_censored_${mode}_10label_snr${snr} \
             --input-file ../../../../output_data/cannon/cannon_galah_${kernel}_1.2_censored_${mode}_10label_snr${snr} \
             --input-file ../../../../output_data/cannon/cannon_galah_${kernel}_1.3_censored_${mode}_10label_snr${snr} \

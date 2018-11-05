@@ -22,7 +22,7 @@ do
         do
             for script in offset_rms.py offset_box_and_whisker.py
             do
-                python2.7 ${script} \
+                python3 ${script} \
                 --cannon-output ../../../../output_data/cannon/cannon_galah_${kernel}_all_censored_${mode}_10label_snr${snr} \
                 --abscissa convolution \
                 --output ../../../../output_plots/cannon_performance/instrumental_profile_tests/${kernel}_${mode}_10label_snr${snr} \

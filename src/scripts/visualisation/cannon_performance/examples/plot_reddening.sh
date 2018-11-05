@@ -38,7 +38,7 @@ do
     for divisor in "h" "fe"
     do
         # Plots averaging the Cannon's performance over stars of all types and metallicities
-        python2.7 mean_performance_vs_label.py \
+        python3 mean_performance_vs_label.py \
           --plot-width 14 --hide-date \
           --abscissa "ebv" \
           --abundances-over-${divisor} \
@@ -46,7 +46,7 @@ do
           --output-file "../../../../output_plots/cannon_performance/performance_vs_label/comparison_reddening_${run_name}_${divisor}" &
 
         # Break down the Cannon's performance by the type of star
-        python2.7 mean_performance_vs_label.py \
+        python3 mean_performance_vs_label.py \
           --plot-width 14 --hide-date \
           --abscissa "ebv" \
           --abundances-over-${divisor} \
@@ -83,7 +83,7 @@ do
     for divisor in "h" "fe"
     do
         # Plots averaging the Cannon's performance over stars of all types and metallicities
-        python2.7 mean_performance_vs_label.py \
+        python3 mean_performance_vs_label.py \
           --plot-width 14 --hide-date \
           --abscissa "ebv" \
           --abundances-over-${divisor} \
