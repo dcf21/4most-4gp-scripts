@@ -366,6 +366,8 @@ def main():
     parser.add_argument('--cannon-version', default="casey_old", dest='cannon_version',
                         choices=("casey_old", "casey_new", "anna_ho"),
                         help="Select which implementation of the Cannon to use: Andy Casey's or Anna Ho's.")
+    parser.add_argument('--polynomial-order', default=2, dest='polynomial_order', type=int,
+                        help="The maximum order of polynomials to use as basis functions in the Cannon.")
     parser.add_argument('--continuum-normalisation', default="none", dest='continuum_normalisation',
                         help="Select continuum normalisation method: none, running_mean or polynomial.")
     parser.add_argument('--reload-cannon', required=False, dest='reload_cannon', default=None,
@@ -521,6 +523,7 @@ def main():
                                  wavelength_arms=wavelength_arm_breaks,
                                  label_names=test_labels,
                                  tolerance=args.tolerance,
+                                 polynomial_order=args.polynomial_order,
                                  censors=censoring_masks,
                                  threads=None if args.multithread else 1
                                  )
@@ -530,6 +533,7 @@ def main():
                                  load_from_file=args.reload_cannon,
                                  label_names=test_labels,
                                  tolerance=args.tolerance,
+                                 polynomial_order=args.polynomial_order,
                                  censors=censoring_masks,
                                  threads=None if args.multithread else 1
                                  )
