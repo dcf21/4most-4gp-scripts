@@ -4,7 +4,7 @@
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
 # <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
 # is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
-# <python rv_test.py>, but <./rv_test.py> will not work.
+# <python rv_test_brani_code.py>, but <./rv_test_brani_code.py> will not work.
 
 """
 Take the APOKASC training set and test sets, apply random radial velocities to the spectra, and see how well fourgp_rv

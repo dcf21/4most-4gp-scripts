@@ -4,7 +4,7 @@
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
 # <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
 # is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
-# <python mean_performance_vs_label.py>, but <./mean_performance_vs_label.py> will not work.
+# <python offset_box_and_whisker.py>, but <./offset_box_and_whisker.py> will not work.
 
 """
 Plot results of testing the Cannon against noisy test spectra, to see how well it reproduces stellar labels.

@@ -4,7 +4,7 @@
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
 # <4most-4gp-scripts> git repository. It also only works if you invoke this python script from the directory where it
 # is located. If these two assumptions are incorrect (e.g. you're using Conda), you can still use this script by typing
-# <python label_tabulator.py>, but <./label_tabulator.py> will not work.
+# <python multiplot_maker.py>, but <./multiplot_maker.py> will not work.
 
 """
 Take a load of plots listed on the command line, and compile them into a single gallery.
