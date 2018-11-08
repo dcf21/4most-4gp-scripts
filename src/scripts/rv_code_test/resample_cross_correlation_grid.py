@@ -11,6 +11,7 @@ Take some high resolution spectra that we're going to use as templates for cross
 use 4FS to down-sample them to the resolution of 4MOST observations for use in cross correlation.
 """
 
+from os import path as os_path
 import logging
 
 from fourgp_rv.templates_resample import command_line_interface, resample_templates
@@ -23,7 +24,10 @@ logger = logging.getLogger(__name__)
 logger.info("Resampling cross-correlation templates")
 
 # Read input parameters
-args = command_line_interface()
+our_path = os_path.split(os_path.abspath(__file__))[0]
+root_path = os_path.join(our_path, "../../../..")
+args = command_line_interface(root_path=root_path)
+args.our_path = our_path
 
 # Resample templates
 resample_templates(args=args,

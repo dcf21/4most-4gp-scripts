@@ -8,7 +8,7 @@
 
 """
 Take the GALAH test sample of spectra, apply random radial velocities to the spectra, and see how well a simple
-cross-corrlation RV code can determine what radial velocity we applied.
+cross-correlation RV code can determine what radial velocity we applied.
 """
 
 import argparse
@@ -22,7 +22,6 @@ import os
 from fourgp_fourfs import FourFS
 from fourgp_rv import random_radial_velocity, RvInstanceCrossCorrelation
 from fourgp_speclib import SpectrumLibrarySqlite
-
 
 # Create unique ID for this process
 run_id = os.getpid()
@@ -83,6 +82,12 @@ spectra = SpectrumLibrarySqlite.open_and_search(
 )
 test_library, test_library_items, test_spectra_constraints = [spectra[i] for i in ("library", "items", "constraints")]
 
+# Open template spectrum library
+template_library = SpectrumLibrarySqlite(
+    path=os_path.join(workspace, args.templates_library),
+    create=False,
+)
+
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
@@ -91,7 +96,7 @@ etc_wrapper = FourFS(
 )
 
 # Instantiate RV code
-rv_calculator = RvInstanceCrossCorrelation(spectrum_library=args.templates_library)
+rv_calculator = RvInstanceCrossCorrelation(spectrum_library=template_library)
 
 # Pick some random spectra
 indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.test_count)]
