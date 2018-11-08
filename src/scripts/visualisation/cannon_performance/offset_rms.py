@@ -107,7 +107,11 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
     data_file_names = []
     for counter, data_set in enumerate(data_sets):
 
-        cannon_output = json.loads(gzip.open(data_set['cannon_output'] + ".full.json.gz", "rt").read())
+        try:
+            cannon_output = json.loads(gzip.open(data_set['cannon_output'] + ".full.json.gz", "rt").read())
+        except json.decoder.JSONDecodeError:
+            print("Corrupt JSON file <{}>. Skipping.".format(data_set['cannon_output'] + ".full.json.gz"))
+            continue
 
         # If no label has been specified for this Cannon run, use the description field from the JSON output
         if data_set['title'] is None:

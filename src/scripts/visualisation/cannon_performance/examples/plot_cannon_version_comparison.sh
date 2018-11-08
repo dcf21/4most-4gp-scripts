@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Produce plots of the precision of labels as a function of reddening, at fixed
-# SNR
+# Produce plots of the comparative precision of three different versions of the Cannon, by Andy Casey and Anna Ho
 
 # ---
 
@@ -29,21 +28,8 @@ do
             --dataset-label "Ho" \
             --output ../../../../output_plots/cannon_performance/compare_cannon_versions/test1_${mode}_${label_count}label &
 
-            python3 ${script} \
-            --cannon-output ../../../../output_data/cannon/cannon_galah_${mode}_${label_count}label \
-            --dataset-label "Casey 2017" \
-            --cannon-output ../../../../output_data/cannon/annaho_cannon_galah_${mode}_${label_count}label \
-            --dataset-label "Ho" \
-            --output ../../../../output_plots/cannon_performance/compare_cannon_versions/test2_${mode}_${label_count}label &
-
-            python3 ${script} \
-            --cannon-output ../../../../output_data/cannon/cannon_galah_${mode}_${label_count}label \
-            --dataset-label "Casey 2017" \
-            --cannon-output ../../../../output_data/cannon/new_cannon_galah_${mode}_${label_count}label \
-            --dataset-label "Casey 2018" \
-            --output ../../../../output_plots/cannon_performance/compare_cannon_versions/test3_${mode}_${label_count}label &
-
-            for censored in "_censored"
+            # Anna Ho's code doesn't support censoring, or 10 labels fits, so also produce plots without Anna's Cannon
+            for censored in "" "_censored"
             do
                 python3 ${script} \
                 --cannon-output ../../../../output_data/cannon/cannon_galah${censored}_${mode}_${label_count}label \

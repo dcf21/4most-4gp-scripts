@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Produce plots of the precision of labels as a function of reddening, at fixed
-# SNR
+# Produce plots of the precision of labels as a function of the instrumental profile they were convolved with
 
 # ---
 
