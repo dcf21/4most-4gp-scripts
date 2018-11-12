@@ -41,6 +41,7 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
         filters: A string containing semicolon-separated set of constraints on stars we are to include.
         colour: The colour to plot the dataset in.
         line_type: The Pyxplot line type to use for this Cannon run.
+        point_type: The Pyxplot point type to use for this Cannon run.
 
 
     :param abscissa_label:
@@ -195,7 +196,9 @@ def generate_rms_precision_plots(data_sets, abscissa_label, assume_scaled_solar,
             plot_precision[i].append({
                 "plot_item": "\"{}\" using 1:2".format(file_name),
                 "title": legend_label,
-                "style": "with lp pt 17 col {} lt {:d}".format(data_set["colour"], int(data_set["line_type"])),
+                "style": "with lp pt {:d} col {} lt {:d}".format(int(data_set["point_type"]),
+                                                                 data_set["colour"],
+                                                                 int(data_set["line_type"])),
                 "star_count": len(stars_which_meet_filter),
             })
 

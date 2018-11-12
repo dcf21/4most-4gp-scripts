@@ -41,6 +41,7 @@ def generate_correlation_scatter_plots(data_sets, abscissa_label, assume_scaled_
         filters: A string containing semicolon-separated set of constraints on stars we are to include.
         colour: The colour to plot the dataset in.
         line_type: The Pyxplot line type to use for this Cannon run.
+        point_type: The Pyxplot point type to use for this Cannon run.
 
 
     :param abscissa_label:

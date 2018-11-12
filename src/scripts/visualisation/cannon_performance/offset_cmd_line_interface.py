@@ -27,6 +27,8 @@ def fetch_command_line_arguments():
                         help="A list of colours with which to plot each run of the Cannon.")
     parser.add_argument('--dataset-line-type', action="append", dest='data_set_line_type',
                         help="A list of Pyxplot line types with which to plot Cannon runs.")
+    parser.add_argument('--dataset-point-type', action="append", dest='data_set_point_type',
+                        help="A list of Pyxplot point types with which to plot Cannon runs.")
     parser.add_argument('--output', default="/tmp/cannon_performance_plot", dest='output_file',
                         help="Data file to write output to.")
     parser.add_argument('--assume-scaled-solar',
@@ -73,12 +75,16 @@ def fetch_command_line_arguments():
 
     # If colours have not been specified for each data set, use a list of default colours
     if (args.data_set_colour is None) or (len(args.data_set_colour) == 0):
-        colour_list = ("red", "blue", "orange", "green")
+        colour_list = ("red", "blue", "orange", "green", "purple", "salmon")
         args.data_set_colour = [colour_list[i % len(colour_list)] for i in range(len(args.cannon_output))]
 
     # If a line type has not been specified for each data set, use a solid line for everything
     if (args.data_set_line_type is None) or (len(args.data_set_line_type) == 0):
         args.data_set_line_type = [1 for i in args.cannon_output]
+
+    # If a line type has not been specified for each data set, use a solid line for everything
+    if (args.data_set_point_type is None) or (len(args.data_set_point_type) == 0):
+        args.data_set_point_type = [17 for i in args.cannon_output]
 
     # Check that we have a matching number of labels and sets of Cannon output
     assert len(args.cannon_output) == len(args.data_set_label), \
@@ -95,17 +101,18 @@ def fetch_command_line_arguments():
 
     # Assemble list of input Cannon output data files
     cannon_outputs = []
-    for cannon_output, data_set_label, data_set_filter, data_set_colour, data_set_line_type in \
+    for cannon_output, data_set_label, data_set_filter, data_set_colour, data_set_line_type, data_set_point_type in \
             zip(args.cannon_output,
                 args.data_set_label,
                 args.data_set_filter,
                 args.data_set_colour,
-                args.data_set_line_type):
+                args.data_set_line_type,
+                args.data_set_point_type):
 
         # Read the JSON file which we dumped after running the Cannon
         cannon_filename_full = cannon_output + ".full.json.gz"
         if not os.path.exists(cannon_filename_full):
-            print("mean_performance_vs_label.py could not proceed: Cannon run <{}> not found". \
+            print("mean_performance_vs_label.py could not proceed: Cannon run <{}> not found".
                   format(cannon_filename_full))
             sys.exit()
 
@@ -114,7 +121,8 @@ def fetch_command_line_arguments():
                                'title': data_set_label,
                                'filters': data_set_filter,
                                'colour': data_set_colour,
-                               'line_type': data_set_line_type
+                               'line_type': data_set_line_type,
+                               'point_type': data_set_point_type
                                })
 
     return {"data_sets": cannon_outputs,
