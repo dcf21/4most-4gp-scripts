@@ -18,19 +18,22 @@ for mode in hrs lrs
 do
     for script in offset_rms.py
     do
-        for label_count in 3 5
+        for censored in "" "_censored"
         do
-            for censored in "" "_censored"
-            do
-                python3 ${script} \
-                --cannon-output ../../../../output_data/cannon/cannon_galah${censored}_${mode}_${label_count}label \
-                --dataset-label "2nd order" \
-                --cannon-output ../../../../output_data/cannon/cannon_cubic_galah${censored}_${mode}_${label_count}label \
-                --dataset-label "3rd order" \
-                --cannon-output ../../../../output_data/cannon/cannon_quartic_galah${censored}_${mode}_${label_count}label \
-                --dataset-label "4th order" \
-                --output ../../../../output_plots/cannon_performance/compare_polynomial_orders/${mode}${censored}_${label_count}label &
-            done
+            python3 ${script} \
+            --cannon-output ../../../../output_data/cannon/cannon_galah${censored}_${mode}_3label \
+            --dataset-label "2nd order; 3 label" \
+            --cannon-output ../../../../output_data/cannon/cannon_cubic_galah${censored}_${mode}_3label \
+            --dataset-label "3rd order; 3 label" \
+            --cannon-output ../../../../output_data/cannon/cannon_quartic_galah${censored}_${mode}_3label \
+            --dataset-label "4th order; 3 label" \
+            --cannon-output ../../../../output_data/cannon/cannon_galah${censored}_${mode}_5label \
+            --dataset-label "2nd order; 5 label" \
+            --cannon-output ../../../../output_data/cannon/cannon_cubic_galah${censored}_${mode}_5label \
+            --dataset-label "3rd order; 5 label" \
+            --cannon-output ../../../../output_data/cannon/cannon_quartic_galah${censored}_${mode}_5label \
+            --dataset-label "4th order; 5 label" \
+            --output ../../../../output_plots/cannon_performance/compare_polynomial_orders/${mode}${censored} &
         done
         wait
     done

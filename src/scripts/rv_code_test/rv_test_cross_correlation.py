@@ -58,7 +58,7 @@ parser.add_argument('--output-file',
                     help="Data file to write output to")
 parser.add_argument('--test-count',
                     required=False,
-                    default=400,
+                    default=20000,
                     type=int,
                     dest="test_count",
                     help="Run n tests.")
@@ -112,7 +112,7 @@ for mode in ("hrs", "lrs"):
     output_files[mode].write("# {}\n".format(format_str).format("Time",
                                                                 "RV_in", "RV_out", "RV_err")
                              )
-    output_files[mode].write("# {}\n".format(format_str).format(*range(13)))
+    output_files[mode].write("# {}\n".format(format_str).format(*range(4)))
 
 # Loop over the spectra we are going to test
 for counter, index in enumerate(indices):
@@ -185,8 +185,8 @@ for counter, index in enumerate(indices):
             # Replace errors which are nans with a large value, otherwise they cause numerical failures in the RV code
             observed.value_errors[np.isnan(observed.value_errors)] = 1000.
 
-            rv_mean, rv_std_dev = rv_calculator.estimate_rv(input_spectrum=observed,
-                                                            mode=mode)
+            rv_mean, rv_std_dev, extra_metadata = rv_calculator.estimate_rv(input_spectrum=observed,
+                                                                            mode=mode)
 
             # Calculate how much CPU time we used
             time_end = time.time()
@@ -194,8 +194,12 @@ for counter, index in enumerate(indices):
             # Write a line to the output data file
             output_files[mode_lower].write("  {}\n".format(format_str).format(
                 time_end - time_start,
-                radial_velocity, rv_mean, rv_std_dev
+                radial_velocity, rv_mean / 1000, rv_std_dev / 1000
             ))
+
+            # Debugging
+            # for item in extra_metadata:
+            #     output_files[mode_lower].write("# {}\n".format(str(item)))
 
             # Make sure that output data file is always kept up to date
             output_files[mode_lower].flush()
