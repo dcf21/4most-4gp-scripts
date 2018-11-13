@@ -105,14 +105,15 @@ indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.te
 output_files = {}
 format_str = "{:5} {:10} {:10} {:10}"
 
-for mode in ("hrs", "lrs"):
-    output_files[mode] = open("{}_{}_{}.dat".format(args.output_file, mode, run_id), "wt")
+for mode in ("HRS", "LRS"):
+    for arm_name in rv_calculator.templates_by_arm[mode].keys():
+        output_files[arm_name] = open("{}_{}_{}.dat".format(args.output_file, arm_name, run_id), "wt")
 
-    # Write column headers
-    output_files[mode].write("# {}\n".format(format_str).format("Time",
-                                                                "RV_in", "RV_out", "RV_err")
-                             )
-    output_files[mode].write("# {}\n".format(format_str).format(*range(4)))
+        # Write column headers
+        output_files[arm_name].write("# {}\n".format(format_str).format("Time",
+                                                                        "RV_in", "RV_out", "RV_err")
+                                     )
+        output_files[arm_name].write("# {}\n".format(format_str).format(*range(4)))
 
 # Loop over the spectra we are going to test
 for counter, index in enumerate(indices):
@@ -172,11 +173,8 @@ for counter, index in enumerate(indices):
 
     # Loop over LRS and HRS
     for mode in mock_observed_spectra:
-        mode_lower = mode.lower()
-
         # Loop over the spectra we simulated (there was only one!)
         for index in mock_observed_spectra[mode]:
-            time_start = time.time()
 
             # Extract continuum-normalised mock observation
             logger.info("Resampling {} spectrum".format(mode))
@@ -185,21 +183,27 @@ for counter, index in enumerate(indices):
             # Replace errors which are nans with a large value, otherwise they cause numerical failures in the RV code
             observed.value_errors[np.isnan(observed.value_errors)] = 1000.
 
-            rv_mean, rv_std_dev, extra_metadata = rv_calculator.estimate_rv(input_spectrum=observed,
-                                                                            mode=mode)
+            for arm_name in rv_calculator.templates_by_arm[mode].keys():
+                time_start = time.time()
 
-            # Calculate how much CPU time we used
-            time_end = time.time()
+                rv_mean, rv_std_dev, extra_metadata = \
+                    rv_calculator.estimate_rv(input_spectrum=observed,
+                                              mode=mode,
+                                              arm_names=(arm_name,)
+                                              )
 
-            # Write a line to the output data file
-            output_files[mode_lower].write("  {}\n".format(format_str).format(
-                time_end - time_start,
-                radial_velocity, rv_mean / 1000, rv_std_dev / 1000
-            ))
+                # Calculate how much CPU time we used
+                time_end = time.time()
 
-            # Debugging
-            # for item in extra_metadata:
-            #     output_files[mode_lower].write("# {}\n".format(str(item)))
+                # Write a line to the output data file
+                output_files[arm_name].write("  {}\n".format(format_str).format(
+                    time_end - time_start,
+                    radial_velocity, rv_mean / 1000, rv_std_dev / 1000
+                ))
 
-            # Make sure that output data file is always kept up to date
-            output_files[mode_lower].flush()
+                # Debugging
+                # for item in extra_metadata:
+                #     output_files[arm_name].write("# {}\n".format(str(item)))
+
+                # Make sure that output data file is always kept up to date
+                output_files[arm_name].flush()
