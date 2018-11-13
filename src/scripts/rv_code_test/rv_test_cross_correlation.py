@@ -62,6 +62,16 @@ parser.add_argument('--test-count',
                     type=int,
                     dest="test_count",
                     help="Run n tests.")
+
+parser.add_argument('--zero-rv',
+                    action='store_true',
+                    dest="per_pixel",
+                    help="Specify that we do not inject any RVs into the test spectra; their true RVs are zero.")
+parser.add_argument('--non-zero-rv',
+                    action='store_false',
+                    dest="per_pixel",
+                    help="Specify that we inject non-zero RVs into the test spectra (default).")
+parser.set_defaults(zero_rv=False)
 args = parser.parse_args()
 
 # Set up logger
@@ -103,17 +113,20 @@ indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.te
 
 # Start writing output
 output_files = {}
-format_str = "{:5} {:10} {:10} {:10}"
+format_str = "{:5} {:10} {:10} {:10} {:10} {:10} {:10}"
 
 for mode in ("HRS", "LRS"):
     for arm_name in rv_calculator.templates_by_arm[mode].keys():
         output_files[arm_name] = open("{}_{}_{}.dat".format(args.output_file, arm_name, run_id), "wt")
 
         # Write column headers
+        output_files[arm_name].write("# SNR/pixel = {}\n".format(args.snr))
+
         output_files[arm_name].write("# {}\n".format(format_str).format("Time",
+                                                                        "Teff", "log(g)", "[Fe/H]",
                                                                         "RV_in", "RV_out", "RV_err")
                                      )
-        output_files[arm_name].write("# {}\n".format(format_str).format(*range(4)))
+        output_files[arm_name].write("# {}\n".format(format_str).format(*range(7)))
 
 # Loop over the spectra we are going to test
 for counter, index in enumerate(indices):
@@ -153,7 +166,11 @@ for counter, index in enumerate(indices):
     test_spectrum_continuum_normalised = test_spectrum_continuum_normalised_arr.extract_item(0)
 
     # Pick a random radial velocity
-    radial_velocity = random_radial_velocity()  # Unit km/s
+    if not args.zero_rv:
+        radial_velocity = random_radial_velocity()  # Unit km/s
+    else:
+        radial_velocity = 0.
+
     logger.info("Applying radial velocity {:6.1f} km/s to spectrum".format(radial_velocity))
 
     # Apply radial velocity to both flux- and continuum-normalised spectra (method expects velocity in m/s)
@@ -197,8 +214,13 @@ for counter, index in enumerate(indices):
 
                 # Write a line to the output data file
                 output_files[arm_name].write("  {}\n".format(format_str).format(
-                    time_end - time_start,
-                    radial_velocity, rv_mean / 1000, rv_std_dev / 1000
+                    "{:.2f}".format(time_end - time_start),
+                    "{:.1f}".format(test_spectrum.metadata["Teff"]),
+                    "{:.3f}".format(test_spectrum.metadata["logg"]),
+                    "{:.3f}".format(test_spectrum.metadata["[Fe/H]"]),
+                    "{:.4f}".format(radial_velocity),
+                    "{:.4f}".format(rv_mean / 1000),
+                    "{:.4f}".format(rv_std_dev / 1000)
                 ))
 
                 # Debugging
