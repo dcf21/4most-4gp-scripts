@@ -65,11 +65,11 @@ parser.add_argument('--test-count',
 
 parser.add_argument('--zero-rv',
                     action='store_true',
-                    dest="per_pixel",
+                    dest="zero_rv",
                     help="Specify that we do not inject any RVs into the test spectra; their true RVs are zero.")
 parser.add_argument('--non-zero-rv',
                     action='store_false',
-                    dest="per_pixel",
+                    dest="zero_rv",
                     help="Specify that we inject non-zero RVs into the test spectra (default).")
 parser.set_defaults(zero_rv=False)
 args = parser.parse_args()
