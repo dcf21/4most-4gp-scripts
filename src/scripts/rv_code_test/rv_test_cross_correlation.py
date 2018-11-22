@@ -13,12 +13,13 @@ cross-correlation RV code can determine what radial velocity we applied.
 
 import argparse
 import logging
+import os
 import random
+import sys
 import time
 from os import path as os_path
-import numpy as np
-import os
 
+import numpy as np
 from fourgp_fourfs import FourFS
 from fourgp_rv import random_radial_velocity, RvInstanceCrossCorrelation
 from fourgp_speclib import SpectrumLibrarySqlite
@@ -133,12 +134,13 @@ for mode in ("HRS", "LRS"):
         output_files[arm_name] = open("{}_{}_{}.dat".format(args.output_file, arm_name, run_id), "wt")
 
         # Write column headers
+        output_files[arm_name].write("# {}\n".format(" ".join(sys.argv[:])))
         output_files[arm_name].write("# SNR/pixel = {}\n".format(args.snr))
 
         output_files[arm_name].write("# {}\n".format(format_str).format("Time",
-                                                                        "Teff_in","Teff_out",
-                                                                        "log(g)_in","log(g)_out",
-                                                                        "[Fe/H]_in","[Fe/H]_out",
+                                                                        "Teff_in", "Teff_out",
+                                                                        "log(g)_in", "log(g)_out",
+                                                                        "[Fe/H]_in", "[Fe/H]_out",
                                                                         "RV_in", "RV_out", "RV_err")
                                      )
         output_files[arm_name].write("# {}\n".format(format_str).format(*range(10)))
