@@ -63,6 +63,16 @@ parser.add_argument('--test-count',
                     dest="test_count",
                     help="Run n tests.")
 
+parser.add_argument('--interpolation', default="quadratic", dest='interpolation',
+                    choices=("quadratic", "spline"),
+                    help="Select what functional form to use when doing sub-pixel interpolation of the CCF")
+parser.add_argument('--interpolation-pixels', default=3, dest='interpolation_pixels',
+                    type=int,
+                    help="Select the number of pixels to use when doing sub-pixel interpolation of the CCF")
+parser.add_argument('--upsampling', default=1, dest='upsampling',
+                    type=int,
+                    help='Upsample both the template spectra and the test spectra before doing cross-correlation')
+
 parser.add_argument('--zero-rv',
                     action='store_true',
                     dest="zero_rv",
@@ -106,14 +116,17 @@ etc_wrapper = FourFS(
 )
 
 # Instantiate RV code
-rv_calculator = RvInstanceCrossCorrelation(spectrum_library=template_library)
+rv_calculator = RvInstanceCrossCorrelation(
+    spectrum_library=template_library,
+    upsampling=args.upsampling
+)
 
 # Pick some random spectra
 indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.test_count)]
 
 # Start writing output
 output_files = {}
-format_str = "{:5} {:10} {:10} {:10} {:10} {:10} {:10}"
+format_str = "{:5} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10}"
 
 for mode in ("HRS", "LRS"):
     for arm_name in rv_calculator.templates_by_arm[mode].keys():
@@ -123,10 +136,12 @@ for mode in ("HRS", "LRS"):
         output_files[arm_name].write("# SNR/pixel = {}\n".format(args.snr))
 
         output_files[arm_name].write("# {}\n".format(format_str).format("Time",
-                                                                        "Teff", "log(g)", "[Fe/H]",
+                                                                        "Teff_in","Teff_out",
+                                                                        "log(g)_in","log(g)_out",
+                                                                        "[Fe/H]_in","[Fe/H]_out",
                                                                         "RV_in", "RV_out", "RV_err")
                                      )
-        output_files[arm_name].write("# {}\n".format(format_str).format(*range(7)))
+        output_files[arm_name].write("# {}\n".format(format_str).format(*range(10)))
 
 # Loop over the spectra we are going to test
 for counter, index in enumerate(indices):
@@ -203,10 +218,12 @@ for counter, index in enumerate(indices):
             for arm_name in rv_calculator.templates_by_arm[mode].keys():
                 time_start = time.time()
 
-                rv_mean, rv_std_dev, extra_metadata = \
+                rv_mean, rv_std_dev, stellar_parameters = \
                     rv_calculator.estimate_rv(input_spectrum=observed,
                                               mode=mode,
-                                              arm_names=(arm_name,)
+                                              arm_names=(arm_name,),
+                                              interpolation_scheme=args.interpolation,
+                                              interpolation_pixels=args.interpolation_pixels
                                               )
 
                 # Calculate how much CPU time we used
@@ -216,16 +233,15 @@ for counter, index in enumerate(indices):
                 output_files[arm_name].write("  {}\n".format(format_str).format(
                     "{:.2f}".format(time_end - time_start),
                     "{:.1f}".format(test_spectrum.metadata["Teff"]),
+                    "{:.1f}".format(stellar_parameters[0]),
                     "{:.3f}".format(test_spectrum.metadata["logg"]),
+                    "{:.3f}".format(stellar_parameters[1]),
                     "{:.3f}".format(test_spectrum.metadata["[Fe/H]"]),
+                    "{:.3f}".format(stellar_parameters[2]),
                     "{:.4f}".format(radial_velocity),
                     "{:.4f}".format(rv_mean / 1000),
                     "{:.4f}".format(rv_std_dev / 1000)
                 ))
-
-                # Debugging
-                # for item in extra_metadata:
-                #     output_files[arm_name].write("# {}\n".format(str(item)))
 
                 # Make sure that output data file is always kept up to date
                 output_files[arm_name].flush()
