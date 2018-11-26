@@ -220,7 +220,7 @@ for counter, index in enumerate(indices):
             for arm_name in rv_calculator.templates_by_arm[mode].keys():
                 time_start = time.time()
 
-                rv_mean, rv_std_dev, stellar_parameters = \
+                rv_mean, rv_std_dev, stellar_parameters, rv_estimates = \
                     rv_calculator.estimate_rv(input_spectrum=observed,
                                               mode=mode,
                                               arm_names=(arm_name,),
@@ -230,6 +230,9 @@ for counter, index in enumerate(indices):
 
                 # Calculate how much CPU time we used
                 time_end = time.time()
+
+                # Debugging
+                # output_files[arm_name].write("# {}\n".format(str(rv_estimates)))
 
                 # Write a line to the output data file
                 output_files[arm_name].write("  {}\n".format(format_str).format(
