@@ -18,11 +18,13 @@ import random
 import sys
 import time
 from os import path as os_path
+from collections import namedtuple
 
 import numpy as np
 from fourgp_fourfs import FourFS
 from fourgp_rv import random_radial_velocity, RvInstanceCrossCorrelation
 from fourgp_speclib import SpectrumLibrarySqlite
+from fourgp_rv.templates_resample import resample_templates
 
 # Create unique ID for this process
 run_id = os.getpid()
@@ -74,6 +76,17 @@ parser.add_argument('--upsampling', default=1, dest='upsampling',
                     type=int,
                     help='Upsample both the template spectra and the test spectra before doing cross-correlation')
 
+parser.add_argument('--correlate-with-test-spectrum',
+                    action='store_true',
+                    dest="correlate_with_test_spectrum",
+                    help="Specify that we cross-correlate with the test spectrum itself, at zero RV, as a sanity "
+                         "check.")
+parser.add_argument('--correlate-with-templates',
+                    action='store_false',
+                    dest="correlate_with_test_spectrum",
+                    help="Specify that we cross-correlate with a library of template spectra (default).")
+parser.set_defaults(correlate_with_test_spectrum=False)
+
 parser.add_argument('--zero-rv',
                     action='store_true',
                     dest="zero_rv",
@@ -109,17 +122,18 @@ template_library = SpectrumLibrarySqlite(
     create=False,
 )
 
-# Instantiate 4FS wrapper
-etc_wrapper = FourFS(
-    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
-    snr_list=[float(args.snr)],
-    snr_per_pixel=True
-)
-
 # Instantiate RV code
 rv_calculator = RvInstanceCrossCorrelation(
     spectrum_library=template_library,
     upsampling=args.upsampling
+)
+
+# Instantiate 4FS wrapper
+etc_wrapper = FourFS(
+    path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
+    snr_list=[float(args.snr)],
+    snr_per_pixel=True,
+    identifier="rv_test"
 )
 
 # Pick some random spectra
@@ -136,6 +150,9 @@ for mode in ("HRS", "LRS"):
         # Write column headers
         output_files[arm_name].write("# {}\n".format(" ".join(sys.argv[:])))
         output_files[arm_name].write("# SNR/pixel = {}\n".format(args.snr))
+        output_files[arm_name].write("# Pixel multiplicative spacing = {:.16f}\n".format(
+            rv_calculator.arm_properties[arm_name]['multiplicative_step']
+        ))
 
         output_files[arm_name].write("# {}\n".format(format_str).format("Time",
                                                                         "Teff_in", "Teff_out",
@@ -164,6 +181,31 @@ for counter, index in enumerate(indices):
     object_name = test_spectrum.metadata[spectrum_matching_field]
     logger.info("Working on test {:6d} (spectrum <{}>)".format(counter, object_name))
     logger.info("Spectrum metadata: {}".format(str(test_spectrum.metadata)))
+
+    # If we're cross-correlating with the test spectrum itself, create an RV code instance to do that now
+    if args.correlate_with_test_spectrum:
+        tmp_template_library = "tmp_{}".format(run_id)
+
+        os.system("rm -Rf {}".format(os_path.join(workspace, tmp_template_library)))
+
+        # Create template spectrum library
+        resample_templates(logger=logger,
+                           args=namedtuple("arguments", ("templates_in", "workspace", "templates_out", "binary_path"))
+                           ("{}[{}={}]".format(args.test_library, spectrum_matching_field, object_name),
+                            workspace, tmp_template_library, root_path)
+                           )
+
+        # Open template spectrum library
+        template_library = SpectrumLibrarySqlite(
+            path=os_path.join(workspace, tmp_template_library),
+            create=False,
+        )
+
+        # Instantiate RV code
+        rv_calculator = RvInstanceCrossCorrelation(
+            spectrum_library=template_library,
+            upsampling=args.upsampling
+        )
 
     # Search for the continuum-normalised version of this same object (which will share the same uid / name)
     search_criteria = test_spectra_constraints.copy()
