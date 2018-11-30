@@ -17,17 +17,26 @@ import os
 import random
 import sys
 import time
-from os import path as os_path
 from collections import namedtuple
+from os import path as os_path
 
 import numpy as np
 from fourgp_fourfs import FourFS
 from fourgp_rv import random_radial_velocity, RvInstanceCrossCorrelation
-from fourgp_speclib import SpectrumLibrarySqlite
 from fourgp_rv.templates_resample import resample_templates
+from fourgp_speclib import SpectrumLibrarySqlite
 
 # Create unique ID for this process
 run_id = os.getpid()
+
+
+# Helper function to measure CPU time
+def get_cpu_time(pid):
+    stats = open("/proc/{:d}/stat".format(pid)).read().split()
+    u_time = float(stats[13])
+    s_time = float(stats[14])
+    return u_time + s_time
+
 
 # Read input parameters
 our_path = os_path.split(os_path.abspath(__file__))[0]
@@ -261,6 +270,7 @@ for counter, index in enumerate(indices):
 
             for arm_name in rv_calculator.templates_by_arm[mode].keys():
                 time_start = time.time()
+                time_start_cpu = get_cpu_time(run_id)
 
                 rv_mean, rv_std_dev, stellar_parameters, rv_estimates = \
                     rv_calculator.estimate_rv(input_spectrum=observed,
@@ -272,13 +282,14 @@ for counter, index in enumerate(indices):
 
                 # Calculate how much CPU time we used
                 time_end = time.time()
+                time_end_cpu = get_cpu_time(run_id)
 
                 # Debugging
                 # output_files[arm_name].write("# {}\n".format(str(rv_estimates)))
 
                 # Write a line to the output data file
                 output_files[arm_name].write("  {}\n".format(format_str).format(
-                    "{:.2f}".format(time_end - time_start),
+                    "{:.2f}/{:.2f}".format(time_end - time_start, time_end_cpu - time_start_cpu),
                     "{:.1f}".format(test_spectrum.metadata["Teff"]),
                     "{:.1f}".format(stellar_parameters[0]),
                     "{:.3f}".format(test_spectrum.metadata["logg"]),
