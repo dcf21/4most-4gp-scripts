@@ -180,7 +180,7 @@ for counter, index in enumerate(indices):
     # Look up the unique ID of this object
     object_name = test_spectrum.metadata[spectrum_matching_field]
     logger.info("Working on test {:6d} (spectrum <{}>)".format(counter, object_name))
-    logger.info("Spectrum metadata: {}".format(str(test_spectrum.metadata)))
+    # logger.info("Spectrum metadata: {}".format(str(test_spectrum.metadata)))
 
     # If we're cross-correlating with the test spectrum itself, create an RV code instance to do that now
     if args.correlate_with_test_spectrum:
