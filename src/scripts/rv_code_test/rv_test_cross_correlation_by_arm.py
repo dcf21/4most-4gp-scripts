@@ -9,6 +9,8 @@
 """
 Take the GALAH test sample of spectra, apply random radial velocities to the spectra, and see how well a simple
 cross-correlation RV code can determine what radial velocity we applied.
+
+We work out the RV from each arm separately, and create separate data files for each arm.
 """
 
 import argparse
@@ -259,11 +261,11 @@ for counter, index in enumerate(indices):
     # Loop over LRS and HRS
     for mode in mock_observed_spectra:
         # Loop over the spectra we simulated (there was only one!)
-        for index in mock_observed_spectra[mode]:
+        for fourfs_index in mock_observed_spectra[mode]:
 
             # Extract continuum-normalised mock observation
             logger.info("Resampling {} spectrum".format(mode))
-            observed = mock_observed_spectra[mode][index][float(args.snr)]['spectrum_continuum_normalised']
+            observed = mock_observed_spectra[mode][fourfs_index][float(args.snr)]['spectrum_continuum_normalised']
 
             # Replace errors which are nans with a large value, otherwise they cause numerical failures in the RV code
             observed.value_errors[np.isnan(observed.value_errors)] = 1000.
