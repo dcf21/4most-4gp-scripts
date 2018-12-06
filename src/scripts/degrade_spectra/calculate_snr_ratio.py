@@ -34,7 +34,7 @@ pid = os.getpid()
 parser = argparse.ArgumentParser(description=__doc__.strip())
 parser.add_argument('--input-library',
                     required=False,
-                    default="galah_test_sample_4fs_lrs_50only",
+                    default="galah_training_sample_4fs_lrs",
                     dest="input_library",
                     help="The name of the spectrum library we are to read input spectra from. A subset of the stars "
                          "in the input library may optionally be selected by suffixing its name with a comma-separated "
@@ -116,6 +116,5 @@ with open(args.log_to, "w") as result_log:
         print("{:10.4f} {:10.4f} {:10.4f} {}".format(input_spectrum.metadata["Teff"],
                                                      input_spectrum.metadata["logg"],
                                                      input_spectrum.metadata["[Fe/H]"],
-                                                     " ".join(["{:10.4f}".format(mean_snr[i] / mean_snr[0])
-                                                               for i in range(1, len(mean_snr))])
+                                                     " ".join(["{:10.4f}".format(x) for x in mean_snr])
                                                      ))
