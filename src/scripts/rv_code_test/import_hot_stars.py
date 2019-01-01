@@ -54,6 +54,7 @@ for line in open(os_path.join(src_dir, "sp_templates.txt")):
         "Mdot": float(words[3]),
         "[Fe/H]": 0,
         "uid": unique_id,
+        "number": int(words[0]),
         "Starname": "hot_star_{:03d}".format(int(words[0])),
         "continuum_normalised": 1
     }
@@ -85,6 +86,7 @@ for line in open(os_path.join(src_dir, "sp_test-sample.txt")):
         "Mdot": float(words[3]),
         "[Fe/H]": 0,
         "uid": unique_id,
+        "number": int(words[0]),
         "Starname": "hot_star_{:03d}".format(int(words[0])),
         "continuum_normalised": 1
     }
@@ -98,5 +100,5 @@ for line in open(os_path.join(src_dir, "sp_test-sample.txt")):
                         value_errors=np.zeros_like(wavelengths),
                         metadata=metadata)
 
-    output_library_templates.insert(spectra=spectrum, metadata_list=[{'continuum_normalised': 0}])
-    output_library_templates.insert(spectra=spectrum, metadata_list=[{'continuum_normalised': 1}])
+    output_library_test_objects.insert(spectra=spectrum, metadata_list=[{'continuum_normalised': 0}])
+    output_library_test_objects.insert(spectra=spectrum, metadata_list=[{'continuum_normalised': 1}])
