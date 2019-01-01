@@ -46,7 +46,7 @@ root_path = os_path.join(our_path, "../../../..")
 parser = argparse.ArgumentParser(description=__doc__.strip())
 parser.add_argument('--test-library',
                     required=False,
-                    default='galah_test_sample_turbospec',
+                    default='rv_test_objects',
                     dest='test_library',
                     help="Library of spectra to test the RV code on")
 parser.add_argument('--snr',
@@ -58,7 +58,7 @@ parser.add_argument('--workspace', dest='workspace', default="",
                     help="Directory where we expect to find spectrum libraries.")
 parser.add_argument('--templates-library',
                     required=False,
-                    default="resampled_rv_templates",
+                    default="rv_templates_resampled",
                     dest="templates_library",
                     help="The path where we find the template spectra we are going to use in the fitting.")
 parser.add_argument('--binary-path',
