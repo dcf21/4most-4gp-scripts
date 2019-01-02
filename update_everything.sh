@@ -19,7 +19,8 @@ virtualenv -p python3 ../virtualenv
 source ../virtualenv/bin/activate
 
 # Install some of the python packages we required
-pip install numpy scipy astropy mysqlclient flask matplotlib tables
+pip install numpy==1.15.3  # Currently, 1.16.0 doesn't actually install
+pip install scipy astropy mysqlclient flask matplotlib tables
 
 # These additional packages are required by Sergey's RV code
 pip install pyyaml numdifftools pandas
