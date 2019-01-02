@@ -170,18 +170,23 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
     flux = data['Fun']
     flux_errors = data['Var']
 
+    # Create a unique ID for this PEPSI spectrum
+    unique_id = hashlib.md5(os.urandom(32)).hexdigest()[:16]
+    header_dictionary["uid"] = unique_id
+
     pepsi_spectrum = Spectrum(wavelengths=wavelengths,
                               values=flux,
                               value_errors=flux_errors,
                               metadata=header_dictionary)
 
-    # Create a unique ID for this PEPSI spectrum
-    unique_id = hashlib.md5(os.urandom(32)).hexdigest()[:16]
-    header_dictionary["uid"] = unique_id
+    output_libraries['original'].insert(spectra=pepsi_spectrum,
+                                        filenames=star_name,
+                                        metadata_list={'continuum_normalised': 1}
+                                        )
 
     output_libraries['original'].insert(spectra=pepsi_spectrum,
                                         filenames=star_name,
-                                        metadata_list=header_dictionary
+                                        metadata_list={'continuum_normalised': 0}
                                         )
 
     # 2. Correct radial velocity
