@@ -16,6 +16,6 @@
 ./resample_cross_correlation_grid.py --templates-in rv_templates --templates-out rv_templates_resampled
 
 # Create test sample
-../rearrange_libraries/rearrange.py --create --input-library galah_test_sample_turbospec --output-library rv_test_objects
-../rearrange_libraries/rearrange.py --no-create --input-library hot_star_test_objects --output-library rv_test_objects
+#../rearrange_libraries/rearrange.py --create --input-library galah_test_sample_turbospec --output-library rv_test_objects
+#../rearrange_libraries/rearrange.py --no-create --input-library hot_star_test_objects --output-library rv_test_objects
 
