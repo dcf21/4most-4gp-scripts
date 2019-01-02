@@ -298,11 +298,11 @@ for counter, index in enumerate(indices):
                 # Write a line to the output data file
                 output_files[arm_name].write("  {}\n".format(format_str).format(
                     "{:.2f}/{:.2f}".format(time_end - time_start, time_end_cpu - time_start_cpu),
-                    "{:.1f}".format(test_spectrum.metadata["Teff"]),
+                    "{:.1f}".format(test_spectrum.metadata.get("Teff", np.nan)),
                     "{:.1f}".format(stellar_parameters[0]),
-                    "{:.3f}".format(test_spectrum.metadata["logg"]),
+                    "{:.3f}".format(test_spectrum.metadata.get("logg", np.nan)),
                     "{:.3f}".format(stellar_parameters[1]),
-                    "{:.3f}".format(test_spectrum.metadata["[Fe/H]"]),
+                    "{:.3f}".format(test_spectrum.metadata.get("[Fe/H]", np.nan)),
                     "{:.3f}".format(stellar_parameters[2]),
                     "{:.4f}".format(radial_velocity),
                     "{:.4f}".format(rv_mean / 1000),
