@@ -265,6 +265,12 @@ for counter, index in enumerate(indices):
             # Replace errors which are nans with a large value, otherwise they cause numerical failures in the RV code
             observed.value_errors[np.isnan(observed.value_errors)] = 1000.
 
+            # Check for NaNs in actual spectrum
+            if not np.all(np.isfinite(observed.values)):
+                print("Warning: NaN values in test spectrum!")
+                observed.value_errors[np.isnan(observed.values)] = 1000.
+                observed.values[np.isnan(observed.values)] = 1.
+
             time_start = time.time()
             time_start_cpu = get_cpu_time(run_id)
 
