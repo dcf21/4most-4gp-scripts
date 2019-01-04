@@ -142,6 +142,7 @@ rv_calculator = RvInstanceCrossCorrelation(
 # Instantiate 4FS wrapper
 etc_wrapper = FourFS(
     path_to_4fs=os_path.join(args.binary_path, "OpSys/ETC"),
+    magnitude=13,
     snr_list=[float(args.snr)],
     snr_per_pixel=True,
     identifier="rv_test"
