@@ -1,0 +1,8 @@
+a 26736       SNR/pixel = 20; 3-pixel quadratic interpolation
+b 23054       SNR/pixel = 30; 3-pixel quadratic interpolation
+c 31769       SNR/pixel = 40; 3-pixel quadratic interpolation
+d 21309       SNR/pixel = 50; 3-pixel quadratic interpolation
+e 26648       SNR/pixel = 100; 3-pixel quadratic interpolation
+f 23553       SNR/pixel = 50; 3-pixel spline interpolation
+g 21244       SNR/pixel = 50; 5x upsampling
+h 31683       SNR/pixel = 50; 5-pixel quadratic interpolation

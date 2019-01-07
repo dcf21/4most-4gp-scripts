@@ -92,9 +92,10 @@ ENV/
 .ropeproject
 
 # LUNARC temporary files
-/lunarc/cannon/tmp_*
-/lunarc/cannon/stdout*
-/lunarc/cannon/stderr*
+/src/lunarc/cannon/tmp_*
+/src/lunarc/cannon/stdout*
+/src/lunarc/cannon/stderr*
 
-/synthesize_grids/modele.sm
+/src/scripts/synthesize_samples/modele.sm
 
+/src/scripts/visualisation/rv_code/*/data/*.dat

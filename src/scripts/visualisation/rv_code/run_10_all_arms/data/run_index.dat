@@ -1,0 +1,4 @@
+a 3247        SNR/pixel = 20; 3-pixel quadratic interpolation
+b 2687        SNR/pixel = 30; 3-pixel quadratic interpolation
+c 2680        SNR/pixel = 50; 3-pixel quadratic interpolation
+d 3254        SNR/pixel =100; 3-pixel quadratic interpolation
