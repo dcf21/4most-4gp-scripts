@@ -41,6 +41,9 @@ parser.add_argument('--library-hrs', default="pepsi_4fs_hrs", dest='library_hrs'
                     help="Spectrum library to insert HRS spectra into.")
 parser.add_argument('--library-original', default="pepsi_original", dest='library',
                     help="Spectrum library to insert the original PEPSI spectra into.")
+parser.add_argument('--library-resampled', default="pepsi_resampled", dest='library_resampled',
+                    help="Spectrum library to insert the original PEPSI spectra into, after resampling onto raster "
+                         "with fixed wavelength stride.")
 parser.add_argument('--fits-path', default="../../../../pepsi/", dest='fits_path',
                     help="The path to the FITS file to import.")
 parser.add_argument('--workspace', dest='workspace', default="",
@@ -114,6 +117,7 @@ os.system("mkdir -p {}".format(workspace))
 output_libraries = {}
 
 for mode, output_library in (("original", args.library),
+                             ("resampled", args.library_resampled),
                              ("LRS", args.library_lrs),
                              ("HRS", args.library_hrs)):
     library_name = re.sub("/", "_", output_library)
@@ -205,6 +209,16 @@ for item in glob.glob(os_path.join(args.fits_path, "*.all6")):
                                                                                stop=lambda_max,
                                                                                num=lambda_steps
                                                                                ))
+
+    output_libraries['resampled'].insert(spectra=pepsi_spectrum_resampled,
+                                        filenames=star_name,
+                                        metadata_list={'continuum_normalised': 1}
+                                        )
+
+    output_libraries['resampled'].insert(spectra=pepsi_spectrum_resampled,
+                                        filenames=star_name,
+                                        metadata_list={'continuum_normalised': 0}
+                                        )
 
     # Process spectra through 4FS
     degraded_spectra = etc_wrapper.process_spectra(
