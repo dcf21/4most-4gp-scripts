@@ -153,7 +153,7 @@ indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.te
 
 # Start writing output
 output_files = {}
-format_str = "{:5} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10}"
+format_str = "{:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10}"
 
 for mode in ("HRS", "LRS"):
     for arm_name in rv_calculator.templates_by_arm[mode].keys():

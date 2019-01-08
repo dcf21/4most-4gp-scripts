@@ -2,4 +2,4 @@ a  3026       SNR/pixel = 20; 3-pixel quadratic interpolation
 b  3106       SNR/pixel = 30; 3-pixel quadratic interpolation
 c 16427       SNR/pixel = 50; 3-pixel quadratic interpolation
 d 15447       SNR/pixel =100; 3-pixel quadratic interpolation
-z 15367       SNR/pixel = 50; Test on PEPSI
+z 20032       SNR/pixel = 50; Test on PEPSI
