@@ -36,6 +36,10 @@ cd ../fourgp_cannon
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
 python3 setup.py install
 
+cd ../fourgp_payne
+rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
+python3 setup.py install
+
 cd ../fourgp_degrade
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
 python3 setup.py install
