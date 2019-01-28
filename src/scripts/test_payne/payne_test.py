@@ -278,8 +278,13 @@ def main():
                              "range.")
     parser.add_argument('--workspace', dest='workspace', default="",
                         help="Directory where we expect to find spectrum libraries.")
-    parser.add_argument('--reload-payne', required=False, dest='reload_cannon', default=None,
-                        help="Skip training step, and reload a Payne that we've previously trained.")
+    parser.add_argument('--train-batch-number', required=False, dest='batch_number', type=int, default=0,
+                        help="If training pixels in multiple batches on different machines, then this is the number of "
+                             "the batch of pixels we are to train. It should be in the range 0 .. batch_count-1 "
+                             "inclusive. If it is -1, then we skip training to move straight to testing.")
+    parser.add_argument('--train-batch-count', required=False, dest='batch_count', type=int, default=1,
+                        help="If training pixels in multiple batches on different machines, then this is the number "
+                             "of batches.")
     parser.add_argument('--description', dest='description',
                         help="A description of this fitting run.")
     parser.add_argument('--labels', dest='labels',
@@ -418,16 +423,14 @@ def main():
 
         model = PayneInstanceTing(training_set=training_spectra,
                                   label_names=test_labels,
+                                  batch_number=args.batch_number,
+                                  batch_count=args.batch_count,
                                   censors=censoring_masks,
                                   threads=None if args.multithread else 1,
-                                  load_from_file=args.reload_cannon if args.reload_cannon else None
+                                  training_data_archive=output_filename
                                   )
 
         time_training_end = time.time()
-
-        # Save the model
-        model.save_model(filename="{:s}.payne".format(output_filename),
-                         overwrite=True)
 
         # Test the model
         N = len(test_library_ids)

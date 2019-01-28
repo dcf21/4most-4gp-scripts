@@ -14,8 +14,8 @@ parallel using the SLURM job management system on lunarc.
 We parse the contents of the shell script, removing any commands which aren't running python, and piecing together
 python commands which have been split over many lines.
 
-Owing to aurora/lunarc being a temperamental heap of junk, it is very necessary to run this in exclusive mode, otherwise
-the out of memory killer tends to kill your jobs. Well, it probably will do that anyway.
+Unfortunately, it seems very necessary to run this in SLURM's exclusive mode. Otherwise, the out of memory killer
+tends to kill your jobs.
 
 """
 
@@ -77,7 +77,7 @@ for job in args.jobs:
     libraries = []
 
     # Start piecing together the python command line to run this job
-    start_string = "python2.7 cannon_test.py"
+    start_string = "python3 cannon_test.py"
 
     for line in open(job):
         line = line.strip()
