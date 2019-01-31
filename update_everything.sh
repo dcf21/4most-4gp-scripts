@@ -34,31 +34,31 @@ python3 setup.py install
 
 cd ../fourgp_cannon
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 cd ../fourgp_payne
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 cd ../fourgp_degrade
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 cd ../fourgp_rv
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 cd ../fourgp_specsynth
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 cd ../fourgp_telescope_data
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 cd ../fourgp_fourfs
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 # Make sure we've got the latest version of Andy Casey's Cannon installed in virtual environment
 cd ${cwd}

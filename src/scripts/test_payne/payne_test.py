@@ -1,4 +1,4 @@
-#!../../../../../virtualenv/bin/python3
+#!../../../../virtualenv/bin/python3
 # -*- coding: utf-8 -*-
 
 # NB: The shebang line above assumes you've installed a python virtual environment alongside your working copy of the
@@ -497,14 +497,15 @@ def main():
             "hostname": os.uname()[1],
             "generator": __file__,
             "4gp_version": fourgp_version,
-            "cannon_version": model.payne_version,
+            "cannon_version": None,
+            "payne_version": model.payne_version,
             "start_time": time_training_start,
             "end_time": time.time(),
             "training_time": time_training_end - time_training_start,
             "description": args.description,
             "train_library": args.train_library,
             "test_library": args.test_library,
-            "tolerance": args.tolerance,
+            "tolerance": None,
             "assume_scaled_solar": args.assume_scaled_solar,
             "line_list": args.censor_line_list,
             "labels": test_labels,
