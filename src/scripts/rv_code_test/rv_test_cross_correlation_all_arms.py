@@ -153,7 +153,7 @@ indices = [random.randint(0, len(test_library_items) - 1) for i in range(args.te
 
 # Start writing output
 output_files = {}
-format_str = "{:5} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10}"
+format_str = "{:12} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10} {:10}"
 
 for mode in ("HRS", "LRS"):
     output_files[mode] = open("{}_{}_{}.dat".format(args.output_file, mode, run_id), "wt")
@@ -166,9 +166,10 @@ for mode in ("HRS", "LRS"):
                                                                 "Teff_in", "Teff_out",
                                                                 "log(g)_in", "log(g)_out",
                                                                 "[Fe/H]_in", "[Fe/H]_out",
-                                                                "RV_in", "RV_out", "RV_err")
+                                                                "RV_in", "RV_out", "RV_err",
+                                                                "Starname")
                              )
-    output_files[mode].write("# {}\n".format(format_str).format(*range(10)))
+    output_files[mode].write("# {}\n".format(format_str).format(*range(11)))
 
 # Loop over the spectra we are going to test
 for counter, index in enumerate(indices):
@@ -301,7 +302,8 @@ for counter, index in enumerate(indices):
                 "{:.3f}".format(stellar_parameters[2]),
                 "{:.4f}".format(radial_velocity),
                 "{:.4f}".format(rv_mean / 1000),
-                "{:.4f}".format(rv_std_dev / 1000)
+                "{:.4f}".format(rv_std_dev / 1000),
+                "{}".format(object_name)
             ))
 
             # Make sure that output data file is always kept up to date
