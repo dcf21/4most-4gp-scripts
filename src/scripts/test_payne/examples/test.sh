@@ -14,8 +14,8 @@ mkdir -p ../../../output_data/payne
 
 # ----------------------
 
-python3 payne_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
-                      --test "galah_test_sample_4fs_hrs" \
+python3 payne_test.py --train "galah_training_sample_4fs_hrs[SNR=250,5000<Teff<6000,3.8<logg<5]" \
+                      --test "galah_test_sample_4fs_hrs[SNR=100,5000<Teff<6000,3.8<logg<5]" \
                       --description "4MOST HRS - 3 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
                       --labels "Teff,logg,[Fe/H]" \
                       --output-file "../../../output_data/payne/payne_galah_hrs_3label"
