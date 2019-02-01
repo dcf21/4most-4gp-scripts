@@ -23,6 +23,8 @@ cd ../4most-4gp/src/pythonModules/fourgp_speclib/
 pip install --upgrade .
 cd ../fourgp_cannon
 pip install --upgrade .
+cd ../fourgp_payne
+pip install --upgrade .
 cd ../fourgp_degrade
 pip install --upgrade .
 # This depends on emcee, which isn't installed...
