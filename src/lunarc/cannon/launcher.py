@@ -50,9 +50,13 @@ slurm_script = """#!/bin/sh
 #SBATCH -e stderr_cannon_{destination_name}_%j.out
 cat $0
 
-module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda2
+module add GCC/4.9.3-binutils-2.25  OpenMPI/1.8.8 CFITSIO/3.38  GCCcore/6.4.0 SQLite/3.20.1 Anaconda3
 
+# This line used to work up until Feb 2019...
 source activate myenv
+
+# ... but since it's stopped working, this line makes sure we use the right python ...
+export PATH="/home/dominic/.conda/envs/myenv/bin:$PATH"
 
 cd {python_directory}
 echo Starting rsync: `date`

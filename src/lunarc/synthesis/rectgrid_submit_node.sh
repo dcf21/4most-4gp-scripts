@@ -7,7 +7,12 @@ export item=$1
 export WRK_NB=$1
 
 # activate conda python environment
+
+# This line used to work up until Feb 2019...
 source activate myenv
+
+# ... but since it's stopped working, this line makes sure we use the right python ...
+export PATH="/home/dominic/.conda/envs/myenv/bin:$PATH"
 
 # create worker-private subdirectory in $SNIC_TMP
 # export WRK_DIR=$SNIC_TMP/WRK_${WRK_NB}
