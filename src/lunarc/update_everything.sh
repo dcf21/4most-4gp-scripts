@@ -59,3 +59,6 @@ python3 setup.py develop
 cd ../fourgp_fourfs
 python3 setup.py develop
 
+cd ../fourgp_pipeline
+python3 setup.py develop
+

@@ -60,6 +60,10 @@ cd ../fourgp_fourfs
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
 python3 setup.py develop
 
+cd ../fourgp_pipeline
+rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
+python3 setup.py develop
+
 # Make sure we've got the latest version of Andy Casey's Cannon installed in virtual environment
 cd ${cwd}
 cd ../AnniesLasso
