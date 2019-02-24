@@ -86,12 +86,72 @@ class PipelineManagerReadFromSpectrumLibrary(PipelineManager):
             'spectrum_identifier': spectrum_id
         }
 
+    def post_result(self, spectrum_analysis):
+        """
+        Post the results from analysing a spectrum back to whatever database you are using to store the pipeline's
+        output
 
-def main():
+        :param spectrum_analysis:
+            A SpectrumAnalysis object containing the results of the pipeline's analysis of the spectrum.
+        :type spectrum_analysis:
+            SpectrumAnalysis
+        :return:
+            True for success; False for failure.
+        """
+
+        # This method should save the output of the pipeline somewhere
+
+        # Don't bother doing anything with the output for now
+        return True
+
+
+def main(logger, input_library, workspace, fourmost_mode, reload_cannon):
     """
     Main entry point for running the pipeline.
+
+    :param logger:
+        Logging object used to update user on progress of pipeline.
+    :param input_library:
+        The name of the spectrum library whose contents we are to run the pipeline on.
+    :param workspace:
+        The path of the workspace directory containing the spectrum libraries we are to use.
+    :param fourmost_mode:
+        The name of the 4MOST mode we are operating, either hrs or lrs
+    :param reload_cannon:
+        The filename of the output files containing the trained Cannon that we are to reload.
+    :return:
+        None
     """
 
+    # Let user know we're up and running
+    logger.info("Running FGK pipeline on the spectrum library <{}>".format(input_library))
+
+    # Set path to workspace where we expect to find libraries of spectra
+    our_path = os_path.split(os_path.abspath(__file__))[0]
+    workspace = workspace if workspace else os_path.join(our_path, "../../../workspace")
+
+    # Instantiate the pipeline
+    pipeline = PipelineFGK(
+        workspace=workspace,
+        fourmost_mode=fourmost_mode,
+        reload_cannon_from_file=reload_cannon
+    )
+
+    # Instantiate the pipeline manager
+    pipeline_manager = PipelineManagerReadFromSpectrumLibrary(
+        spectrum_library_to_analyse=input_library,
+        workspace=workspace,
+        pipeline=pipeline
+    )
+
+    # Do the work
+    while pipeline_manager.poll_server_for_work():
+        pass
+
+
+# Do it right away if we're run as a script
+if __name__ == "__main__":
+    # Configure format for logging messages
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s:%(filename)s:%(message)s',
                         datefmt='%d/%m/%Y %H:%M:%S')
     logger = logging.getLogger(__name__)
@@ -114,26 +174,9 @@ def main():
                         help="The 4MOST mode we are operating on.")
     args = parser.parse_args()
 
-    # Let user know we're up and running
-    logger.info("Running FGK pipeline on the spectrum library <{}>".format(args.input_library))
-
-    # Set path to workspace where we expect to find libraries of spectra
-    our_path = os_path.split(os_path.abspath(__file__))[0]
-    workspace = args.workspace if args.workspace else os_path.join(our_path, "../../../workspace")
-
-    # Instantiate the pipeline
-    pipeline = PipelineFGK(
-        fourmost_mode=args.fourmost_mode,
-        reload_cannon_from_file=args.reload_cannon
-    )
-
-    # Instantiate the pipeline manager
-    pipeline_manager = PipelineManagerReadFromSpectrumLibrary(
-        spectrum_library_to_analyse=args.input_library,
-        workspace=workspace,
-        pipeline=pipeline
-    )
-
-    # Do the work
-    while pipeline_manager.poll_server_for_work():
-        pass
+    main(logger=logger,
+         input_library=args.input_library,
+         workspace=args.workspace,
+         reload_cannon=args.reload_cannon,
+         fourmost_mode=args.fourmost_mode
+         )
