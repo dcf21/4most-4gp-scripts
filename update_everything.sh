@@ -30,7 +30,7 @@ cd ${cwd}
 
 cd ../4most-4gp/src/pythonModules/fourgp_speclib
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+python3 setup.py develop
 
 cd ../fourgp_cannon
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
@@ -64,17 +64,17 @@ cd ../fourgp_pipeline
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
 python3 setup.py develop
 
-# Make sure we've got the latest version of Andy Casey's Cannon installed in virtual environment
+# Make sure we've got the old version of Andy Casey's Cannon installed in virtual environment
 cd ${cwd}
 cd ../AnniesLasso
 rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
 python3 setup.py install
 
 # Make sure we've got the latest version of Anno Ho's Cannon installed in virtual environment
-cd ${cwd}
-cd ../TheCannon
-rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+# cd ${cwd}
+# cd ../TheCannon
+# rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
+# python3 setup.py install
 
 # Make sure we've got the latest version of pyphot installed in virtual environment
 cd ${cwd}
@@ -83,7 +83,7 @@ rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install late
 python3 setup.py install
 
 # Make sure we've got the latest version of Sergey's RV code installed in virtual environment
-cd ${cwd}
-cd ../rvspecfit
-rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
-python3 setup.py install
+# cd ${cwd}
+# cd ../rvspecfit
+# rm -Rf build dist *.egg-info  # Clear out the cache to make sure we install latest version of code
+# python3 setup.py install
