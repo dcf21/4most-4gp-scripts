@@ -26,10 +26,10 @@ class Synthesizer:
         return dict([(i, x[i]) for i in x.columns])
 
     # Read input parameters
-    def __init__(self, library_name, logger, docstring, root_path="../..", spectral_resolution=50000):
+    def __init__(self, library_name, logger, docstring, root_path="../../../..", spectral_resolution=50000):
         self.logger = logger
         self.our_path = os_path.split(os_path.abspath(__file__))[0]
-        self.root_path = os_path.join(self.our_path, root_path, "..")
+        self.root_path = os_path.abspath(os_path.join(self.our_path, root_path, ".."))
         self.pid = os.getpid()
         self.spectral_resolution = spectral_resolution
         parser = argparse.ArgumentParser(description=docstring)
@@ -103,7 +103,7 @@ class Synthesizer:
 
         # Set path to workspace where we create libraries of spectra
         self.workspace = (self.args.workspace if self.args.workspace else
-                          os_path.join(self.our_path, root_path, "workspace"))
+                          os_path.abspath(os_path.join(self.our_path, root_path, "workspace")))
         os.system("mkdir -p {}".format(self.workspace))
 
     def set_star_list(self, star_list):
