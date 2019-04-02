@@ -12,23 +12,6 @@ source ../../../../virtualenv/bin/activate
 # Now do some work
 mkdir -p ../../../output_data/cannon
 
-python3 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
-                       --test "galah_test_sample_4fs_hrs" \
-                       --continuum-normalisation "running_mean" \
-                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
-                       --description "4MOST HRS (censored) - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                       --assume-scaled-solar \
-                       --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_cn_10label"
-python3 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
-                       --test "galah_test_sample_4fs_lrs" \
-                       --continuum-normalisation "running_mean" \
-                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
-                       --description "4MOST LRS (censored) - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
-                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
-                       --assume-scaled-solar \
-                       --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_cn_10label"
-
 # ----------------------
 
 python3 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
@@ -159,4 +142,23 @@ python3 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
                        --description "4MOST LRS - 12 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
                        --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H],[C/H],[Eu/H]" \
                        --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_12label"
+
+# -----------------------------------------------------------------------------------------
+
+python3 cannon_test.py --train "galah_training_sample_4fs_hrs[SNR=250]" \
+                       --test "galah_test_sample_4fs_hrs" \
+                       --continuum-normalisation "running_mean" \
+                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                       --description "4MOST HRS (censored) - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                       --assume-scaled-solar \
+                       --output-file "../../../output_data/cannon/cannon_galah_censored_hrs_cn_10label"
+python3 cannon_test.py --train "galah_training_sample_4fs_lrs[SNR=250]" \
+                       --test "galah_test_sample_4fs_lrs" \
+                       --continuum-normalisation "running_mean" \
+                       --censor "line_list_filter_2016MNRAS.461.2174R.txt" \
+                       --description "4MOST LRS (censored) - 10 labels - Train on 0.25 GALAH. Test on 0.75 GALAH." \
+                       --labels "Teff,logg,[Fe/H],[Ca/H],[Mg/H],[Ti/H],[Si/H],[Na/H],[Ni/H],[Cr/H]" \
+                       --assume-scaled-solar \
+                       --output-file "../../../output_data/cannon/cannon_galah_censored_lrs_cn_10label"
 

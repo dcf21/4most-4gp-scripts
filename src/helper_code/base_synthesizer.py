@@ -7,6 +7,7 @@ Framework for code to synthesise a library of spectra.
 import argparse
 import hashlib
 import json
+import logging
 import os
 import re
 import sqlite3
@@ -99,7 +100,7 @@ class Synthesizer:
                             help="Only process a maximum of n spectra.")
         self.args = parser.parse_args()
 
-        self.logger.info("Synthesizing {} to <{}>".format(library_name, self.args.library))
+        logging.info("Synthesizing {} to <{}>".format(library_name, self.args.library))
 
         # Set path to workspace where we create libraries of spectra
         self.workspace = (self.args.workspace if self.args.workspace else
@@ -252,8 +253,12 @@ class Synthesizer:
                                                                         time_end - time_start,
                                                                         star_name,
                                                                         errors))
+                    logging.warn("Star <{}> could not be synthesised. Errors were: {}".
+                                 format(star_name, errors))
                     result_log.flush()
                     continue
+                else:
+                    logging.info("Synthesis completed without error.")
 
                 # Fetch filename of the spectrum we just generated
                 filepath = os_path.join(turbospectrum_out["output_file"])
@@ -283,6 +288,6 @@ class Synthesizer:
                 result_log.flush()
 
     def clean_up(self):
-        self.logger.info("Synthesized {:d} spectra.".format(self.counter_output))
+        logging.info("Synthesized {:d} spectra.".format(self.counter_output))
         # Close TurboSpectrum synthesizer instance
         self.synthesizer.close()
