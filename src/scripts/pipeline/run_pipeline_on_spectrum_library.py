@@ -166,7 +166,8 @@ if __name__ == "__main__":
     parser.add_argument('--workspace', dest='workspace', default="",
                         help="Directory where we expect to find spectrum libraries.")
     parser.add_argument('--reload-cannon', required=True, dest='reload_cannon',
-                        help="Filename of a trained Cannon that we are to reload.")
+                        help="Skip training step, and reload a Cannon that we've previously trained. Specify the full "
+                             "path to the .cannon file containing the trained Cannon, but without the .cannon suffix.")
     parser.add_argument('--output-file', default="./test_cannon.out", dest='output_file',
                         help="Data file to write output to.")
     parser.add_argument('--mode', required=True, dest='fourmost_mode',

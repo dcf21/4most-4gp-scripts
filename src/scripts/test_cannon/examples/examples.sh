@@ -20,11 +20,9 @@ python3 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
                        --labels "Teff,logg,[Fe/H]" \
                        --output-file "../../../output_data/cannon/cannon_demo_3label"
 
-python3 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
-                       --test "4fs_demo_stars_lrs" \
-                       --reload-cannon "../output_data/cannon/cannon_demo_3label.cannon" \
+python3 cannon_test.py --test "4fs_demo_stars_lrs" \
+                       --reload-cannon "../output_data/cannon/cannon_demo_3label" \
                        --description "4MOST LRS - 3 labels - Quick APOKASC test." \
-                       --labels "Teff,logg,[Fe/H]" \
                        --output-file "../../../output_data/cannon/cannon_demo_cp_3label"
 
 python3 cannon_test.py --train "4fs_ahm2017_sample_lrs[SNR=250]" \
