@@ -13,6 +13,7 @@ were at some particular reference magnitude.
 
 import argparse
 import logging
+import os
 from os import path as os_path
 
 import numpy as np
